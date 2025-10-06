@@ -8,7 +8,9 @@
    ------------------------------------------------------------------- */
 :root {
     --primary-color: #1cb1d1;
-    --secondary-color: #2c3e50;
+    --primary-dark: #006472;
+    --secondary-color: #003963;
+    --secondary-orange: #ff6b35;
     --text-color: #333;
     --text-light: #666;
     --background-light: #f8f9fa;
@@ -246,21 +248,53 @@ h3 {
 /* -------------------------------------------------------------------
    FAQ Question and Answer Content
    ------------------------------------------------------------------- */
-.question {
-    background: var(--background-light);
-    padding: 20px;
+.faq-main-content {
+    background: white;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     margin: 20px 0;
-    border: 1px solid var(--border-color);
-    border-left: 4px solid var(--primary-color);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
 }
 
-.question h2 {
+.faq-question {
+    background: var(--background-light);
+    padding: 25px 30px 15px 30px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.faq-question h2 {
     margin: 0;
     color: var(--secondary-color);
-    font-size: 1.4em;
+    font-size: 1.5em;
     font-weight: 600;
     line-height: 1.3;
+}
+
+.faq-answer {
+    padding: 25px 30px;
+    line-height: 1.6;
+}
+
+.faq-answer p:first-child {
+    margin-top: 0;
+}
+
+.faq-answer p:last-child {
+    margin-bottom: 0;
+}
+
+.faq-answer h2:first-child,
+.faq-answer h3:first-child {
+    margin-top: 0;
+}
+
+.faq-answer h2 {
+    margin-top: 25px;
+}
+
+.faq-answer h3 {
+    margin-top: 20px;
 }
 
 /* Admin Mode Toggle */
@@ -362,51 +396,34 @@ h3 {
     border: 1px solid #ffcc02;
 }
 
-/* FAQ status display on individual pages */
-.faq-status-display {
-    margin: 20px 0;
-    background: #fff3e0;
-    border: 1px solid #ffcc02;
-    border-left: 4px solid #ff9800;
-    border-radius: 8px;
-    padding: 20px;
+/* FAQ Warnings Box */
+.faq-warnings {
+    margin: 25px 0 0 0;
 }
 
-.faq-status-display p {
-    margin: 0 0 12px 0;
-    color: var(--secondary-color);
+.faq-warning {
+    margin: 0;
+}
+
+.faq-warning + .faq-warning {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #ffe4a3;
+}
+
+.faq-warning p {
+    margin: 0 0 8px 0;
+    color: var(--text-color);
     line-height: 1.5;
 }
 
-.faq-status-display p:last-child {
+.faq-warning p:last-child {
     margin-bottom: 0;
 }
 
-.faq-status-display strong {
-    color: #c62828;
-}
-
-.pending-guidance-callout {
-    margin: 20px 0;
-    background: #fff3e0;
-    border: 1px solid #ffcc02;
-    border-left: 4px solid #ff9800;
-    border-radius: 8px;
-    padding: 20px;
-}
-
-.pending-guidance-callout p {
-    margin: 0 0 12px 0;
-    color: var(--secondary-color);
-    line-height: 1.5;
-}
-
-.pending-guidance-callout p:last-child {
-    margin-bottom: 0;
-}
-
-.pending-guidance-callout strong {
-    color: #c62828;
+.faq-warning strong {
+    color: #e65100;
+    font-weight: 600;
 }
 
 .guidance-content {
@@ -438,12 +455,14 @@ h3 {
     text-decoration: underline;
 }
 
+/* Legacy answer styles for backward compatibility */
 .answer {
     background: var(--background-light);
     padding: 30px;
-    border-radius: 12px;
-    margin: 10px 0 30px 0;
+    border-radius: 0 0 8px 8px;
+    margin: 0 0 20px 0;
     border: 1px solid var(--border-color);
+    border-top: none;
     box-shadow: var(--card-shadow);
 }
 
@@ -466,6 +485,23 @@ h3 {
 
 .answer h3 {
     margin-top: 20px;
+}
+
+.question {
+    background: var(--background-light);
+    padding: 20px;
+    border-radius: 8px 8px 0 0;
+    margin: 20px 0 0 0;
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary-color);
+}
+
+.question h2 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-size: 1.4em;
+    font-weight: 600;
+    line-height: 1.3;
 }
 
 /* -------------------------------------------------------------------
@@ -725,16 +761,135 @@ pre code {
 }
 
 /* -------------------------------------------------------------------
-   Blockquotes
+   Blockquotes & GitHub Alerts
    ------------------------------------------------------------------- */
+
+/* Shared boxed element style */
+blockquote,
+.markdown-alert,
+.faq-warnings {
+    border-style: solid;
+    border-width: 1px;
+    border-left-width: 3px;
+    border-radius: 6px;
+    margin: 16px 0;
+    padding: 25px 30px;
+    font-size: 0.92em;
+    color: var(--text-color);
+}
+
+blockquote p,
+.markdown-alert p {
+    margin: 0 0 8px 0;
+    line-height: 1.5;
+}
+
+blockquote p:first-child,
+.markdown-alert p:first-child {
+    margin-top: 0;
+}
+
+blockquote p:last-child,
+.markdown-alert p:last-child {
+    margin-bottom: 0;
+}
+
+/* Regular blockquote */
 blockquote {
-    border-left: 4px solid var(--primary-color);
-    margin: 20px 0;
-    padding: 20px;
-    background: var(--background-light);
-    border-radius: 0 8px 8px 0;
-    color: var(--text-light);
+    border-color: #d0d7de;
+    border-left-color: #d0d7de;
+    background: #f6f8fa;
     font-style: italic;
+}
+
+/* GitHub Alert Callouts */
+.markdown-alert > p:first-child strong {
+    font-weight: 600;
+}
+
+/* Note - Blue */
+.markdown-alert-note {
+    background: #f0f7ff;
+    border-color: #b6d9ff;
+    border-left-color: #0969da;
+}
+
+.markdown-alert-note > p:first-child strong::before {
+    content: '🔵 ';
+    font-size: 0.85em;
+}
+
+.markdown-alert-note > p:first-child strong {
+    color: #0969da;
+}
+
+/* Tip - Green */
+.markdown-alert-tip {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    border-left-color: #1a7f37;
+}
+
+.markdown-alert-tip > p:first-child strong::before {
+    content: '💡 ';
+}
+
+.markdown-alert-tip > p:first-child strong {
+    color: #1a7f37;
+}
+
+/* Important - Purple */
+.markdown-alert-important {
+    background: #faf5ff;
+    border-color: #e9d5ff;
+    border-left-color: #8250df;
+}
+
+.markdown-alert-important > p:first-child strong::before {
+    content: '🟣 ';
+    font-size: 0.85em;
+}
+
+.markdown-alert-important > p:first-child strong {
+    color: #8250df;
+}
+
+/* Warning - Orange */
+.markdown-alert-warning,
+.faq-warnings {
+    background: #fffbf0;
+    border-color: #ffe4a3;
+    border-left-color: #ffb300;
+}
+
+.markdown-alert-warning > p:first-child strong::before,
+.faq-warning > p:first-child strong::before {
+    content: '⚠️ ';
+}
+
+/* Pending guidance uses stop sign */
+.faq-guidance > p:first-child strong::before {
+    content: '🛑 ';
+}
+
+.markdown-alert-warning > p:first-child strong,
+.faq-warning > p:first-child strong {
+    color: #e65100;
+}
+
+/* Caution - Red */
+.markdown-alert-caution {
+    background: #fef2f2;
+    border-color: #fecaca;
+    border-left-color: #cf222e;
+}
+
+.markdown-alert-caution > p:first-child strong::before {
+    content: '🛑 ';
+}
+
+.markdown-alert-caution > p:first-child strong {
+    color: #cf222e;
 }
 
 /* -------------------------------------------------------------------
@@ -755,8 +910,12 @@ blockquote {
 /* -------------------------------------------------------------------
    Curated Lists Styling
    ------------------------------------------------------------------- */
+/* Shared intro section style */
 .curated-lists-intro,
-.faq-list-intro {
+.faq-list-intro,
+.curated-list-description,
+.pending-guidance-intro,
+.home-intro {
     background: var(--background-light);
     padding: 20px;
     border-radius: 8px;
@@ -767,17 +926,29 @@ blockquote {
 .curated-lists-intro h2:first-child,
 .curated-lists-intro h3:first-child,
 .faq-list-intro h2:first-child,
-.faq-list-intro h3:first-child {
+.faq-list-intro h3:first-child,
+.curated-list-description h2:first-child,
+.curated-list-description h3:first-child,
+.pending-guidance-intro h2:first-child,
+.pending-guidance-intro h3:first-child,
+.home-intro h2:first-child,
+.home-intro h3:first-child {
     margin-top: 0;
 }
 
 .curated-lists-intro h2,
-.faq-list-intro h2 {
+.faq-list-intro h2,
+.curated-list-description h2,
+.pending-guidance-intro h2,
+.home-intro h2 {
     margin-top: 25px;
 }
 
 .curated-lists-intro h3,
-.faq-list-intro h3 {
+.faq-list-intro h3,
+.curated-list-description h3,
+.pending-guidance-intro h3,
+.home-intro h3 {
     margin-top: 20px;
 }
 
@@ -787,7 +958,9 @@ blockquote {
     margin: 30px 0;
 }
 
-.curated-list-card {
+/* Shared card style */
+.curated-list-card,
+.home-nav-card {
     background: white;
     border: 1px solid var(--border-color);
     border-radius: 12px;
@@ -800,7 +973,8 @@ blockquote {
     position: relative;
 }
 
-.curated-list-card:hover {
+.curated-list-card:hover,
+.home-nav-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     border-color: var(--primary-color);
@@ -821,6 +995,11 @@ blockquote {
 .curated-list-card:hover::after {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
+}
+
+/* Home nav card specific */
+.home-nav-card {
+    padding: 30px;
 }
 
 .curated-list-card--disabled {
@@ -911,26 +1090,6 @@ blockquote {
 }
 
 /* Individual curated list pages */
-.curated-list-description {
-    background: var(--background-light);
-    padding: 20px;
-    border-radius: 8px;
-    margin: 20px 0 30px 0;
-    border: 1px solid var(--border-color);
-}
-
-.curated-list-description h2:first-child,
-.curated-list-description h3:first-child {
-    margin-top: 0;
-}
-
-.curated-list-description h2 {
-    margin-top: 25px;
-}
-
-.curated-list-description h3 {
-    margin-top: 20px;
-}
 
 .list-meta {
     color: var(--text-light);
@@ -1039,25 +1198,7 @@ blockquote {
    Home Page Styling
    ------------------------------------------------------------------- */
 .home-intro {
-    background: var(--background-light);
-    padding: 20px;
-    border-radius: 8px;
-    margin: 20px 0 30px 0;
-    border: 1px solid var(--border-color);
     text-align: center;
-}
-
-.home-intro h2:first-child,
-.home-intro h3:first-child {
-    margin-top: 0;
-}
-
-.home-intro h2 {
-    margin-top: 25px;
-}
-
-.home-intro h3 {
-    margin-top: 20px;
 }
 
 .disclaimer {
@@ -1089,39 +1230,14 @@ blockquote {
     margin: 30px 0;
 }
 
-.home-nav-card {
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: var(--card-shadow);
-    transition: all 0.2s ease;
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    position: relative;
-}
-
-.home-nav-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    border-color: var(--primary-color);
-}
-
 .home-nav-card::after {
     content: '→';
-    position: absolute;
     top: 30px;
     right: 30px;
-    font-weight: bold;
-    color: var(--primary-color);
-    opacity: 0;
     transform: translateX(-10px);
-    transition: all 0.2s ease;
 }
 
 .home-nav-card:hover::after {
-    opacity: 1;
     transform: translateX(0);
 }
 
@@ -1207,26 +1323,6 @@ blockquote {
 /* -------------------------------------------------------------------
    Pending Guidance Index
    ------------------------------------------------------------------- */
-.pending-guidance-intro {
-    background: var(--background-light);
-    padding: 20px;
-    border-radius: 8px;
-    margin: 20px 0 30px 0;
-    border: 1px solid var(--border-color);
-}
-
-.pending-guidance-intro h2:first-child,
-.pending-guidance-intro h3:first-child {
-    margin-top: 0;
-}
-
-.pending-guidance-intro h2 {
-    margin-top: 25px;
-}
-
-.pending-guidance-intro h3 {
-    margin-top: 20px;
-}
 
 .pending-guidance-status-title {
     background: #ffebee;
