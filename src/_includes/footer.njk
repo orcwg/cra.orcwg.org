@@ -6,10 +6,10 @@
             {% if section.content %}
                 <p>{{ section.content | markdown | safe }}</p>
             {% endif %}
-            {% if section.links %}
+            {% if section.list %}
                 <ul>
-                {% for link in section.links %}
-                    <li><a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.text }}</a></li>
+                {% for item in section.list %}
+                    <li>{{ item | markdownInline | safe }}</li>
                 {% endfor %}
                 </ul>
             {% endif %}

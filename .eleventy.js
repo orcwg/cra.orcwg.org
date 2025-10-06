@@ -8,6 +8,12 @@ module.exports = function (eleventyConfig) {
     return markdownIt.render(content || "");
   });
 
+  // Add inline markdown filter (no paragraph wrapping)
+  eleventyConfig.addFilter("markdownInline", function (content) {
+    const markdownIt = require("markdown-it")();
+    return markdownIt.renderInline(content || "");
+  });
+
   // Add category title filter
   eleventyConfig.addFilter("categoryTitle", function (category) {
     return category

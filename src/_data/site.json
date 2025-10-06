@@ -11,39 +11,21 @@
         "content": "This website does not collect any personal information beyond what is [collected by GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages#data-collection) for hosting purposes."
       },
       {
-        "title": "Licenses",
-        "content": "Copyright ORC WG Contributors.",
-        "links": [
-          {
-            "text": "Content (CC-By 4.0)",
-            "url": "https://github.com/orcwg/cra-hub/blob/main/LICENSE.md"
-          },
-          {
-            "text": "Source code (Apache License 2.0)",
-            "url": "https://github.com/orcwg/cra.orcwg.org/blob/main/LICENSE"
-          }
+        "title": "Licenses & Trademarks",
+        "list": [
+          "Copyright [ORC WG Contributors](https://github.com/orcwg/cra-hub/graphs/contributors).",
+          "Content: [CC-By 4.0](https://github.com/orcwg/cra-hub/blob/main/LICENSE.md).",
+          "Source code: [Apache License 2.0](https://github.com/orcwg/cra.orcwg.org/blob/main/LICENSE).",
+          "ORC WG logo and Orc Mascot are trademarks of the Eclipse Foundation (see [policy](https://www.eclipse.org/legal/logo-guidelines/))."
         ]
-        
       },
       {
         "title": "Community Resources",
-        "links": [
-          {
-            "text": "CRA FAQ GitHub Repository",
-            "url": "https://github.com/orcwg/cra-hub/"
-          },
-          {
-            "text": "FAQ Task Force",
-            "url": "https://github.com/orcwg/cyber-resilience-sig/tree/main/task-forces/faq-tf"
-          },
-          {
-            "text": "Source code of this website",
-            "url": "https://github.com/orcwg/cra.orcwg.org/"
-          },
-          {
-            "text": "Open Regulatory Compliance Working Group",
-            "url": "https://orcwg.org"
-          }
+        "list": [
+          "[CRA FAQ GitHub Repository](https://github.com/orcwg/cra-hub/)",
+          "[FAQ Task Force](https://github.com/orcwg/cyber-resilience-sig/tree/main/task-forces/faq-tf)",
+          "[Website source code](https://github.com/orcwg/cra.orcwg.org/)",
+          "[Open Regulatory Compliance WG](https://orcwg.org)"
         ]
       }
     ]
