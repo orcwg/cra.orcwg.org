@@ -1,6 +1,6 @@
 # cra.orcwg.org
 
-Eleventy-based static site generator that creates a FAQ website for ORC WG's CRA Hub. The site consumes FAQ content from an external GitHub repository and generates a categorized FAQ website.
+Eleventy-based static site generator that creates a FAQ website for ORC WG's CRA Hub at [cra.orcwg.org](https://cra.orcwg.org/). The site consumes FAQ content from an external GitHub repository and generates a categorized FAQ website.
 
 ## Development Setup
 
