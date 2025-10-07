@@ -9,25 +9,39 @@ eleventyComputed:
   title: "{{ item.title or 'Pending Guidance' }}"
 ---
 
-<div class="pending-guidance-page">
-  <div class="pending-guidance-status-title">
-    <h2>🛑 Pending Guidance</h2>
-  </div>
+<article class="faq-main-content faq-main-content--guidance" data-status="{{ item.data.status }}">
+  <h1>{{ item.title or 'Pending Guidance' }}</h1>
+  {{ item.answer | markdown | safe }}
 
-  <div class="answer pending-guidance-content">
-    {{ (item.answer or item.content) | markdown | safe }}
-
-    {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
+  {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
+  <div class="related-faqs-section">
+    <h2>Related FAQs</h2>
     <div class="related-faqs-inline">
       <ul>
         {% for faq in item.relatedFaqs %}
-        <li><a href="/faq/{{ faq.category }}/{{ faq.filename | replace('.md', '') }}/">{{ faq.question | markdown | safe | striptags }}</a></li>
+        <li><a href="/faq/{{ faq.category }}/{{ faq.filename | replace('.md', '') }}/">{{ faq.question }}</a></li>
         {% endfor %}
       </ul>
     </div>
+  </div>
+  {% endif %}
+</article>
+
+<aside class="faq-warnings faq-warnings--guidance">
+  <div class="faq-warning faq-guidance">
+    <p><strong>Pending Guidance from EU Commission</strong></p>
+    <p>This topic requires additional clarification from the European Commission. {% if item.data.status == "requested" %}Guidance has been formally requested and is awaiting response.{% else %}Guidance is needed but has not yet been formally requested.{% endif %}</p>
+    {% if item.data["Commission-guidance-request"] %}
+    <p><a href="{{ item.data["Commission-guidance-request"] }}" target="_blank" rel="noopener">View formal guidance request →</a></p>
     {% endif %}
   </div>
+</aside>
 
+<button class="admin-toggle" onclick="toggleAdminMode()" title="Toggle admin information">
+  ✏️
+</button>
+
+<div class="admin-info" style="display: none;">
   {% if item.data["Related issue"] %}
   <div class="related-issue">
     <strong>Related issue:</strong> <a href="{{ item.data["Related issue"] }}">{{ item.data["Related issue"] }}</a>
@@ -39,4 +53,21 @@ eleventyComputed:
     <a href="https://github.com/orcwg/cra-hub/edit/main/faq/pending-guidance/{{ item.filename }}" target="_blank" rel="noopener">Edit this guidance request on GitHub</a>
   </div>
 </div>
+
+<script>
+function toggleAdminMode() {
+  const adminInfo = document.querySelector('.admin-info');
+  const button = document.querySelector('.admin-toggle');
+
+  if (adminInfo.style.display === 'none' || adminInfo.style.display === '') {
+    adminInfo.style.display = 'block';
+    button.classList.add('active');
+    button.title = 'Hide admin information';
+  } else {
+    adminInfo.style.display = 'none';
+    button.classList.remove('active');
+    button.title = 'Toggle admin information';
+  }
+}
+</script>
 

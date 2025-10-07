@@ -9,41 +9,35 @@ eleventyComputed:
   title: "{{ item.question }}"
 ---
 
-<article class="faq-main-content">
-  <header class="faq-question">
-    <h2>{{ item.question | markdown | safe }}</h2>
-  </header>
+<article class="faq-main-content" data-status="{{ item.status }}" {% if item.guidanceItem %}data-has-guidance="true"{% endif %}>
+  {{ item.content | markdown | safe }}
 
-  <div class="faq-answer">
-    {{ item.answer | markdown | safe }}
-
-    {% if item.status == "draft" or item.guidanceItem %}
-    <aside class="faq-warnings">
-      {% if item.status == "draft" %}
-      <div class="faq-warning">
-        <p><strong>This FAQ is a draft</strong> - it hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
-      </div>
-      {% endif %}
-
-      {% if item.guidanceItem %}
-      <div class="faq-warning faq-guidance">
-        <p><strong>Pending Guidance</strong></p>
-        {% if item.guidanceItem.guidanceText %}
-          <div class="guidance-content">
-            <p>This FAQ awaits commission guidance on:</p>
-            <p class="guidance-phrase">{{ item.guidanceItem.guidanceText | truncate(300) }}</p>
-          </div>
-          <div class="guidance-actions">
-            <a href="{{ item.guidanceItem.permalink }}" class="guidance-link">View full guidance request →</a>
-          </div>
-        {% else %}
-          <p>This FAQ awaits commission guidance.</p>
-        {% endif %}
-      </div>
-      {% endif %}
-    </aside>
+  {% if item.status == "draft" or item.guidanceItem %}
+  <aside class="faq-warnings">
+    {% if item.status == "draft" %}
+    <div class="faq-warning">
+      <p><strong>This FAQ is a draft</strong> - it hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
+    </div>
     {% endif %}
-  </div>
+
+    {% if item.guidanceItem %}
+    <div class="faq-warning faq-guidance">
+      <p><strong>Pending Guidance</strong></p>
+      {% if item.guidanceItem.guidanceText %}
+        <div class="guidance-content">
+          <p>This FAQ awaits commission guidance on:</p>
+          <p class="guidance-phrase">{{ item.guidanceItem.guidanceText | truncate(300) }}</p>
+        </div>
+        <div class="guidance-actions">
+          <a href="{{ item.guidanceItem.permalink }}" class="guidance-link">View full guidance request →</a>
+        </div>
+      {% else %}
+        <p>This FAQ awaits commission guidance.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </aside>
+  {% endif %}
 </article>
 
 <button class="admin-toggle" onclick="toggleAdminMode()" title="Toggle admin information">
