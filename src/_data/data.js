@@ -42,7 +42,16 @@ function parseMarkdown(rawContent, filename, category) {
 
   // Parse question from first # heading
   const titleMatch = content.match(/^#\s+(.+)$/m);
-  const question = titleMatch ? titleMatch[1] : null;
+  const questionRaw = titleMatch ? titleMatch[1] : null;
+
+  // Create plain text version for page titles (strip markdown formatting)
+  const questionPlain = questionRaw ? questionRaw
+    .replace(/\*\*(.+?)\*\*/g, '$1')  // Remove bold **text**
+    .replace(/\*(.+?)\*/g, '$1')      // Remove italic *text*
+    .replace(/_(.+?)_/g, '$1')        // Remove italic _text_
+    .replace(/`(.+?)`/g, '$1')        // Remove code `text`
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1') // Remove links [text](url)
+    : null;
 
   // Everything after the first heading is the answer
   let answer = null;
@@ -59,7 +68,8 @@ function parseMarkdown(rawContent, filename, category) {
     category,
     content: parsed.content,
     frontmatter: parsed.data,
-    question,
+    question: questionRaw,        // Keep markdown formatting for display
+    questionPlain: questionPlain,  // Plain text for page titles
     answer
   };
 }
@@ -114,7 +124,7 @@ function extractGuidanceText(content) {
 
 // Data enrichment for FAQ items
 function processFaqItem(parsedItem) {
-  const { frontmatter, filename, category, question, answer, content } = parsedItem;
+  const { frontmatter, filename, category, question, questionPlain, answer, content } = parsedItem;
 
   // Normalize status by removing emojis and converting to lowercase
   const status = frontmatter.Status.replace(/^(⚠️|🛑|✅)\s*/, '').trim().toLowerCase();
@@ -125,6 +135,7 @@ function processFaqItem(parsedItem) {
     ...frontmatter,
     status,
     question,
+    questionPlain,
     answer,
     content,
     hasAnswer: Boolean(answer && answer.trim().length > 0),
@@ -134,7 +145,7 @@ function processFaqItem(parsedItem) {
 
 // Data enrichment for guidance items
 function processGuidanceItem(parsedItem) {
-  const { frontmatter, filename, category, question, answer, content } = parsedItem;
+  const { frontmatter, filename, category, question, questionPlain, answer, content } = parsedItem;
 
   // Extract title from content if not in frontmatter
   let title = frontmatter.title || question;
@@ -149,16 +160,27 @@ function processGuidanceItem(parsedItem) {
     title = filename.replace('.md', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 
+  // Create plain text version for page titles
+  const titlePlain = title ? title
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    : null;
+
   return {
     filename,
     category,
     data: frontmatter,
     question,
+    questionPlain,
     answer,
     content,
     status: frontmatter.status,
     fullPath: parsedItem.fullPath,
     title,
+    titlePlain,
     guidanceText: extractGuidanceText(content),
     permalink: `/pending-guidance/${filename.replace('.md', '')}/`
   };

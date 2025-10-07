@@ -6,7 +6,7 @@ pagination:
   alias: item
 permalink: "/faq/{{ item.category }}/{{ item.filename | replace('.md', '') }}/"
 eleventyComputed:
-  title: "{{ item.question }}"
+  title: "{{ item.questionPlain }}"
 ---
 
 <article class="faq-main-content" data-status="{{ item.status }}" {% if item.guidanceItem %}data-has-guidance="true"{% endif %}>

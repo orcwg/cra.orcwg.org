@@ -6,7 +6,7 @@ pagination:
   alias: item
 permalink: "/pending-guidance/{{ item.filename | replace('.md', '') }}/"
 eleventyComputed:
-  title: "{{ item.title or 'Pending Guidance' }}"
+  title: "{{ item.titlePlain or 'Pending Guidance' }}"
 ---
 
 <article class="faq-main-content faq-main-content--guidance" data-status="{{ item.data.status }}">
@@ -19,7 +19,7 @@ eleventyComputed:
     <div class="related-faqs-inline">
       <ul>
         {% for faq in item.relatedFaqs %}
-        <li><a href="/faq/{{ faq.category }}/{{ faq.filename | replace('.md', '') }}/">{{ faq.question }}</a></li>
+        <li><a href="/faq/{{ faq.category }}/{{ faq.filename | replace('.md', '') }}/">{{ faq.question | markdownInline | safe }}</a></li>
         {% endfor %}
       </ul>
     </div>
