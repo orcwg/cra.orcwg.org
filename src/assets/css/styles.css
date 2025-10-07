@@ -58,16 +58,16 @@ h1 {
 }
 
 h2 {
-    font-size: 2em;
-    font-weight: 500;
+    font-size: 1.3em;
+    font-weight: 600;
     color: var(--primary-dark);
     margin: 40px 0 20px 0;
     letter-spacing: -0.02em;
 }
 
 h3 {
-    font-size: 1.5em;
-    font-weight: 500;
+    font-size: 1.1em;
+    font-weight: 600;
     color: var(--primary-dark);
     margin: 30px 0 15px 0;
 }
@@ -263,15 +263,17 @@ h3 {
     margin: 20px 0;
     box-shadow: var(--card-shadow);
     overflow: hidden;
-    padding: 0;
+    padding: 0 30px 25px 30px;
 }
 
 /* Style the first H1 as the question/title header */
 .faq-main-content > h1:first-child {
     background: var(--background-light);
-    padding: 25px 30px 15px 30px;
+    padding: 25px 0 15px 0;
     border-bottom: 1px solid var(--border-color);
-    margin: 0;
+    margin: 0 -30px 25px -30px;
+    padding-left: 30px;
+    padding-right: 30px;
     color: var(--primary-dark);
     font-size: 1.5em;
     font-weight: 600;
@@ -282,37 +284,6 @@ h3 {
 .faq-main-content--guidance > h1:first-child {
     background: #fffbf0;
     border-bottom-color: #ffe4a3;
-}
-
-/* All content after the first H1 is the "answer" area */
-.faq-main-content > h1:first-child ~ *:not(.faq-warnings):not(aside) {
-    padding-left: 30px;
-    padding-right: 30px;
-}
-
-/* First element after H1 gets top padding */
-.faq-main-content > h1:first-child + *:not(.faq-warnings):not(aside) {
-    padding-top: 25px;
-}
-
-/* Last direct child gets bottom padding (but not warnings/aside) */
-.faq-main-content > *:last-child:not(.faq-warnings):not(aside) {
-    padding-bottom: 25px;
-}
-
-/* Warnings are inset to align borders with text content */
-.faq-main-content > .faq-warnings {
-    margin-left: 30px;
-    margin-right: 30px;
-    margin-top: 25px;
-    margin-bottom: 25px;
-}
-
-.faq-main-content > .related-faqs-section {
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-top: 0;
-    padding-bottom: 0;
 }
 
 .faq-main-content p:first-of-type {
@@ -330,6 +301,18 @@ h3 {
 .faq-main-content > h1:first-child ~ h2:first-of-type,
 .faq-main-content > h1:first-child ~ h3:first-of-type {
     margin-top: 0;
+}
+
+/* Lists inside FAQ content (but not in special sections) */
+.faq-main-content ul:not(.related-faqs-inline ul),
+.faq-main-content ol:not(.related-faqs-inline ol) {
+    margin: 16px 0;
+    padding-left: 40px;
+    list-style-position: inside;
+}
+
+.faq-main-content li:not(.related-faqs-inline li) {
+    margin: 8px 0;
 }
 
 .faq-warnings--guidance {
@@ -826,7 +809,7 @@ blockquote,
     border-left-width: 3px;
     border-radius: 6px;
     margin: 16px 0;
-    padding: 25px 30px;
+    padding: 20px 30px;
     font-size: 0.92em;
     color: var(--text-color);
 }
