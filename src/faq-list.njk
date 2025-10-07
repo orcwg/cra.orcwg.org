@@ -19,7 +19,7 @@ permalink: "/faq-list/"
             <a href="{{ question.permalink }}" class="question-link">
               <span class="question-text">
                 {% if question.question %}
-                  {{ question.question | markdown | safe }}
+                  {{ question.question | markdownInline | safe }}
                 {% else %}
                   <span class="missing-content">{{ question.filename | replace('.md', '') | replace('-', ' ') | title }}</span>
                   <span class="content-note">⚠️ Missing question</span>
