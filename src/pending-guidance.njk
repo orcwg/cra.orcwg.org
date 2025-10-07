@@ -10,7 +10,19 @@ eleventyComputed:
 ---
 
 <article class="faq-main-content faq-main-content--guidance" data-status="{{ item.data.status }}">
-  <h1>{{ item.title or 'Pending Guidance' }}</h1>
+  <div class="guidance-header-integrated">
+    <div class="guidance-header-content">
+      <div class="guidance-header-prefix">Commission Guidance Request for:</div>
+      <h1>{{ item.title or 'Pending Guidance' }}</h1>
+    </div>
+    <div class="guidance-status-badge">
+      {% if item.data.status == "requested" %}
+        <span class="status-badge status-requested">✓ Formally Requested</span>
+      {% else %}
+        <span class="status-badge status-needed">⚠ Not Yet Requested</span>
+      {% endif %}
+    </div>
+  </div>
   {{ item.answer | markdown | safe }}
 
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}

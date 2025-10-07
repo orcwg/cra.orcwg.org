@@ -280,10 +280,46 @@ h3 {
     line-height: 1.3;
 }
 
-/* Guidance-specific styling for first H1 */
-.faq-main-content--guidance > h1:first-child {
-    background: #fffbf0;
-    border-bottom-color: #ffe4a3;
+/* Guidance-specific styling - integrated header */
+.guidance-header-integrated {
+    background: linear-gradient(135deg, #fff3e0 0%, #fffbf0 100%);
+    border-bottom: 2px solid #ff9800;
+    margin: 0 -30px 25px -30px;
+    padding: 20px 30px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.guidance-header-content {
+    flex: 3;
+}
+
+.guidance-header-prefix {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #e65100;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+}
+
+.guidance-header-integrated h1 {
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--primary-dark);
+    font-size: 1.5em;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.guidance-status-badge {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
 }
 
 .faq-main-content p:first-of-type {
@@ -597,6 +633,30 @@ h3 {
 /* -------------------------------------------------------------------
    Pending Guidance Page Styling
    ------------------------------------------------------------------- */
+
+/* Status badges for guidance pages */
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-badge.status-requested {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 2px solid #4caf50;
+}
+
+.status-badge.status-needed {
+    background: #fff8e1;
+    color: #e65100;
+    border: 2px solid #ff9800;
+}
+
 .pending-guidance-page {
     background: white;
     border-radius: 8px;
