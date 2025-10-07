@@ -114,7 +114,7 @@ function extractGuidanceText(content) {
 
 // Data enrichment for FAQ items
 function processFaqItem(parsedItem) {
-  const { frontmatter, filename, category, question, answer } = parsedItem;
+  const { frontmatter, filename, category, question, answer, content } = parsedItem;
 
   // Normalize status by removing emojis and converting to lowercase
   const status = frontmatter.Status.replace(/^(⚠️|🛑|✅)\s*/, '').trim().toLowerCase();
@@ -126,6 +126,7 @@ function processFaqItem(parsedItem) {
     status,
     question,
     answer,
+    content,
     hasAnswer: Boolean(answer && answer.trim().length > 0),
     permalink: `/faq/${category}/${filename.replace('.md', '')}/`
   };
