@@ -197,7 +197,15 @@ This is a paragraph with a [link](#), **bold text**, *italic text*, and `inline 
 ## Guidance Page Example
 
 <article class="faq-main-content faq-main-content--guidance">
-  <h1>Example Guidance Request</h1>
+  <div class="guidance-header-integrated">
+    <div class="guidance-header-content">
+      <div class="guidance-header-prefix">Commission Guidance Request for:</div>
+      <h1>Example Guidance Request</h1>
+    </div>
+    <div class="guidance-status-badge">
+      <span class="status-badge status-requested">✓ Formally Requested</span>
+    </div>
+  </div>
 
   <h2>Guidance needed</h2>
 
@@ -227,5 +235,32 @@ This is a paragraph with a [link](#), **bold text**, *italic text*, and `inline 
   <div class="faq-warning faq-guidance">
     <p><strong>Pending Guidance from EU Commission</strong></p>
     <p>This topic requires additional clarification from the European Commission. Guidance has been formally requested and is awaiting response.</p>
+  </div>
+</aside>
+
+---
+
+## Guidance Page Example (Not Yet Requested)
+
+<article class="faq-main-content faq-main-content--guidance">
+  <div class="guidance-header-integrated">
+    <div class="guidance-header-content">
+      <div class="guidance-header-prefix">Commission Guidance Request for:</div>
+      <h1>Another Guidance Request</h1>
+    </div>
+    <div class="guidance-status-badge">
+      <span class="status-badge status-needed">⚠ Not Yet Requested</span>
+    </div>
+  </div>
+
+  <h2>Guidance needed</h2>
+
+  <p>This is an example where guidance is needed but hasn't been formally requested yet.</p>
+</article>
+
+<aside class="faq-warnings faq-warnings--guidance">
+  <div class="faq-warning faq-guidance">
+    <p><strong>Pending Guidance from EU Commission</strong></p>
+    <p>This topic requires additional clarification from the European Commission. Guidance is needed but has not yet been formally requested.</p>
   </div>
 </aside>
