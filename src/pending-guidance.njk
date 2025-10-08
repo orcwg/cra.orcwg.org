@@ -10,44 +10,33 @@ eleventyComputed:
 ---
 
 <article class="faq-main-content faq-main-content--guidance" data-status="{{ item.data.status }}">
-  <div class="guidance-header-integrated">
-    <div class="guidance-header-content">
-      <div class="guidance-header-prefix">Commission Guidance Request for:</div>
-      <h1>{{ item.title or 'Pending Guidance' }}</h1>
+  <h1>
+    <div class="guidance-header-wrapper">
+      <div class="guidance-header-content">
+        <div class="guidance-header-prefix">Commission Guidance Request for:</div>
+        <div class="guidance-header-title">{{ item.title or 'Pending Guidance' }}</div>
+      </div>
+      <div class="guidance-status-badge">
+        {% if item.data.status == "requested" %}
+          <span class="status-badge status-requested">✓ Formally Requested</span>
+        {% else %}
+          <span class="status-badge status-needed">⚠ Not Yet Requested</span>
+        {% endif %}
+      </div>
     </div>
-    <div class="guidance-status-badge">
-      {% if item.data.status == "requested" %}
-        <span class="status-badge status-requested">✓ Formally Requested</span>
-      {% else %}
-        <span class="status-badge status-needed">⚠ Not Yet Requested</span>
-      {% endif %}
-    </div>
-  </div>
+  </h1>
   {{ item.answer | markdown | safe }}
 
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
-  <div class="related-faqs-section">
-    <h2>Related FAQs</h2>
-    <div class="related-faqs-inline">
-      <ul>
-        {% for faq in item.relatedFaqs %}
-        <li><a href="/faq/{{ faq.category }}/{{ faq.filename | replace('.md', '') }}/">{{ faq.question | markdownInline | safe }}</a></li>
-        {% endfor %}
-      </ul>
-    </div>
+  <div class="related-faqs-inline">
+    <ul>
+      {% for faq in item.relatedFaqs %}
+      <li><a href="/faq/{{ faq.category }}/{{ faq.filename | replace('.md', '') }}/">{{ faq.question | markdownInline | safe }}</a></li>
+      {% endfor %}
+    </ul>
   </div>
   {% endif %}
 </article>
-
-<aside class="faq-warnings faq-warnings--guidance">
-  <div class="faq-warning faq-guidance">
-    <p><strong>Pending Guidance from EU Commission</strong></p>
-    <p>This topic requires additional clarification from the European Commission. {% if item.data.status == "requested" %}Guidance has been formally requested and is awaiting response.{% else %}Guidance is needed but has not yet been formally requested.{% endif %}</p>
-    {% if item.data["Commission-guidance-request"] %}
-    <p><a href="{{ item.data["Commission-guidance-request"] }}" target="_blank" rel="noopener">View formal guidance request →</a></p>
-    {% endif %}
-  </div>
-</aside>
 
 <button class="admin-toggle" onclick="toggleAdminMode()" title="Toggle admin information">
   ✏️
