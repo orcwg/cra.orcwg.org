@@ -4,9 +4,9 @@ pagination:
   data: data.faqItems
   size: 1
   alias: item
-permalink: "/faq/{{ item.category }}/{{ item.filename | replace('.md', '') }}/"
+permalink: "{{ item.permalink }}"
 eleventyComputed:
-  title: "{{ item.questionPlain }}"
+  title: "{{ item.pageTitle }}"
 ---
 
 <article class="faq-main-content" data-status="{{ item.status }}" {% if item.guidanceItem %}data-has-guidance="true"{% endif %}>

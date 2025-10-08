@@ -4,9 +4,9 @@ pagination:
   data: data.guidance
   size: 1
   alias: item
-permalink: "/pending-guidance/{{ item.filename | replace('.md', '') }}/"
+permalink: "{{ item.permalink }}"
 eleventyComputed:
-  title: "{{ item.titlePlain or 'Pending Guidance' }}"
+  title: "{{ item.pageTitle }}"
 ---
 
 <article class="faq-main-content faq-main-content--guidance" data-status="{{ item.data.status }}">
@@ -25,13 +25,13 @@ eleventyComputed:
       </div>
     </div>
   </h1>
-  {{ item.answer | markdown | safe }}
+  {{ item.body | markdown | safe }}
 
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
   <div class="related-faqs-inline">
     <ul>
       {% for faq in item.relatedFaqs %}
-      <li><a href="/faq/{{ faq.category }}/{{ faq.filename | replace('.md', '') }}/">{{ faq.question | markdownInline | safe }}</a></li>
+      <li><a href="{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
       {% endfor %}
     </ul>
   </div>
