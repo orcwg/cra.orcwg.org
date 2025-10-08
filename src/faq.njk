@@ -10,7 +10,8 @@ eleventyComputed:
 ---
 
 <article class="faq-main-content" data-status="{{ item.status }}" {% if item.guidanceItem %}data-has-guidance="true"{% endif %}>
-  {{ item.content | markdown | safe }}
+  <h1>{{ item.question | markdownInline | safe }}</h1>
+  {{ item.answer | markdown | safe }}
 
   {% if item.status == "draft" or item.guidanceItem %}
   <aside class="faq-warnings">

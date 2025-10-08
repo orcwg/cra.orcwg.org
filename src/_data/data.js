@@ -137,7 +137,6 @@ function processFaqItem(parsedItem) {
     question,
     questionPlain,
     answer,
-    content,
     hasAnswer: Boolean(answer && answer.trim().length > 0),
     permalink: `/faq/${category}/${filename.replace('.md', '')}/`
   };
@@ -176,9 +175,7 @@ function processGuidanceItem(parsedItem) {
     question,
     questionPlain,
     answer,
-    content,
     status: frontmatter.status,
-    fullPath: parsedItem.fullPath,
     title,
     titlePlain,
     guidanceText: extractGuidanceText(content),
