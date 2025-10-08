@@ -18,7 +18,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addFilter("categoryTitle", function (category) {
     return category
       .replace(/-/g, ' ')
-      .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+      .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+      .replace(/\bcra\b/gi, 'CRA');
   });
 
   // Add a filter to get object keys
