@@ -11,7 +11,7 @@ const mdPlain = markdownIt().use(plainTextPlugin);
 
 // Helper function to convert markdown to plain text for page titles
 function markdownToPlainText(markdownText) {
-  if (!markdownText) return null;
+  if (!markdownText) return "";
   mdPlain.render(markdownText);
   return mdPlain.plainText;
 }
