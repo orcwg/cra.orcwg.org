@@ -1,9 +1,20 @@
 const fs = require("fs");
 const path = require("path");
 const matter = require("gray-matter");
+const markdownIt = require("markdown-it");
+const plainTextPlugin = require("markdown-it-plain-text");
 
 const CACHE_DIR = path.join(__dirname, "..", "..", "_cache", "faq");
 const OUTPUT_DIR = path.join(__dirname, "..", "..", "_tmp");
+
+const mdPlain = markdownIt().use(plainTextPlugin);
+
+// Helper function to convert markdown to plain text for page titles
+function markdownToPlainText(markdownText) {
+  if (!markdownText) return "";
+  mdPlain.render(markdownText);
+  return mdPlain.plainText;
+}
 
 // Pure file system operations
 function walkAllFiles(dir, category = "") {
@@ -44,23 +55,22 @@ function parseMarkdown(rawContent, filename, category) {
   const titleMatch = content.match(/^#\s+(.+)$/m);
   const question = titleMatch ? titleMatch[1] : null;
 
-  // Everything after the first heading is the answer
-  let answer = null;
+  // Everything after the first heading is the body content
+  let body = null;
   if (titleMatch) {
     const afterTitle = content.substring(content.indexOf(titleMatch[0]) + titleMatch[0].length).trim();
-    answer = afterTitle;
+    body = afterTitle;
   } else {
-    // Fallback: treat entire content as answer if no title found
-    answer = content;
+    // Fallback: treat entire content as body if no title found
+    body = content;
   }
 
   return {
     filename,
     category,
-    content: parsed.content,
     frontmatter: parsed.data,
     question,
-    answer
+    body
   };
 }
 
@@ -114,7 +124,7 @@ function extractGuidanceText(content) {
 
 // Data enrichment for FAQ items
 function processFaqItem(parsedItem) {
-  const { frontmatter, filename, category, question, answer } = parsedItem;
+  const { frontmatter, filename, category, question, body } = parsedItem;
 
   // Normalize status by removing emojis and converting to lowercase
   const status = frontmatter.Status.replace(/^(⚠️|🛑|✅)\s*/, '').trim().toLowerCase();
@@ -125,24 +135,19 @@ function processFaqItem(parsedItem) {
     ...frontmatter,
     status,
     question,
-    answer,
-    hasAnswer: Boolean(answer && answer.trim().length > 0),
+    answer: body,
+    pageTitle: markdownToPlainText(question),
+    hasAnswer: Boolean(body && body.trim().length > 0),
     permalink: `/faq/${category}/${filename.replace('.md', '')}/`
   };
 }
 
 // Data enrichment for guidance items
 function processGuidanceItem(parsedItem) {
-  const { frontmatter, filename, category, question, answer, content } = parsedItem;
+  const { frontmatter, filename, category, question, body } = parsedItem;
 
-  // Extract title from content if not in frontmatter
+  // Extract title - prefer frontmatter, fallback to question, then filename
   let title = frontmatter.title || question;
-  if (!title && content) {
-    const titleMatch = content.match(/^#\s+(.+)$/m);
-    if (titleMatch) {
-      title = titleMatch[1];
-    }
-  }
   if (!title) {
     // Fallback to filename
     title = filename.replace('.md', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -152,13 +157,11 @@ function processGuidanceItem(parsedItem) {
     filename,
     category,
     data: frontmatter,
-    question,
-    answer,
-    content,
     status: frontmatter.status,
-    fullPath: parsedItem.fullPath,
     title,
-    guidanceText: extractGuidanceText(content),
+    body,
+    pageTitle: markdownToPlainText(title),
+    guidanceText: extractGuidanceText(body),
     permalink: `/pending-guidance/${filename.replace('.md', '')}/`
   };
 }
@@ -191,7 +194,8 @@ function enrichWithRelatedFaqs(guidanceItems, faqItems) {
         relatedFaqs.push({
           category: faqItem.category,
           filename: faqItem.filename,
-          question: faqItem.question
+          question: faqItem.question,
+          permalink: faqItem.permalink
         });
       }
     }
