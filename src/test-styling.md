@@ -267,17 +267,9 @@ This is a paragraph with a [link](#), **bold text**, *italic text*, and `inline 
 
 ---
 
-## Guidance Status Badges
+## Guidance Status Tracker
 
-The site uses a date-based status system for guidance requests:
-
-<div style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0;">
-  <span class="status-badge status-in-preparation">In preparation</span>
-  <span class="status-badge status-ready">Ready on 10.01.2025</span>
-  <span class="status-badge status-sent">Sent on 15.01.2025</span>
-  <span class="status-badge status-acknowledged">Acknowledged on 18.01.2025</span>
-  <span class="status-badge status-answered">Answered on 20.01.2025</span>
-</div>
+The site uses a delivery-style tracking component for guidance requests, showing progress through 4 stages: Ready, Sent, Acknowledged, and Answered. Completed steps show in teal, the current step in orange, and future steps in gray. Hover over dots to see dates.
 
 ---
 
@@ -293,20 +285,49 @@ Status indicators appear in the FAQ list when admin mode is enabled:
 
 ---
 
-## Guidance Page Example (Request Sent)
+## Guidance Page with Full Tracker (in header)
 
-<article class="faq-main-content faq-main-content--guidance" data-status="requested">
+<article class="faq-main-content faq-main-content--guidance">
   <h1>
     <div class="guidance-header-wrapper">
       <div class="guidance-header-content">
         <div class="guidance-header-prefix">Commission Guidance Request for:</div>
         <div class="guidance-header-title">Example Guidance Request</div>
       </div>
-      <div class="guidance-status-badge">
-        <span class="status-badge status-requested">✓ Formally Requested</span>
+      <div class="guidance-status-tracker">
+        <div class="tracker-line">
+          <div class="tracker-progress" style="width: 50%;"></div>
+          <div class="tracker-steps">
+            <div class="tracker-step completed">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">In preparation</div>
+              <div class="tracker-tooltip">05.01.2025</div>
+            </div>
+            <div class="tracker-step completed">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">Ready</div>
+              <div class="tracker-tooltip">10.01.2025</div>
+            </div>
+            <div class="tracker-step active">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">Sent</div>
+              <div class="tracker-tooltip">15.01.2025</div>
+            </div>
+            <div class="tracker-step">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">Acknowledged</div>
+              <div class="tracker-tooltip">Not yet</div>
+            </div>
+            <div class="tracker-step">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">Answered</div>
+              <div class="tracker-tooltip">Not yet</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </h1>
 
   <h2>Guidance needed</h2>
 
@@ -332,44 +353,73 @@ Status indicators appear in the FAQ list when admin mode is enabled:
   </div>
 </article>
 
-<aside class="faq-warnings faq-warnings--guidance">
-  <div class="faq-warning faq-guidance">
-    <p><strong>Pending Guidance from EU Commission</strong></p>
-    <div class="guidance-status-info">
-      <span class="status-badge status-sent">Sent on 15.01.2025</span>
-    </div>
-    <p>This topic requires additional clarification from the European Commission. Guidance has been formally requested and is awaiting response.</p>
-  </div>
-</aside>
-
 ---
 
-## Guidance Page Example (Ready)
+## Guidance Page with Full Width Tracker (above title)
 
-<article class="faq-main-content faq-main-content--guidance" data-status="needed">
+<article class="faq-main-content faq-main-content--guidance">
+  <div class="guidance-status-tracker-compact">
+    <div class="tracker-line">
+      <div class="tracker-progress" style="width: 0%;"></div>
+      <div class="tracker-steps">
+        <div class="tracker-step active">
+          <div class="tracker-dot"></div>
+          <div class="tracker-label">In preparation</div>
+          <div class="tracker-tooltip">02.01.2025</div>
+        </div>
+        <div class="tracker-step">
+          <div class="tracker-dot"></div>
+          <div class="tracker-label">Ready</div>
+          <div class="tracker-tooltip">Not yet</div>
+        </div>
+        <div class="tracker-step">
+          <div class="tracker-dot"></div>
+          <div class="tracker-label">Sent</div>
+          <div class="tracker-tooltip">Not yet</div>
+        </div>
+        <div class="tracker-step">
+          <div class="tracker-dot"></div>
+          <div class="tracker-label">Acknowledged</div>
+          <div class="tracker-tooltip">Not yet</div>
+        </div>
+        <div class="tracker-step">
+          <div class="tracker-dot"></div>
+          <div class="tracker-label">Answered</div>
+          <div class="tracker-tooltip">Not yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <h1>
     <div class="guidance-header-wrapper">
       <div class="guidance-header-content">
         <div class="guidance-header-prefix">Commission Guidance Request for:</div>
-        <div class="guidance-header-title">Another Guidance Request</div>
-      </div>
-      <div class="guidance-status-badge">
-        <span class="status-badge status-needed">⚠ Not Yet Requested</span>
+        <div class="guidance-header-title">Another Example Request</div>
       </div>
     </div>
-  </div>
+  </h1>
 
   <h2>Guidance needed</h2>
 
-  <p>This is an example where guidance is ready to be sent.</p>
-</article>
+  <p>This is an example showing the full width tracker above the h1 title, at the very beginning stage (In preparation).</p>
 
-<aside class="faq-warnings faq-warnings--guidance">
-  <div class="faq-warning faq-guidance">
-    <p><strong>Pending Guidance from EU Commission</strong></p>
-    <div class="guidance-status-info">
-      <span class="status-badge status-ready">Ready on 10.01.2025</span>
-    </div>
-    <p>This topic requires additional clarification from the European Commission. The guidance request is ready to be sent.</p>
+  <h2>Why this matters</h2>
+
+  <p>This distinction is crucial for determining:</p>
+
+  <ul>
+    <li>Whether the warm color theme applies correctly</li>
+    <li>Whether heading hierarchy is maintained</li>
+    <li>Whether list bullets render inside the content area</li>
+  </ul>
+
+  <h2>Related FAQs</h2>
+
+  <div class="related-faqs-inline">
+    <ul>
+      <li><a href="#">Example related FAQ with <em>italics</em></a></li>
+      <li><a href="#">Another related FAQ with <strong>bold text</strong></a></li>
+    </ul>
   </div>
-</aside>
+</article>
