@@ -91,7 +91,7 @@ function testFunction() {
 
 <div class="faq-index">
   <section class="category-section">
-    <h2 class="category-title">Test Category</h2>
+    <h2 class="category-title">Test Category (Regular Links)</h2>
     <ul class="question-list">
       <li class="question-item">
         <a href="#" class="question-link">
@@ -117,6 +117,94 @@ function testFunction() {
     </ul>
   </section>
 </div>
+
+---
+
+## FAQ Accordion Block
+
+<div class="faq-category faq-category--accordion">
+  <h2 class="category-title">Test Category (Accordion)</h2>
+
+  <div class="faq-items">
+    <div class="faq-item">
+      <button class="faq-trigger" onclick="toggleAccordion(this)">
+        <span class="question-text">What happens when you click on an accordion question?</span>
+        <span class="accordion-icon">▼</span>
+      </button>
+      <div class="faq-content">
+        <div class="faq-answer">
+          <p>When you click on an accordion question, the answer expands smoothly below the question. This allows for a more compact display of multiple FAQs.</p>
+
+          <blockquote class="markdown-alert markdown-alert-tip">
+            <p><strong>Tip</strong><br>
+            Accordions are great for organizing many related questions in a single category.</p>
+          </blockquote>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-trigger" onclick="toggleAccordion(this)">
+        <span class="question-text">Can you put callouts in accordion answers?</span>
+        <span class="accordion-icon">▼</span>
+      </button>
+      <div class="faq-content">
+        <div class="faq-answer">
+          <p>Yes! Accordion answers support all the same styling as regular FAQ answers.</p>
+
+          <blockquote class="markdown-alert markdown-alert-warning">
+            <p><strong>Warning</strong><br>
+            This is a warning callout inside an accordion answer.</p>
+          </blockquote>
+
+          <p>You can also include code blocks:</p>
+          <pre><code>const example = "accordion code";</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-trigger" onclick="toggleAccordion(this)">
+        <span class="question-text">What's the third accordion item?</span>
+        <span class="accordion-icon">▼</span>
+      </button>
+      <div class="faq-content">
+        <div class="faq-answer">
+          <p>This is the third accordion item. Notice how only one can be open at a time.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleAccordion(trigger) {
+  const item = trigger.closest('.faq-item');
+  const content = item.querySelector('.faq-content');
+  const icon = trigger.querySelector('.accordion-icon');
+  const isOpen = item.classList.contains('open');
+
+  // Close all other items
+  document.querySelectorAll('.faq-item.open').forEach(openItem => {
+    if (openItem !== item) {
+      openItem.classList.remove('open');
+      openItem.querySelector('.faq-content').style.maxHeight = null;
+      openItem.querySelector('.accordion-icon').style.transform = 'rotate(0deg)';
+    }
+  });
+
+  // Toggle current item
+  if (isOpen) {
+    item.classList.remove('open');
+    content.style.maxHeight = null;
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    item.classList.add('open');
+    content.style.maxHeight = content.scrollHeight + 'px';
+    icon.style.transform = 'rotate(180deg)';
+  }
+}
+</script>
 
 ---
 

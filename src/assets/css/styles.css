@@ -254,6 +254,188 @@ h3 {
 }
 
 /* -------------------------------------------------------------------
+   FAQ Component (List and Accordion modes)
+   ------------------------------------------------------------------- */
+
+/* FAQ List Container - wraps all categories */
+.faq-list-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    margin: 20px 0;
+}
+
+/* FAQ Category container */
+.faq-category {
+    padding: 20px 0;
+}
+
+/* FAQ Items container */
+.faq-items {
+    margin-top: 20px;
+}
+
+/* Individual FAQ Item */
+.faq-item {
+    margin-bottom: 8px;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+/* List mode styling */
+.faq-category--list .faq-item {
+    padding: 0;
+}
+
+.faq-category--list .faq-trigger {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--background-light);
+    border-radius: 6px;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    font-weight: 500;
+    font-size: 0.95em;
+    min-height: 60px;
+    width: 100%;
+}
+
+.faq-category--list .faq-trigger:hover {
+    background: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 15px rgba(28, 177, 209, 0.1);
+    transform: translateY(-1px);
+    color: var(--primary-color);
+}
+
+.faq-category--list .faq-trigger::after {
+    content: '→';
+    margin-left: auto;
+    font-weight: bold;
+    color: var(--primary-color);
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.2s ease;
+}
+
+.faq-category--list .faq-trigger:hover::after {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Accordion mode styling */
+.faq-category--accordion .faq-item {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.faq-category--accordion .faq-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.faq-category--accordion .faq-item.open {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.faq-category--accordion .faq-trigger {
+    width: 100%;
+    padding: 18px 20px;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    font-size: 1em;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.faq-category--accordion .faq-trigger:hover {
+    background: rgba(28, 177, 209, 0.03);
+}
+
+.faq-category--accordion .faq-item.open .faq-trigger {
+    background: rgba(28, 177, 209, 0.05);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Question text styling */
+.faq-trigger .question-text {
+    flex: 1;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.faq-trigger .question-text p {
+    margin: 0;
+    display: inline;
+}
+
+/* Accordion icon */
+.accordion-icon {
+    flex-shrink: 0;
+    color: var(--primary-color);
+    font-size: 0.8em;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+    margin-top: 2px;
+}
+
+/* FAQ Content (accordion only) */
+.faq-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.faq-item.open .faq-content {
+    border-top: 1px solid var(--border-color);
+}
+
+/* FAQ Answer */
+.faq-answer {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.faq-answer p:first-child {
+    margin-top: 0;
+}
+
+.faq-answer p:last-child {
+    margin-bottom: 0;
+}
+
+/* FAQ Admin Info */
+.faq-admin-info {
+    padding: 15px 20px;
+    background: var(--background-light);
+    border-top: 1px solid var(--border-color);
+}
+
+.faq-admin-info .edit-on-github,
+.faq-admin-info .related-issue,
+.faq-admin-info .pending-guidance-link,
+.faq-admin-info .faq-link {
+    margin-bottom: 10px;
+}
+
+.faq-admin-info .faq-link:last-child {
+    margin-bottom: 0;
+}
+
+/* -------------------------------------------------------------------
    FAQ Question and Answer Content
    ------------------------------------------------------------------- */
 .faq-main-content {
