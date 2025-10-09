@@ -602,10 +602,18 @@ h3 {
     border: 1px solid #ddd;
 }
 
+.status-indicator::before {
+    content: attr(data-status);
+}
+
 .status-indicator.status-draft {
     background: #fff3e0 !important;
     color: #f57c00 !important;
     border: 1px solid #ffcc02 !important;
+}
+
+.status-indicator.status-draft::before {
+    content: "⚠️ Draft";
 }
 
 .status-indicator.status-pending-guidance {
@@ -614,10 +622,18 @@ h3 {
     border: 1px solid #ffcdd2 !important;
 }
 
+.status-indicator.status-pending-guidance::before {
+    content: "🛑 Pending Guidance";
+}
+
 .status-indicator.status-approved {
-    background: #e0f2f5 !important;
-    color: var(--primary-dark) !important;
-    border: 1px solid #b3dfe6 !important;
+    background: #e8f5e8 !important;
+    color: #2e7d32 !important;
+    border: 1px solid #c8e6c9 !important;
+}
+
+.status-indicator.status-approved::before {
+    content: "✅ Approved";
 }
 
 .missing-answer-indicator {

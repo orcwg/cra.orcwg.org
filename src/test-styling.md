@@ -97,6 +97,9 @@ function testFunction() {
         <a href="#" class="question-link">
           <span class="question-text">
             <p>What is the first test question?</p>
+            <div class="admin-indicators" style="display: block;">
+              <span class="status-indicator status-draft"></span>
+            </div>
           </span>
         </a>
       </li>
@@ -104,6 +107,10 @@ function testFunction() {
         <a href="#" class="question-link">
           <span class="question-text">
             <p>What is the second test question?</p>
+            <div class="admin-indicators" style="display: block;">
+              <span class="status-indicator status-approved"></span>
+              <span class="pending-guidance-indicator">🛑 Guidance Pending</span>
+            </div>
           </span>
         </a>
       </li>
@@ -111,6 +118,9 @@ function testFunction() {
         <a href="#" class="question-link">
           <span class="question-text">
             <p>What is the third test question?</p>
+            <div class="admin-indicators" style="display: block;">
+              <span class="status-indicator status-approved"></span>
+            </div>
           </span>
         </a>
       </li>
