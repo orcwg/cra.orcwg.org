@@ -9,39 +9,15 @@ permalink: "/faq-list/"
   <p><strong>Note:</strong> This list includes all FAQs regardless of completion status. Some entries may be drafts, have missing content, or require additional guidance. For curated collections of complete FAQs, visit the <a href="/lists/">Curated Lists</a> section.</p>
 </div>
 
-<div class="faq-index">
+<div class="faq-list-container">
   {% for category, questions in data.faqsByCategory %}
-    <section class="category-section">
-      <h2 class="category-title">{{ category | categoryTitle }}</h2>
-      <ul class="question-list">
-        {% for question in questions %}
-          <li class="question-item">
-            <a href="{{ question.permalink }}" class="question-link">
-              <span class="question-text">
-                {% if question.question %}
-                  {{ question.question | markdownInline | safe }}
-                {% else %}
-                  <span class="missing-content">{{ question.filename | replace('.md', '') | replace('-', ' ') | title }}</span>
-                  <span class="content-note">⚠️ Missing question</span>
-                {% endif %}
-                <div class="admin-indicators" style="display: none;">
-                  {% if question.status == "draft" %}
-                    <span class="status-indicator status-draft">⚠️ Draft</span>
-                  {% elif question.status == "pending guidance" %}
-                    <span class="status-indicator status-pending-guidance">🛑 Pending Guidance</span>
-                  {% elif question.status == "approved" %}
-                    <span class="status-indicator status-approved">✅ Approved</span>
-                  {% endif %}
-                  {% if not question.hasAnswer %}
-                    <span class="missing-answer-indicator">⚠️ Missing answer</span>
-                  {% endif %}
-                </div>
-              </span>
-            </a>
-          </li>
-        {% endfor %}
-      </ul>
-    </section>
+    {% set componentData = {
+      title: category | categoryTitle,
+      faqs: questions,
+      mode: "list",
+      showAdminIndicators: false
+    } %}
+    {% include "components/faq-list.njk" %}
   {% endfor %}
 </div>
 
@@ -50,11 +26,44 @@ permalink: "/faq-list/"
 </button>
 
 <script>
+function toggleAccordion(trigger) {
+  const item = trigger.closest('.faq-item');
+  const content = item.querySelector('.faq-content');
+  const icon = trigger.querySelector('.accordion-icon');
+  const isOpen = item.classList.contains('open');
+
+  // Close all other items in this category
+  const category = item.closest('.faq-category');
+  category.querySelectorAll('.faq-item.open').forEach(openItem => {
+    if (openItem !== item) {
+      openItem.classList.remove('open');
+      openItem.querySelector('.faq-content').style.maxHeight = null;
+      openItem.querySelector('.accordion-icon').style.transform = 'rotate(0deg)';
+    }
+  });
+
+  // Toggle current item
+  if (isOpen) {
+    item.classList.remove('open');
+    content.style.maxHeight = null;
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    item.classList.add('open');
+    content.style.maxHeight = content.scrollHeight + 'px';
+    icon.style.transform = 'rotate(180deg)';
+  }
+}
+
 function toggleFaqListAdminMode() {
+  const adminInfos = document.querySelectorAll('.faq-admin-info');
   const adminIndicators = document.querySelectorAll('.admin-indicators');
   const button = document.querySelector('.admin-toggle');
 
-  const isHidden = adminIndicators[0]?.style.display === 'none' || adminIndicators[0]?.style.display === '';
+  const isHidden = adminInfos[0]?.style.display === 'none' || adminInfos[0]?.style.display === '';
+
+  adminInfos.forEach(info => {
+    info.style.display = isHidden ? 'block' : 'none';
+  });
 
   adminIndicators.forEach(indicator => {
     indicator.style.display = isHidden ? 'block' : 'none';
