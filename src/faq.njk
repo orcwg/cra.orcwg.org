@@ -24,6 +24,11 @@ eleventyComputed:
     {% if item.guidanceItem %}
     <div class="faq-warning faq-guidance">
       <p><strong>Pending Guidance</strong></p>
+      {% if item.guidanceItem.guidanceStatusText %}
+        <div class="guidance-status-info">
+          <span class="status-badge status-{{ item.guidanceItem.guidanceStatus }}">{{ item.guidanceItem.guidanceStatusText }}</span>
+        </div>
+      {% endif %}
       {% if item.guidanceItem.guidanceText %}
         <div class="guidance-content">
           <p>This FAQ awaits commission guidance on:</p>

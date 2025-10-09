@@ -153,6 +153,24 @@ function processGuidanceItem(parsedItem) {
     title = filename.replace('.md', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 
+  // Compute guidance status based on dates
+  let guidanceStatus = 'in-preparation';
+  let guidanceStatusText = 'In preparation';
+
+  if (frontmatter.Answered) {
+    guidanceStatus = 'answered';
+    guidanceStatusText = `Answered on ${formatDate(frontmatter.Answered)}`;
+  } else if (frontmatter.Acknowledged) {
+    guidanceStatus = 'acknowledged';
+    guidanceStatusText = `Acknowledged on ${formatDate(frontmatter.Acknowledged)}`;
+  } else if (frontmatter.Sent) {
+    guidanceStatus = 'sent';
+    guidanceStatusText = `Sent on ${formatDate(frontmatter.Sent)}`;
+  } else if (frontmatter.Ready) {
+    guidanceStatus = 'ready';
+    guidanceStatusText = `Ready on ${formatDate(frontmatter.Ready)}`;
+  }
+
   return {
     filename,
     category,
@@ -162,8 +180,24 @@ function processGuidanceItem(parsedItem) {
     body,
     pageTitle: markdownToPlainText(title),
     guidanceText: extractGuidanceText(body),
-    permalink: `/pending-guidance/${filename.replace('.md', '')}/`
+    permalink: `/pending-guidance/${filename.replace('.md', '')}/`,
+    guidanceStatus,
+    guidanceStatusText,
+    ready: frontmatter.Ready,
+    sent: frontmatter.Sent,
+    acknowledged: frontmatter.Acknowledged,
+    answered: frontmatter.Answered
   };
+}
+
+// Helper function to format dates
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
 }
 
 // Cross-reference enrichment

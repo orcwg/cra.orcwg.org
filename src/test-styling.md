@@ -214,12 +214,15 @@ Regular paragraph after the callout.
 ### Headings
 
 # Heading 1
+
 ## Heading 2
+
 ### Heading 3
 
 ### Lists
 
 **Unordered List:**
+
 - First item
 - Second item
   - Nested item
@@ -227,6 +230,7 @@ Regular paragraph after the callout.
 - Third item
 
 **Ordered List:**
+
 1. First step
 2. Second step
 3. Third step
@@ -263,7 +267,33 @@ This is a paragraph with a [link](#), **bold text**, *italic text*, and `inline 
 
 ---
 
-## Guidance Page Example (Formally Requested)
+## Guidance Status Badges
+
+The site uses a date-based status system for guidance requests:
+
+<div style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0;">
+  <span class="status-badge status-in-preparation">In preparation</span>
+  <span class="status-badge status-ready">Ready on 10.01.2025</span>
+  <span class="status-badge status-sent">Sent on 15.01.2025</span>
+  <span class="status-badge status-acknowledged">Acknowledged on 18.01.2025</span>
+  <span class="status-badge status-answered">Answered on 20.01.2025</span>
+</div>
+
+---
+
+## FAQ Status Indicators
+
+Status indicators appear in the FAQ list when admin mode is enabled:
+
+<div class="admin-indicators" style="display: block; margin: 20px 0;">
+  <span class="status-indicator status-draft"></span>
+  <span class="status-indicator status-approved"></span>
+  <span class="status-indicator status-pending-guidance"></span>
+</div>
+
+---
+
+## Guidance Page Example (Request Sent)
 
 <article class="faq-main-content faq-main-content--guidance" data-status="requested">
   <h1>
@@ -276,7 +306,7 @@ This is a paragraph with a [link](#), **bold text**, *italic text*, and `inline 
         <span class="status-badge status-requested">✓ Formally Requested</span>
       </div>
     </div>
-  </h1>
+  </div>
 
   <h2>Guidance needed</h2>
 
@@ -302,9 +332,19 @@ This is a paragraph with a [link](#), **bold text**, *italic text*, and `inline 
   </div>
 </article>
 
+<aside class="faq-warnings faq-warnings--guidance">
+  <div class="faq-warning faq-guidance">
+    <p><strong>Pending Guidance from EU Commission</strong></p>
+    <div class="guidance-status-info">
+      <span class="status-badge status-sent">Sent on 15.01.2025</span>
+    </div>
+    <p>This topic requires additional clarification from the European Commission. Guidance has been formally requested and is awaiting response.</p>
+  </div>
+</aside>
+
 ---
 
-## Guidance Page Example (Not Yet Requested)
+## Guidance Page Example (Ready)
 
 <article class="faq-main-content faq-main-content--guidance" data-status="needed">
   <h1>
@@ -317,13 +357,19 @@ This is a paragraph with a [link](#), **bold text**, *italic text*, and `inline 
         <span class="status-badge status-needed">⚠ Not Yet Requested</span>
       </div>
     </div>
-  </h1>
+  </div>
 
   <h2>Guidance needed</h2>
 
-  <p>This is an example where guidance is needed but hasn't been formally requested yet.</p>
-
-  <h2>Why this matters</h2>
-
-  <p>Understanding the status badge styling helps ensure visual consistency across the site.</p>
+  <p>This is an example where guidance is ready to be sent.</p>
 </article>
+
+<aside class="faq-warnings faq-warnings--guidance">
+  <div class="faq-warning faq-guidance">
+    <p><strong>Pending Guidance from EU Commission</strong></p>
+    <div class="guidance-status-info">
+      <span class="status-badge status-ready">Ready on 10.01.2025</span>
+    </div>
+    <p>This topic requires additional clarification from the European Commission. The guidance request is ready to be sent.</p>
+  </div>
+</aside>
