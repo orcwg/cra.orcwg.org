@@ -59,6 +59,15 @@ This is an Eleventy site that acts as a content processor and renderer for exter
 - Each YAML file creates a new list page at `/lists/{filename}/`
 - Lists reference specific FAQs by category and filename
 - Automatic quality control filters incomplete/draft content
+- Lists are displayed using accordion components for compact navigation
+
+### FAQ List Component
+
+- Reusable component at `src/_includes/components/faq-list.njk`
+- Supports two display modes:
+  - **List mode**: Simple links to individual FAQ pages
+  - **Accordion mode**: Expandable/collapsible items with inline answers
+- Used in both the main FAQ list page and curated list pages
 
 ### Site Configuration
 
@@ -79,6 +88,7 @@ This is an Eleventy site that acts as a content processor and renderer for exter
 - **Template Engine**: Nunjucks
 - **Markdown Processing**: markdown-it
 - **Diagram Support**: Mermaid.js
+- **JavaScript**: Custom scripts in `src/assets/js/site.js` for interactive components
 
 ## Development Resources
 

@@ -177,35 +177,6 @@ function testFunction() {
   </div>
 </div>
 
-<script>
-function toggleAccordion(trigger) {
-  const item = trigger.closest('.faq-item');
-  const content = item.querySelector('.faq-content');
-  const icon = trigger.querySelector('.accordion-icon');
-  const isOpen = item.classList.contains('open');
-
-  // Close all other items
-  document.querySelectorAll('.faq-item.open').forEach(openItem => {
-    if (openItem !== item) {
-      openItem.classList.remove('open');
-      openItem.querySelector('.faq-content').style.maxHeight = null;
-      openItem.querySelector('.accordion-icon').style.transform = 'rotate(0deg)';
-    }
-  });
-
-  // Toggle current item
-  if (isOpen) {
-    item.classList.remove('open');
-    content.style.maxHeight = null;
-    icon.style.transform = 'rotate(0deg)';
-  } else {
-    item.classList.add('open');
-    content.style.maxHeight = content.scrollHeight + 'px';
-    icon.style.transform = 'rotate(180deg)';
-  }
-}
-</script>
-
 ---
 
 ## Callouts in Regular Content (Outside FAQ Box)
@@ -282,18 +253,20 @@ This is a paragraph with a [link](#), **bold text**, *italic text*, and `inline 
 
 ---
 
-## Guidance Page Example
+## Guidance Page Example (Formally Requested)
 
-<article class="faq-main-content faq-main-content--guidance">
-  <div class="guidance-header-integrated">
-    <div class="guidance-header-content">
-      <div class="guidance-header-prefix">Commission Guidance Request for:</div>
-      <h1>Example Guidance Request</h1>
+<article class="faq-main-content faq-main-content--guidance" data-status="requested">
+  <h1>
+    <div class="guidance-header-wrapper">
+      <div class="guidance-header-content">
+        <div class="guidance-header-prefix">Commission Guidance Request for:</div>
+        <div class="guidance-header-title">Example Guidance Request</div>
+      </div>
+      <div class="guidance-status-badge">
+        <span class="status-badge status-requested">✓ Formally Requested</span>
+      </div>
     </div>
-    <div class="guidance-status-badge">
-      <span class="status-badge status-requested">✓ Formally Requested</span>
-    </div>
-  </div>
+  </h1>
 
   <h2>Guidance needed</h2>
 
@@ -319,36 +292,28 @@ This is a paragraph with a [link](#), **bold text**, *italic text*, and `inline 
   </div>
 </article>
 
-<aside class="faq-warnings faq-warnings--guidance">
-  <div class="faq-warning faq-guidance">
-    <p><strong>Pending Guidance from EU Commission</strong></p>
-    <p>This topic requires additional clarification from the European Commission. Guidance has been formally requested and is awaiting response.</p>
-  </div>
-</aside>
-
 ---
 
 ## Guidance Page Example (Not Yet Requested)
 
-<article class="faq-main-content faq-main-content--guidance">
-  <div class="guidance-header-integrated">
-    <div class="guidance-header-content">
-      <div class="guidance-header-prefix">Commission Guidance Request for:</div>
-      <h1>Another Guidance Request</h1>
+<article class="faq-main-content faq-main-content--guidance" data-status="needed">
+  <h1>
+    <div class="guidance-header-wrapper">
+      <div class="guidance-header-content">
+        <div class="guidance-header-prefix">Commission Guidance Request for:</div>
+        <div class="guidance-header-title">Another Guidance Request</div>
+      </div>
+      <div class="guidance-status-badge">
+        <span class="status-badge status-needed">⚠ Not Yet Requested</span>
+      </div>
     </div>
-    <div class="guidance-status-badge">
-      <span class="status-badge status-needed">⚠ Not Yet Requested</span>
-    </div>
-  </div>
+  </h1>
 
   <h2>Guidance needed</h2>
 
   <p>This is an example where guidance is needed but hasn't been formally requested yet.</p>
-</article>
 
-<aside class="faq-warnings faq-warnings--guidance">
-  <div class="faq-warning faq-guidance">
-    <p><strong>Pending Guidance from EU Commission</strong></p>
-    <p>This topic requires additional clarification from the European Commission. Guidance is needed but has not yet been formally requested.</p>
-  </div>
-</aside>
+  <h2>Why this matters</h2>
+
+  <p>Understanding the status badge styling helps ensure visual consistency across the site.</p>
+</article>
