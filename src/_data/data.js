@@ -153,23 +153,65 @@ function processGuidanceItem(parsedItem) {
     title = filename.replace('.md', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 
-  // Compute guidance status based on dates
-  let guidanceStatus = 'in-preparation';
-  let guidanceStatusText = 'In preparation';
+  // Build tracker object with step statuses
+  const steps = [
+    { key: 'preparation', label: 'In preparation', date: null },
+    { key: 'ready', label: 'Ready', date: frontmatter.Ready ? formatDate(frontmatter.Ready) : null },
+    { key: 'sent', label: 'Sent', date: frontmatter.Sent ? formatDate(frontmatter.Sent) : null },
+    { key: 'acknowledged', label: 'Acknowledged', date: frontmatter.Acknowledged ? formatDate(frontmatter.Acknowledged) : null },
+    { key: 'answered', label: 'Answered', date: frontmatter.Answered ? formatDate(frontmatter.Answered) : null }
+  ];
 
-  if (frontmatter.Answered) {
-    guidanceStatus = 'answered';
-    guidanceStatusText = `Answered on ${formatDate(frontmatter.Answered)}`;
-  } else if (frontmatter.Acknowledged) {
-    guidanceStatus = 'acknowledged';
-    guidanceStatusText = `Acknowledged on ${formatDate(frontmatter.Acknowledged)}`;
-  } else if (frontmatter.Sent) {
-    guidanceStatus = 'sent';
-    guidanceStatusText = `Sent on ${formatDate(frontmatter.Sent)}`;
-  } else if (frontmatter.Ready) {
-    guidanceStatus = 'ready';
-    guidanceStatusText = `Ready on ${formatDate(frontmatter.Ready)}`;
+  // Determine step statuses: completed, active, or pending
+  let foundActive = false;
+  let completedCount = 0;
+  let lastCompletedStep = null;
+
+  for (let i = steps.length - 1; i >= 0; i--) {
+    if (steps[i].date && !foundActive) {
+      // This step and all previous are completed
+      steps[i].status = 'completed';
+      completedCount++;
+      lastCompletedStep = steps[i];
+      for (let j = i - 1; j >= 0; j--) {
+        steps[j].status = 'completed';
+        completedCount++;
+      }
+      // Next step (if exists) is active
+      if (i < steps.length - 1) {
+        steps[i + 1].status = 'active';
+        foundActive = true;
+      }
+      break;
+    }
   }
+
+  // If no completed steps, first step is active
+  if (completedCount === 0) {
+    steps[0].status = 'active';
+  }
+
+  // All remaining steps without status are pending
+  steps.forEach(step => {
+    if (!step.status) {
+      step.status = 'pending';
+    }
+  });
+
+  // Calculate progress percentage
+  const progress = (completedCount / steps.length) * 100;
+
+  const tracker = {
+    steps,
+    progress
+  };
+
+  // Derive simple status from tracker for use in FAQ pages
+  const activeStep = steps.find(s => s.status === 'active');
+  const guidanceStatus = activeStep.key;
+  const guidanceStatusText = lastCompletedStep
+    ? `${lastCompletedStep.label} on ${lastCompletedStep.date}`
+    : activeStep.label;
 
   return {
     filename,
@@ -183,6 +225,7 @@ function processGuidanceItem(parsedItem) {
     permalink: `/pending-guidance/${filename.replace('.md', '')}/`,
     guidanceStatus,
     guidanceStatusText,
+    tracker,
     ready: frontmatter.Ready,
     sent: frontmatter.Sent,
     acknowledged: frontmatter.Acknowledged,

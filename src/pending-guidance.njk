@@ -16,12 +16,19 @@ eleventyComputed:
         <div class="guidance-header-prefix">Commission Guidance Request for:</div>
         <div class="guidance-header-title">{{ item.title or 'Pending Guidance' }}</div>
       </div>
-      <div class="guidance-status-badge">
-        {% if item.data.status == "requested" %}
-          <span class="status-badge status-requested">✓ Formally Requested</span>
-        {% else %}
-          <span class="status-badge status-needed">⚠ Not Yet Requested</span>
-        {% endif %}
+      <div class="guidance-status-tracker">
+        <div class="tracker-line">
+          <div class="tracker-progress" style="width: {{ item.tracker.progress }}%;"></div>
+          <div class="tracker-steps">
+            {% for step in item.tracker.steps %}
+            <div class="tracker-step tracker-step--{{ step.status }}">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">{{ step.label }}</div>
+              {% if step.date %}<div class="tracker-tooltip">{{ step.date }}</div>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
       </div>
     </div>
   </h1>
