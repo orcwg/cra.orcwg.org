@@ -10,17 +10,15 @@
 </head>
 <body>
     <main>
-        <div class="header-container">
-            <div class="header-title">
-                <a href="/"><h1>{{ site.title }}</h1></a>
-            </div>
-            <nav class="header-navigation">
-                <a href="/faq-list/" class="header-nav-link{% if page.url == '/faq-list/' or page.url.startsWith('/faq/') %} active{% endif %}">All FAQs</a>
-                <a href="/lists/" class="header-nav-link{% if page.url == '/lists/' or page.url.startsWith('/lists/') %} active{% endif %}">Curated Lists</a>
-                <a href="/pending-guidance/" class="header-nav-link{% if page.url == '/pending-guidance/' or page.url.startsWith('/pending-guidance/') %} active{% endif %}">Pending Guidance</a>
+        <header class="site-header">
+            <a href="/" class="site-title"><h1>{{ site.title }}</h1></a>
+            <nav class="site-nav">
+                <a href="/faq-list/" class="nav-link{% if page.url == '/faq-list/' or page.url.startsWith('/faq/') %} active{% endif %}">All FAQs</a>
+                <a href="/lists/" class="nav-link{% if page.url == '/lists/' or page.url.startsWith('/lists/') %} active{% endif %}">Curated Lists</a>
+                <a href="/pending-guidance/" class="nav-link{% if page.url == '/pending-guidance/' or page.url.startsWith('/pending-guidance/') %} active{% endif %}">Pending Guidance</a>
             </nav>
-            <img src="/assets/images/orcwg_orc.png" alt="Open Regulatory Compliance Working Group Orc mascott" class="header-logo">
-        </div>
+            <img src="/assets/images/orcwg_orc.png" alt="Open Regulatory Compliance Working Group Orc mascott" class="site-logo">
+        </header>
         {{ content | safe }}
 
         {% include "footer.njk" %}
