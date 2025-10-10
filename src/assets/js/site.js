@@ -26,3 +26,36 @@ function toggleAccordion(trigger) {
         icon.style.transform = 'rotate(180deg)';
     }
 }
+
+// Admin mode toggle functionality
+function toggleAdminMode() {
+    const button = document.querySelector('.admin-toggle');
+    const adminElements = document.querySelectorAll('.admin-indicators, .faq-admin-info, .admin-info');
+
+    // Toggle active state on button
+    const isActive = button.classList.contains('active');
+
+    if (isActive) {
+        button.classList.remove('active');
+        button.title = 'Show admin information';
+        // Hide all admin elements
+        adminElements.forEach(el => {
+            if (el.classList.contains('admin-info')) {
+                el.hidden = true;
+            } else {
+                el.style.display = 'none';
+            }
+        });
+    } else {
+        button.classList.add('active');
+        button.title = 'Hide admin information';
+        // Show all admin elements
+        adminElements.forEach(el => {
+            if (el.classList.contains('admin-info')) {
+                el.hidden = false;
+            } else {
+                el.style.display = 'block';
+            }
+        });
+    }
+}

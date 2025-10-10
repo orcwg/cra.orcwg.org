@@ -15,8 +15,10 @@ permalink: "/faq-list/"
       title: category | categoryTitle,
       faqs: questions,
       mode: "list",
-      showAdminIndicators: false
+      showAdminIndicators: true
     } %}
     {% include "components/faq-list.njk" %}
   {% endfor %}
 </div>
+
+<button class="admin-toggle" onclick="toggleAdminMode()" title="Show admin information">✏️</button>

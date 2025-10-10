@@ -52,6 +52,8 @@
             <span class="accordion-icon">▼</span>
             <div class="admin-indicators" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
               <span class="status-indicator status-{{ item.status }}"></span>
+              {% if item.guidanceItem %}<span class="pending-guidance-indicator"></span>{% endif %}
+              {% if not item.hasAnswer %}<span class="missing-answer-indicator"></span>{% endif %}
             </div>
           </button>
         {% else %}
@@ -60,6 +62,8 @@
               {{ item.question | markdown | safe }}
               <div class="admin-indicators" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
                 <span class="status-indicator status-{{ item.status }}"></span>
+                {% if item.guidanceItem %}<span class="pending-guidance-indicator"></span>{% endif %}
+                {% if not item.hasAnswer %}<span class="missing-answer-indicator"></span>{% endif %}
               </div>
             </span>
           </a>
