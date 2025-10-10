@@ -43,39 +43,16 @@ eleventyComputed:
     </ul>
   </div>
   {% endif %}
+
+  <div class="admin-info" hidden>
+    {% if item.data["Related issue"] %}
+    <a href="{{ item.data["Related issue"] }}" target="_blank" rel="noopener">View Issue</a>
+    {% endif %}
+    <a href="https://github.com/orcwg/cra-hub/edit/main/faq/pending-guidance/{{ item.filename }}" target="_blank" rel="noopener">Edit on GitHub</a>
+  </div>
 </article>
 
 <button class="admin-toggle" onclick="toggleAdminMode()" title="Toggle admin information">
   ✏️
 </button>
-
-<div class="admin-info" style="display: none;">
-  {% if item.data["Related issue"] %}
-  <div class="related-issue">
-    <strong>Related issue:</strong> <a href="{{ item.data["Related issue"] }}">{{ item.data["Related issue"] }}</a>
-  </div>
-  {% endif %}
-
-  <div class="edit-on-github">
-    <span class="edit-icon">✏️</span>
-    <a href="https://github.com/orcwg/cra-hub/edit/main/faq/pending-guidance/{{ item.filename }}" target="_blank" rel="noopener">Edit this guidance request on GitHub</a>
-  </div>
-</div>
-
-<script>
-function toggleAdminMode() {
-  const adminInfo = document.querySelector('.admin-info');
-  const button = document.querySelector('.admin-toggle');
-
-  if (adminInfo.style.display === 'none' || adminInfo.style.display === '') {
-    adminInfo.style.display = 'block';
-    button.classList.add('active');
-    button.title = 'Hide admin information';
-  } else {
-    adminInfo.style.display = 'none';
-    button.classList.remove('active');
-    button.title = 'Toggle admin information';
-  }
-}
-</script>
 

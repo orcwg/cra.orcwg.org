@@ -560,20 +560,39 @@ h3 {
 }
 
 .admin-info {
-    margin-top: 30px;
-    padding: 20px;
-    background: #fff8e1;
-    border: 1px solid #ffcc02;
-    border-radius: 8px;
-    border-left: 4px solid #ff9800;
+    clear: both;
+    margin-top: 25px;
+    padding: 15px 20px;
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
-.admin-info>div {
-    margin-bottom: 15px;
+.admin-info[hidden] {
+    display: none;
 }
 
-.admin-info>div:last-child {
-    margin-bottom: 0;
+.admin-info a {
+    display: inline-block;
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.85em;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.admin-info a:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
 /* Admin indicators for FAQ list */
@@ -1094,34 +1113,10 @@ h3 {
 }
 
 /* -------------------------------------------------------------------
-   Edit on GitHub
+   Edit on GitHub - simplified, now inside admin-info
    ------------------------------------------------------------------- */
 .edit-on-github {
-    margin: 30px 0;
-    padding: 15px;
-    background: var(--background-light);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.edit-on-github .edit-icon {
-    font-size: 1.1em;
-}
-
-.edit-on-github a {
-    color: var(--text-light);
-    text-decoration: underline;
-    font-size: 0.9em;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.edit-on-github a:hover {
-    color: var(--primary-color);
+    /* Styles are inherited from .admin-info > div */
 }
 
 
