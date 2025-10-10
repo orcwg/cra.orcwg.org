@@ -425,15 +425,24 @@ h3 {
 }
 
 /* -------------------------------------------------------------------
-   FAQ Question and Answer Content
+   Article & FAQ Content
    ------------------------------------------------------------------- */
-.faq-main-content {
+article {
     background: white;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     margin: 20px 0;
     box-shadow: var(--card-shadow);
     overflow: hidden;
+    padding: 30px;
+}
+
+article>h1:first-child {
+    margin-top: 0;
+}
+
+/* FAQ-specific padding override */
+.faq-main-content {
     padding: 0 30px 25px 30px;
 }
 
@@ -1663,6 +1672,26 @@ blockquote {
     font-size: 0.9em;
     font-weight: 500;
     margin-top: 10px;
+}
+
+
+/* -------------------------------------------------------------------
+   Contributors List
+   ------------------------------------------------------------------- */
+.contributors-list {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+}
+
+.contributors-list li {
+    line-height: 1.6;
+    transition: all 0.1s ease;
+}
+
+.contributors-list li:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
 }
 
 /* -------------------------------------------------------------------
