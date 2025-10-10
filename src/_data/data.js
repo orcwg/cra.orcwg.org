@@ -199,7 +199,9 @@ function processGuidanceItem(parsedItem) {
   });
 
   // Calculate progress percentage
-  const progress = (completedCount / steps.length) * 100;
+  const activeStepIndex = steps.findIndex(s => s.status === 'active');
+  const progressSteps = activeStepIndex >= 0 ? activeStepIndex : completedCount;
+  const progress = (progressSteps / (steps.length - 1)) * 100;
 
   const tracker = {
     steps,

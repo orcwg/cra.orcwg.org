@@ -451,24 +451,27 @@ h3 {
     line-height: 1.3;
 }
 
-/* Guidance-specific styling - matches FAQ h1 layout */
-.faq-main-content--guidance > h1:first-child,
-.faq-main-content--guidance > h1:nth-child(2) {
+/* Guidance-specific styling - header with stacked layout */
+.faq-main-content--guidance > header.guidance-header {
     background: var(--background-light);
     padding: 20px 30px 35px 30px;
     border-bottom: 1px solid var(--border-color);
     margin: 0 -30px 25px -30px;
     overflow: visible;
-}
-
-.guidance-header-wrapper {
     display: flex;
-    gap: 20px;
-    align-items: center;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.guidance-header-content {
-    flex: 3;
+.guidance-title-box {
+    width: 100%;
+}
+
+.guidance-tracker-box {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .guidance-header-prefix {
@@ -481,17 +484,11 @@ h3 {
 }
 
 .guidance-header-title {
-    font-size: 1em;
+    font-size: 1.5em;
     color: var(--primary-dark);
     font-weight: 600;
     line-height: 1.3;
-}
-
-.guidance-status-badge {
-    flex: 1;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    margin: 0;
 }
 
 .faq-main-content p:first-of-type {
@@ -844,7 +841,7 @@ h3 {
 /* Guidance Status Tracker - Compact Version (inside h1 header) */
 .guidance-status-tracker {
     position: relative;
-    padding: 5px 0 25px 0;
+    padding: 5px 40px 20px 40px;
     flex: 2;
     margin: 0;
 }
@@ -907,10 +904,14 @@ h3 {
     top: 16px;
     left: 50%;
     transform: translateX(-50%);
+    width: 70px;
     font-size: 0.65rem;
     color: #e0e0e0;
-    white-space: nowrap;
+    white-space: normal;
+    word-wrap: break-word;
+    text-align: center;
     font-weight: 500;
+    line-height: 1.2;
 }
 
 .guidance-status-tracker .tracker-step--completed .tracker-label {
@@ -952,6 +953,17 @@ h3 {
 
 .guidance-status-tracker .tracker-step:hover .tracker-tooltip:not(:empty) {
     opacity: 1;
+}
+
+/* Mobile: Only show active step label to prevent overlap */
+@media (max-width: 480px) {
+    .guidance-status-tracker .tracker-label {
+        display: none;
+    }
+
+    .guidance-status-tracker .tracker-step--active .tracker-label {
+        display: block;
+    }
 }
 
 

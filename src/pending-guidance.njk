@@ -10,12 +10,12 @@ eleventyComputed:
 ---
 
 <article class="faq-main-content faq-main-content--guidance" data-status="{{ item.data.status }}">
-  <h1>
-    <div class="guidance-header-wrapper">
-      <div class="guidance-header-content">
-        <div class="guidance-header-prefix">Commission Guidance Request for:</div>
-        <div class="guidance-header-title">{{ item.title or 'Pending Guidance' }}</div>
-      </div>
+  <header class="guidance-header">
+    <div class="guidance-title-box">
+      <div class="guidance-header-prefix">Commission Guidance Request for:</div>
+      <h1 class="guidance-header-title">{{ item.title or 'Pending Guidance' }}</h1>
+    </div>
+    <div class="guidance-tracker-box">
       <div class="guidance-status-tracker">
         <div class="tracker-line">
           <div class="tracker-progress" style="width: {{ item.tracker.progress }}%;"></div>
@@ -31,7 +31,7 @@ eleventyComputed:
         </div>
       </div>
     </div>
-  </h1>
+  </header>
   {{ item.body | markdown | safe }}
 
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}

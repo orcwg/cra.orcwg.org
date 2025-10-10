@@ -1,0 +1,287 @@
+---
+layout: layout.njk
+title: Test Styling Page
+permalink: "{% if env.BUILD_ENV == 'production' %}false{% else %}/test-styling/{% endif %}"
+eleventyExcludeFromCollections: "{% if env.BUILD_ENV == 'production' %}true{% else %}false{% endif %}"
+---
+
+<h1>Test Styling Page</h1>
+
+<p>This page demonstrates all the different styling elements used throughout the site.</p>
+
+<hr>
+
+<h2>Typography Examples</h2>
+
+<h3>Headings</h3>
+
+<h1>Heading 1</h1>
+<h2>Heading 2</h2>
+<h3>Heading 3</h3>
+
+<h3>Links and Text Styles</h3>
+
+<p>This is a paragraph with a <a href="#">link</a>, <strong>bold text</strong>, <em>italic text</em>, and <code>inline code</code>.</p>
+
+<h3>Lists</h3>
+
+<p><strong>Unordered List:</strong></p>
+
+<ul>
+  <li>First item</li>
+  <li>Second item
+    <ul>
+      <li>Nested item</li>
+      <li>Another nested item</li>
+    </ul>
+  </li>
+  <li>Third item</li>
+</ul>
+
+<p><strong>Ordered List:</strong></p>
+
+<ol>
+  <li>First step</li>
+  <li>Second step</li>
+  <li>Third step</li>
+</ol>
+
+<hr>
+
+<h2>Code Examples</h2>
+
+<p>Inline code: <code>const example = "test";</code></p>
+
+<pre><code>// Code block example
+function testFunction() {
+  return "This is a test";
+}</code></pre>
+
+<hr>
+
+<h2>Blockquotes and Callouts</h2>
+
+<h3>Regular Blockquote</h3>
+
+<blockquote>
+  <p>"This is a regular blockquote quote. It should look like a traditional quotation." - Test Author</p>
+</blockquote>
+
+<h3>GitHub Alert Callouts</h3>
+
+<blockquote class="markdown-alert markdown-alert-note">
+  <p><strong>Note</strong><br>
+  This is a NOTE callout. Useful for highlighting important information that users should be aware of.</p>
+</blockquote>
+
+<blockquote class="markdown-alert markdown-alert-tip">
+  <p><strong>Tip</strong><br>
+  This is a TIP callout. Great for providing helpful suggestions or best practices.</p>
+</blockquote>
+
+<blockquote class="markdown-alert markdown-alert-important">
+  <p><strong>Important</strong><br>
+  This is an IMPORTANT callout. Use this to draw attention to critical information.</p>
+</blockquote>
+
+<blockquote class="markdown-alert markdown-alert-warning">
+  <p><strong>Warning</strong><br>
+  This is a WARNING callout. Alerts users to potential issues or things to watch out for.</p>
+</blockquote>
+
+<blockquote class="markdown-alert markdown-alert-caution">
+  <p><strong>Caution</strong><br>
+  This is a CAUTION callout. Indicates something that could cause problems if not handled carefully.</p>
+</blockquote>
+
+<hr>
+
+<h2>FAQ Status Indicators</h2>
+
+<p>Status indicators appear in the FAQ list when admin mode is enabled:</p>
+
+<div class="admin-indicators" style="display: block; margin: 20px 0;">
+  <span class="status-indicator status-draft"></span>
+  <span class="status-indicator status-approved"></span>
+  <span class="status-indicator status-pending-guidance"></span>
+</div>
+
+<hr>
+
+<h2>FAQ-Style Q&A Block</h2>
+
+<article class="faq-main-content">
+  <h1>What is this test page for?</h1>
+
+  <p>This test page demonstrates all the different callout types, blockquotes, and other styling elements used in the CRA FAQ site. It helps us design and refine the visual appearance of different components.</p>
+
+  <h2>Content with Callouts</h2>
+
+  <p>Here's a regular paragraph introducing the concept.</p>
+
+  <blockquote class="markdown-alert markdown-alert-note">
+    <p><strong>Note</strong><br>
+    This NOTE appears within a FAQ answer. The styling should work well with the FAQ structure.</p>
+  </blockquote>
+
+  <p>Another paragraph between callouts.</p>
+
+  <blockquote class="markdown-alert markdown-alert-warning">
+    <p><strong>Warning</strong><br>
+    This WARNING also appears within the FAQ answer. It should be visually distinct but harmonious.</p>
+  </blockquote>
+
+  <blockquote>
+    <p>And here's a regular blockquote for comparison within the FAQ answer.</p>
+  </blockquote>
+
+  <aside class="faq-warnings">
+    <div class="faq-warning">
+      <p><strong>This is a draft warning</strong> - This is how warnings appear at the bottom of FAQ answers.</p>
+    </div>
+  </aside>
+</article>
+
+<hr>
+
+<h2>FAQ List Block (Category Section - List Mode)</h2>
+
+{% set componentData = {
+  title: "Test Category (List Mode)",
+  faqs: [
+    {
+      filename: "test-1.md",
+      question: "What is the first test question?",
+      status: "draft",
+      hasAnswer: true,
+      permalink: "#"
+    },
+    {
+      filename: "test-2.md",
+      question: "What is the second test question?",
+      status: "approved",
+      hasAnswer: true,
+      guidanceItem: { permalink: "#" },
+      permalink: "#"
+    },
+    {
+      filename: "test-3.md",
+      question: "What is the third test question?",
+      status: "approved",
+      hasAnswer: true,
+      permalink: "#"
+    }
+  ],
+  mode: "list",
+  showAdminIndicators: false
+} %}
+{% include "components/faq-list.njk" %}
+
+<hr>
+
+<h2>FAQ Accordion Block</h2>
+
+{% set componentData = {
+  title: "Test Category (Accordion Mode)",
+  faqs: [
+    {
+      filename: "test-accordion-1.md",
+      question: "What happens when you click on an accordion question?",
+      answer: "<p>When you click on an accordion question, the answer expands smoothly below the question. This allows for a more compact display of multiple FAQs.</p><blockquote class=\"markdown-alert markdown-alert-tip\"><p><strong>Tip</strong><br>Accordions are great for organizing many related questions in a single category.</p></blockquote>",
+      status: "approved",
+      hasAnswer: true,
+      category: "test",
+      permalink: "#"
+    },
+    {
+      filename: "test-accordion-2.md",
+      question: "Can you put callouts in accordion answers?",
+      answer: "<p>Yes! Accordion answers support all the same styling as regular FAQ answers.</p><blockquote class=\"markdown-alert markdown-alert-warning\"><p><strong>Warning</strong><br>This is a warning callout inside an accordion answer.</p></blockquote><p>You can also include code blocks:</p><pre><code>const example = \"accordion code\";</code></pre>",
+      status: "approved",
+      hasAnswer: true,
+      category: "test",
+      permalink: "#"
+    },
+    {
+      filename: "test-accordion-3.md",
+      question: "What's the third accordion item?",
+      answer: "<p>This is the third accordion item. Notice how only one can be open at a time.</p>",
+      status: "approved",
+      hasAnswer: true,
+      category: "test",
+      permalink: "#"
+    }
+  ],
+  mode: "accordion",
+  showAdminIndicators: false
+} %}
+{% include "components/faq-list.njk" %}
+
+<hr>
+
+<h2>Guidance Page with Full Tracker</h2>
+
+<p>The site uses a delivery-style tracking component for guidance requests, showing progress through 5 stages: In preparation, Ready, Sent, Acknowledged, and Answered. Completed steps show in teal, the current step in orange, and future steps in gray. Hover over dots to see dates.</p>
+
+<article class="faq-main-content faq-main-content--guidance">
+  <header class="guidance-header">
+    <div class="guidance-title-box">
+      <div class="guidance-header-prefix">Commission Guidance Request for:</div>
+      <h1 class="guidance-header-title">Example Guidance Request</h1>
+    </div>
+    <div class="guidance-tracker-box">
+      <div class="guidance-status-tracker">
+        <div class="tracker-line">
+          <div class="tracker-progress" style="width: 50%;"></div>
+          <div class="tracker-steps">
+            <div class="tracker-step tracker-step--completed">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">In preparation</div>
+            </div>
+            <div class="tracker-step tracker-step--completed">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">Ready</div>
+              <div class="tracker-tooltip">10.01.2025</div>
+            </div>
+            <div class="tracker-step tracker-step--active">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">Sent</div>
+              <div class="tracker-tooltip">15.01.2025</div>
+            </div>
+            <div class="tracker-step">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">Acknowledged</div>
+            </div>
+            <div class="tracker-step">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">Answered</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <h2>Guidance needed</h2>
+
+  <p>Confirmation that the example guidance system works correctly with the new CSS structure.</p>
+
+  <h2>Why this matters</h2>
+
+  <p>This distinction is crucial for determining:</p>
+
+  <ul>
+    <li>Whether the warm color theme applies correctly</li>
+    <li>Whether heading hierarchy is maintained</li>
+    <li>Whether list bullets render inside the content area</li>
+  </ul>
+
+  <h2>Related FAQs</h2>
+
+  <div class="related-faqs-inline">
+    <ul>
+      <li><a href="#">Example related FAQ with <em>italics</em></a></li>
+      <li><a href="#">Another related FAQ with <strong>bold text</strong></a></li>
+    </ul>
+  </div>
+</article>
