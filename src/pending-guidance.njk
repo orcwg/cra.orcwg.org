@@ -10,21 +10,28 @@ eleventyComputed:
 ---
 
 <article class="faq-main-content faq-main-content--guidance" data-status="{{ item.data.status }}">
-  <h1>
-    <div class="guidance-header-wrapper">
-      <div class="guidance-header-content">
-        <div class="guidance-header-prefix">Commission Guidance Request for:</div>
-        <div class="guidance-header-title">{{ item.title or 'Pending Guidance' }}</div>
-      </div>
-      <div class="guidance-status-badge">
-        {% if item.data.status == "requested" %}
-          <span class="status-badge status-requested">✓ Formally Requested</span>
-        {% else %}
-          <span class="status-badge status-needed">⚠ Not Yet Requested</span>
-        {% endif %}
+  <header class="guidance-header">
+    <div class="guidance-title-box">
+      <div class="guidance-header-prefix">Commission Guidance Request for:</div>
+      <h1 class="guidance-header-title">{{ item.title or 'Pending Guidance' }}</h1>
+    </div>
+    <div class="guidance-tracker-box">
+      <div class="guidance-status-tracker">
+        <div class="tracker-line">
+          <div class="tracker-progress" style="width: {{ item.tracker.progress }}%;"></div>
+          <div class="tracker-steps">
+            {% for step in item.tracker.steps %}
+            <div class="tracker-step tracker-step--{{ step.status }}">
+              <div class="tracker-dot"></div>
+              <div class="tracker-label">{{ step.label }}</div>
+              {% if step.date %}<div class="tracker-tooltip">{{ step.date }}</div>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
       </div>
     </div>
-  </h1>
+  </header>
   {{ item.body | markdown | safe }}
 
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
@@ -36,39 +43,16 @@ eleventyComputed:
     </ul>
   </div>
   {% endif %}
+
+  <div class="admin-info" hidden>
+    {% if item.data["Related issue"] %}
+    <a href="{{ item.data["Related issue"] }}" target="_blank" rel="noopener">View Issue</a>
+    {% endif %}
+    <a href="https://github.com/orcwg/cra-hub/edit/main/faq/pending-guidance/{{ item.filename }}" target="_blank" rel="noopener">Edit on GitHub</a>
+  </div>
 </article>
 
 <button class="admin-toggle" onclick="toggleAdminMode()" title="Toggle admin information">
   ✏️
 </button>
-
-<div class="admin-info" style="display: none;">
-  {% if item.data["Related issue"] %}
-  <div class="related-issue">
-    <strong>Related issue:</strong> <a href="{{ item.data["Related issue"] }}">{{ item.data["Related issue"] }}</a>
-  </div>
-  {% endif %}
-
-  <div class="edit-on-github">
-    <span class="edit-icon">✏️</span>
-    <a href="https://github.com/orcwg/cra-hub/edit/main/faq/pending-guidance/{{ item.filename }}" target="_blank" rel="noopener">Edit this guidance request on GitHub</a>
-  </div>
-</div>
-
-<script>
-function toggleAdminMode() {
-  const adminInfo = document.querySelector('.admin-info');
-  const button = document.querySelector('.admin-toggle');
-
-  if (adminInfo.style.display === 'none' || adminInfo.style.display === '') {
-    adminInfo.style.display = 'block';
-    button.classList.add('active');
-    button.title = 'Hide admin information';
-  } else {
-    adminInfo.style.display = 'none';
-    button.classList.remove('active');
-    button.title = 'Toggle admin information';
-  }
-}
-</script>
 
