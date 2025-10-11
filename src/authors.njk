@@ -4,17 +4,6 @@ title: Contributors
 permalink: /contributors/
 ---
 
-{% if data.authors %}
-<article>
-  <h1>{{ data.authors.title }}</h1>
-  <p>The following people have contributed to the CRA FAQ either directly or indirectly (e.g. by raising questions):</p>
-
-  <ul class="contributors-list">
-    {% for contributor in data.authors.contributors %}
-    <li>{{ contributor }}</li>
-    {% endfor %}
-  </ul>
-
-  {{ data.authors.note | markdown | safe }}
+<article class="contributors-list">
+  {{ data.authorsContent | markdown | safe }}
 </article>
-{% endif %}

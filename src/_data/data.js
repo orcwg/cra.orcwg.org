@@ -230,32 +230,18 @@ function processAuthorsFile() {
   const authorsPath = path.join(CACHE_DIR, "AUTHORS.md");
 
   if (!fs.existsSync(authorsPath)) {
-    return null;
+    throw new Error(`AUTHORS.md not found at ${authorsPath}. Ensure the cache is populated.`);
   }
 
   const rawContent = fs.readFileSync(authorsPath, "utf-8");
   const parsed = matter(rawContent);
   const content = parsed.content.trim();
 
-  // Extract title from first heading
-  const titleMatch = content.match(/^#\s+(.+)$/m);
-  const title = titleMatch ? titleMatch[1] : "Contributors";
+  if (!content) {
+    throw new Error(`AUTHORS.md at ${authorsPath} is empty or has no content after frontmatter.`);
+  }
 
-  // Extract list items (contributors)
-  const contributorMatches = content.match(/^\*\s+(.+)$/gm);
-  const contributors = contributorMatches
-    ? contributorMatches.map(line => line.replace(/^\*\s+/, '').trim())
-    : [];
-
-  // Extract the note at the end (everything after the last list item)
-  const noteMatch = content.match(/\n\n([^*]+)$/);
-  const note = noteMatch ? noteMatch[1].trim() : "";
-
-  return {
-    title,
-    contributors,
-    note
-  };
+  return content;
 }
 
 // Main content processing function
@@ -287,14 +273,14 @@ function processAllContent() {
   const enrichedGuidance = enrichWithRelatedFaqs(guidanceItems, faqItems);
 
   // Step 4: Process authors
-  const authors = processAuthorsFile();
+  const authorsContent = processAuthorsFile();
 
   return {
     faqs: enrichedFaqs,
     guidance: enrichedGuidance,
     faqsByCategory: organizeFaqsByCategory(enrichedFaqs),
     faqItems: enrichedFaqs, // Flat array for pagination
-    authors
+    authorsContent
   };
 }
 

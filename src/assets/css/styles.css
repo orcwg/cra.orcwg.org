@@ -1679,9 +1679,12 @@ blockquote {
    Contributors List
    ------------------------------------------------------------------- */
 .contributors-list {
+    text-align: center;
+}
+
+.contributors-list ul {
     list-style: none;
     padding: 0;
-    text-align: center;
 }
 
 .contributors-list li {
