@@ -43,12 +43,7 @@ module.exports = function () {
   const curatedListsConfig = loadCuratedListsFromYAML();
   const result = [];
 
-  // Sort lists by order field if present
-  const sortedLists = Object.entries(curatedListsConfig).sort(([, a], [, b]) => {
-    return (a.order || 999) - (b.order || 999);
-  });
-
-  for (const [listKey, listConfig] of sortedLists) {
+  for (const [listKey, listConfig] of Object.entries(curatedListsConfig)) {
     const listItems = [];
 
     for (const faqRef of listConfig.faqs) {

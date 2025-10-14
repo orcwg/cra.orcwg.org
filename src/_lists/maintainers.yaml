@@ -1,0 +1,11 @@
+title: "Maintainers"
+description: "Guidance for open source maintainers on CRA obligations, transparency, and penalties"
+faqs:
+  - maintainers/should-i-worry
+  - maintainers/contributors
+  - maintainers/no-monetization
+  - maintainers/monetization
+  - maintainers/penalties
+  - maintainers/transparency
+  - maintainers/solo-maintainer-steward
+  - maintainers/multiple-maintainers-steward
