@@ -169,17 +169,40 @@ function processGuidanceItem(parsedItem) {
 // Cross-reference enrichment
 function enrichWithGuidance(faqItems, guidanceItems) {
   return faqItems.map(faqItem => {
-    if (faqItem['guidance-id']) {
-      const relatedGuidance = guidanceItems.find(guidance =>
-        guidance.filename === faqItem['guidance-id'] + '.md'
-      );
+    // Find related guidance document if guidance-id exists
+    const guidanceItem = faqItem['guidance-id']
+      ? guidanceItems.find(guidance => guidance.filename === faqItem['guidance-id'] + '.md') || null
+      : null;
 
-      return {
-        ...faqItem,
-        guidanceItem: relatedGuidance || null
-      };
+    return {
+      ...faqItem,
+      guidanceItem
+    };
+  });
+}
+
+// Build badges for all FAQ items in one pass
+function addBadgesToFaqs(faqItems) {
+  return faqItems.map(faqItem => {
+    const badges = [];
+
+    // Status badge (always present: draft or approved)
+    badges.push(`status-indicator status-${faqItem.status}`);
+
+    // Pending guidance indicator
+    if (faqItem.guidanceItem) {
+      badges.push('pending-guidance-indicator');
     }
-    return faqItem;
+
+    // Missing answer indicator
+    if (!faqItem.hasAnswer) {
+      badges.push('missing-answer-indicator');
+    }
+
+    return {
+      ...faqItem,
+      badges
+    };
   });
 }
 
@@ -272,14 +295,17 @@ function processAllContent() {
   const enrichedFaqs = enrichWithGuidance(faqItems, guidanceItems);
   const enrichedGuidance = enrichWithRelatedFaqs(guidanceItems, faqItems);
 
-  // Step 4: Process authors
+  // Step 4: Add badges to all FAQs (after all enrichment is complete)
+  const faqsWithBadges = addBadgesToFaqs(enrichedFaqs);
+
+  // Step 5: Process authors
   const authorsContent = processAuthorsFile();
 
   return {
-    faqs: enrichedFaqs,
+    faqs: faqsWithBadges,
     guidance: enrichedGuidance,
-    faqsByCategory: organizeFaqsByCategory(enrichedFaqs),
-    faqItems: enrichedFaqs, // Flat array for pagination
+    faqsByCategory: organizeFaqsByCategory(faqsWithBadges),
+    faqItems: faqsWithBadges, // Flat array for pagination
     authorsContent
   };
 }

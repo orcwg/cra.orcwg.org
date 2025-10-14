@@ -51,7 +51,9 @@
             <span class="question-text">{{ item.question | markdown | safe }}</span>
             <span class="accordion-icon">▼</span>
             <div class="admin-indicators" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
-              <span class="status-indicator status-{{ item.status }}"></span>
+              {% for badgeClass in item.badges %}
+              <span class="{{ badgeClass }}"></span>
+              {% endfor %}
             </div>
           </button>
         {% else %}
@@ -59,7 +61,9 @@
             <span class="question-text">
               {{ item.question | markdown | safe }}
               <div class="admin-indicators" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
-                <span class="status-indicator status-{{ item.status }}"></span>
+                {% for badgeClass in item.badges %}
+                <span class="{{ badgeClass }}"></span>
+                {% endfor %}
               </div>
             </span>
           </a>
