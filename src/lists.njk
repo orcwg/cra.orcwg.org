@@ -25,7 +25,12 @@ listOrder:
     {% for listItem in curatedLists %}
       {% if listItem.key == listKey and listItem.value.count > 0 %}
         <a href="/lists/{{ listItem.key }}/" class="curated-list-card">
-          <h2 class="list-title">{{ listItem.value.title }}</h2>
+          <h2 class="list-title">
+            {% if listItem.value.icon %}
+              <span class="list-icon">{{ listItem.value.icon }}</span>
+            {% endif %}
+            {{ listItem.value.title }}
+          </h2>
           <p class="list-description">{{ listItem.value.description }}</p>
         </a>
       {% endif %}
