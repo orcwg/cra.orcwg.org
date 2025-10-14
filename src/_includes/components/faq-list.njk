@@ -63,7 +63,7 @@
             </div>
           </button>
         {% else %}
-          <a href="{{ item.url or item.permalink }}" class="faq-trigger">
+          <a href="{{ item.permalink }}" class="faq-trigger">
             <span class="question-text">
               {{ item.question | markdown | safe }}
               <div class="admin-indicators" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
@@ -126,7 +126,7 @@
               </div>
 
               <div class="faq-link">
-                <a href="{{ item.url or item.permalink }}" class="standalone-link">📄 View standalone page</a>
+                <a href="{{ item.permalink }}" class="standalone-link">📄 View standalone page</a>
               </div>
             </div>
           </div>
