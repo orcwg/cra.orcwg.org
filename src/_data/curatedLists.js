@@ -43,23 +43,14 @@ module.exports = function () {
     for (const faqRef of listConfig.faqs) {
       let category, filename;
 
-      // Support both new simple format (string) and old format (object)
-      if (typeof faqRef === 'string') {
-        // New format: "directory/filename" (without .md)
-        const parts = faqRef.split('/');
-        if (parts.length === 2) {
-          category = parts[0];
-          filename = parts[1] + '.md'; // Add .md extension
-        } else {
-          console.warn(`Invalid FAQ reference format: ${faqRef}. Expected "category/filename"`);
-          continue;
-        }
+      const parts = faqRef.split('/');
+      if (parts.length === 2) {
+        category = parts[0];
+        filename = parts[1] + '.md'; // Add .md extension
       } else {
-        // Old format: { category: "...", filename: "..." }
-        category = faqRef.category;
-        filename = faqRef.filename;
+        throw new Error(`Invalid FAQ reference format: ${faqRef}. Expected "category/filename"`);
       }
-
+  
       // Find the FAQ item in the data
       const categoryItems = faqData[category];
       if (categoryItems) {
@@ -67,8 +58,7 @@ module.exports = function () {
         if (faqItem) {
           listItems.push({
             ...faqItem,
-            category: category,
-            url: faqItem.permalink
+            category: category
           });
         }
       }
