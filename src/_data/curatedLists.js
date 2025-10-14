@@ -31,12 +31,6 @@ function loadCuratedListsFromYAML() {
   return listsConfig;
 }
 
-function isCompleteItem(item) {
-  // Only include FAQs that have both question and answer
-  return item.question &&
-    item.answer &&
-    item.answer.trim().length > 0;
-}
 
 module.exports = function () {
   const faqData = data().faqsByCategory;
@@ -70,7 +64,7 @@ module.exports = function () {
       const categoryItems = faqData[category];
       if (categoryItems) {
         const faqItem = categoryItems.find(item => item.filename === filename);
-        if (faqItem && isCompleteItem(faqItem)) {
+        if (faqItem) {
           listItems.push({
             ...faqItem,
             category: category,
