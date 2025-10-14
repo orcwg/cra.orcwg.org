@@ -9,12 +9,11 @@ Each YAML file should follow this structure:
 ```yaml
 title: "Display Name for the List"
 description: "Brief description of what this list covers"
-order: 1  # Optional: controls display order (lower numbers first)
 faqs:
-  - category: "category-name"
-    filename: "filename.md"
-  - category: "another-category"
-    filename: "another-file.md"
+  - faq id
+  - faq id
+  - faq id
+  - etc.
 ```
 
 ## Quality Control
@@ -45,7 +44,7 @@ For a file named `beginners.yaml`:
 
 ## Notes
 
-- Files are processed in alphabetical order unless `order` field is specified
+- Files are processed in alphabetical order
 - Invalid YAML files will be skipped with a warning
 - FAQ references that don't exist or are incomplete will be filtered out
 - Changes to YAML files require a site rebuild to take effect
