@@ -41,7 +41,15 @@
 {% set isAccordion = mode == "accordion" %}
 
 <section class="faq-category faq-category--{{ mode }}{{ ' ' + componentData.categoryClass if componentData.categoryClass }}">
-  <h2 class="category-title">{{ componentData.title }}</h2>
+  <h2 class="category-title">
+    {% if componentData.icon %}
+      <span class="category-icon">{{ componentData.icon }}</span>
+    {% endif %}
+    {{ componentData.title }}
+  </h2>
+  {% if componentData.description %}
+    <p class="category-description">{{ componentData.description }}</p>
+  {% endif %}
 
   <div class="faq-items">
     {% for item in componentData.faqs %}
