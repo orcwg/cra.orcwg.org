@@ -1,15 +1,17 @@
 {#
   FAQ Status and Danger Badges Component
 
-  Parameters (passed via badgeData):
-  - item: FAQ item with status and indicator flags
+  Expects 'faq' variable from parent scope with:
+  - faq.status: FAQ status (pending-guidance, draft, approved)
+  - faq.hasAnswer: Boolean indicating if FAQ has answer text
+  - faq.guidanceIdMissing: Boolean flag
+  - faq.guidanceFileNotFound: Boolean flag
 
-  Usage:
-  {% set faq = faqItem %}
+  Usage (assumes 'faq' exists in parent scope):
   {% include "components/faq-badges.njk" %}
 #}
 
-<div class="admin-indicators" style="display: block ">
+<div class="admin-indicators" style="display: none;">
   {# Status badge - one of three #}
   {% if faq.status == 'pending-guidance' %}
   <span class="badge warning">🛑 Pending Guidance</span>
