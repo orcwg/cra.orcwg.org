@@ -50,21 +50,15 @@
           <button class="faq-trigger" onclick="toggleAccordion(this)">
             <span class="question-text">{{ item.question | markdown | safe }}</span>
             <span class="accordion-icon">▼</span>
-            <div class="admin-indicators" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
-              {% for badgeClass in item.badges %}
-              <span class="{{ badgeClass }}"></span>
-              {% endfor %}
-            </div>
+            {% set faq = item %}
+            {% include "components/faq-badges.njk" %}
           </button>
         {% else %}
           <a href="{{ item.url or item.permalink }}" class="faq-trigger">
             <span class="question-text">
               {{ item.question | markdown | safe }}
-              <div class="admin-indicators" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
-                {% for badgeClass in item.badges %}
-                <span class="{{ badgeClass }}"></span>
-                {% endfor %}
-              </div>
+              {% set faq = item %}
+              {% include "components/faq-badges.njk" %}
             </span>
           </a>
         {% endif %}

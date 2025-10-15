@@ -23,6 +23,11 @@
     --background-light: #f8f9fa;
     --border-color: #e9ecef;
     --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+    /* Status Colors - base colors only, backgrounds and borders derived */
+    --warning-color: #f57c00;
+    --success-color: #2e7d32;
+    --danger-color: #c62828;
 }
 
 /* -------------------------------------------------------------------
@@ -596,63 +601,32 @@ article>h1:first-child {
     gap: 6px;
 }
 
-.status-indicator,
-.missing-answer-indicator,
-.pending-guidance-indicator {
+/* Badge shape utility */
+.badge {
     font-size: 0.75em;
     padding: 2px 6px;
     border-radius: 3px;
     font-weight: 500;
+    border: 1px solid;
 }
 
-.status-indicator {
-    background: #f5f5f5;
-    color: var(--text-color);
-    border: 1px solid #ddd;
+/* Status color utilities - backgrounds and borders derived from base color */
+.warning {
+    background: color-mix(in srgb, var(--warning-color) 10%, white);
+    color: var(--warning-color);
+    border-color: color-mix(in srgb, var(--warning-color) 40%, white);
 }
 
-.status-indicator::before {
-    content: attr(data-status);
+.success {
+    background: color-mix(in srgb, var(--success-color) 10%, white);
+    color: var(--success-color);
+    border-color: color-mix(in srgb, var(--success-color) 40%, white);
 }
 
-.status-indicator.status-draft {
-    background: #fff3e0 !important;
-    color: #f57c00 !important;
-    border: 1px solid #ffcc02 !important;
-}
-
-.status-indicator.status-draft::before {
-    content: "⚠️ Draft";
-}
-
-.status-indicator.status-approved {
-    background: #e8f5e8 !important;
-    color: #2e7d32 !important;
-    border: 1px solid #c8e6c9 !important;
-}
-
-.status-indicator.status-approved::before {
-    content: "✅ Approved";
-}
-
-.missing-answer-indicator {
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ffcdd2;
-}
-
-.missing-answer-indicator::before {
-    content: "⚠️ Missing Answer";
-}
-
-.pending-guidance-indicator {
-    background: #fff3e0;
-    color: #f57c00;
-    border: 1px solid #ffcc02;
-}
-
-.pending-guidance-indicator::before {
-    content: "🛑 Pending Guidance";
+.danger {
+    background: color-mix(in srgb, var(--danger-color) 10%, white);
+    color: var(--danger-color);
+    border-color: color-mix(in srgb, var(--danger-color) 40%, white);
 }
 
 /* FAQ Warnings Box */

@@ -1,0 +1,34 @@
+{#
+  FAQ Status and Danger Badges Component
+
+  Parameters (passed via badgeData):
+  - item: FAQ item with status and indicator flags
+
+  Usage:
+  {% set faq = faqItem %}
+  {% include "components/faq-badges.njk" %}
+#}
+
+<div class="admin-indicators" style="display: block ">
+  {# Status badge - one of three #}
+  {% if faq.status == 'pending-guidance' %}
+  <span class="badge warning">🛑 Pending Guidance</span>
+  {% elif faq.status == 'draft' %}
+  <span class="badge warning">⚠️ Draft</span>
+  {% elif faq.status == "approved" %}
+  <span class="badge success">✅ Approved</span>
+  {% else %}
+  <span class="badge danger">🛑 Status not set</span>
+  {% endif %}
+
+  {# Danger indicators - can have multiple #}
+  {% if faq.answerMissing %}
+  <span class="badge danger">⚠️ Missing Answer</span>
+  {% endif %}
+  {% if faq.guidanceIdMissing %}
+  <span class="badge danger">⚠️ Missing Guidance ID</span>
+  {% endif %}
+  {% if faq.guidanceFileNotFound %}
+  <span class="badge danger">⚠️ Guidance File Not Found</span>
+  {% endif %}
+</div>

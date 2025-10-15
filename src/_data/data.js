@@ -137,7 +137,7 @@ function processFaqItem(parsedItem) {
     question,
     answer: body,
     pageTitle: markdownToPlainText(question),
-    hasAnswer: Boolean(body && body.trim().length > 0),
+    answerMissing: !body || !body.trim(),
     permalink: `/faq/${category}/${filename.replace('.md', '')}/`
   };
 }
@@ -169,39 +169,22 @@ function processGuidanceItem(parsedItem) {
 // Cross-reference enrichment
 function enrichWithGuidance(faqItems, guidanceItems) {
   return faqItems.map(faqItem => {
+    const hasGuidanceId = Boolean(faqItem['guidance-id']);
+
     // Find related guidance document if guidance-id exists
-    const guidanceItem = faqItem['guidance-id']
+    const guidanceItem = hasGuidanceId
       ? guidanceItems.find(guidance => guidance.filename === faqItem['guidance-id'] + '.md') || null
       : null;
 
-    return {
-      ...faqItem,
-      guidanceItem
-    };
-  });
-}
-
-// Build badges for all FAQ items in one pass
-function addBadgesToFaqs(faqItems) {
-  return faqItems.map(faqItem => {
-    const badges = [];
-
-    // Status badge (always present: draft or approved)
-    badges.push(`status-indicator status-${faqItem.status}`);
-
-    // Pending guidance indicator
-    if (faqItem.guidanceItem) {
-      badges.push('pending-guidance-indicator');
-    }
-
-    // Missing answer indicator
-    if (!faqItem.hasAnswer) {
-      badges.push('missing-answer-indicator');
-    }
+    // Determine danger indicators
+    const guidanceIdMissing = faqItem.status === 'pending-guidance' && !hasGuidanceId;
+    const guidanceFileNotFound = hasGuidanceId && !guidanceItem;
 
     return {
       ...faqItem,
-      badges
+      guidanceItem,
+      guidanceIdMissing,
+      guidanceFileNotFound
     };
   });
 }
@@ -295,17 +278,14 @@ function processAllContent() {
   const enrichedFaqs = enrichWithGuidance(faqItems, guidanceItems);
   const enrichedGuidance = enrichWithRelatedFaqs(guidanceItems, faqItems);
 
-  // Step 4: Add badges to all FAQs (after all enrichment is complete)
-  const faqsWithBadges = addBadgesToFaqs(enrichedFaqs);
-
-  // Step 5: Process authors
+  // Step 4: Process authors
   const authorsContent = processAuthorsFile();
 
   return {
-    faqs: faqsWithBadges,
+    faqs: enrichedFaqs,
     guidance: enrichedGuidance,
-    faqsByCategory: organizeFaqsByCategory(faqsWithBadges),
-    faqItems: faqsWithBadges, // Flat array for pagination
+    faqsByCategory: organizeFaqsByCategory(enrichedFaqs),
+    faqItems: enrichedFaqs, // Flat array for pagination
     authorsContent
   };
 }
