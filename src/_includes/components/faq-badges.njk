@@ -1,0 +1,32 @@
+{#
+  FAQ Status and Danger Badges Component
+
+  Expects 'faq' variable from parent scope with:
+  - faq.status: FAQ status (pending-guidance, draft, approved)
+  - faq.answerMissing: Boolean indicating if FAQ has no answer text
+  - faq.guidanceFileNotFound: Boolean flag when guidance-id references non-existent file
+
+  Usage (assumes 'faq' exists in parent scope):
+  {% include "components/faq-badges.njk" %}
+#}
+
+<div class="admin-indicators" style="display: none;">
+  {# Status badge - one of three #}
+  {% if faq.status == 'pending-guidance' %}
+  <span class="badge warning">🛑 Pending Guidance</span>
+  {% elif faq.status == 'draft' %}
+  <span class="badge warning">⚠️ Draft</span>
+  {% elif faq.status == "approved" %}
+  <span class="badge success">✅ Approved</span>
+  {% else %}
+  <span class="badge danger">🛑 Status not set</span>
+  {% endif %}
+
+  {# Danger indicators - can have multiple #}
+  {% if faq.answerMissing %}
+  <span class="badge danger">⚠️ Missing Answer</span>
+  {% endif %}
+  {% if faq.guidanceFileNotFound %}
+  <span class="badge danger">⚠️ Guidance File Not Found</span>
+  {% endif %}
+</div>

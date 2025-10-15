@@ -52,23 +52,19 @@
   {% endif %}
 
   <div class="faq-items">
-    {% for item in componentData.faqs %}
-      <div class="faq-item"{% if isAccordion %} data-faq-key="{{ item.filename | replace('.md', '') }}"{% endif %}>
+    {% for faq in componentData.faqs %}
+      <div class="faq-item"{% if isAccordion %} data-faq-key="{{ faq.filename | replace('.md', '') }}"{% endif %}>
         {% if isAccordion %}
           <button class="faq-trigger" onclick="toggleAccordion(this)">
-            <span class="question-text">{{ item.question | markdown | safe }}</span>
+            <span class="question-text">{{ faq.question | markdown | safe }}</span>
             <span class="accordion-icon">▼</span>
-            <div class="admin-indicators" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
-              <span class="status-indicator status-{{ item.status }}"></span>
-            </div>
+            {% include "components/faq-badges.njk" %}
           </button>
         {% else %}
           <a href="{{ item.permalink }}" class="faq-trigger">
             <span class="question-text">
-              {{ item.question | markdown | safe }}
-              <div class="admin-indicators" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
-                <span class="status-indicator status-{{ item.status }}"></span>
-              </div>
+              {{ faq.question | markdown | safe }}
+              {% include "components/faq-badges.njk" %}
             </span>
           </a>
         {% endif %}
@@ -76,26 +72,26 @@
         {% if isAccordion %}
           <div class="faq-content">
             <div class="faq-answer">
-              {{ item.answer | markdown | safe }}
+              {{ faq.answer | markdown | safe }}
 
-              {% if item.status == "draft" or item.guidanceItem %}
+              {% if faq.status == "draft" or faq.guidanceItem %}
               <aside class="faq-warnings">
-                {% if item.status == "draft" %}
+                {% if faq.status == "draft" %}
                 <div class="faq-warning">
                   <p><strong>This FAQ is a draft</strong> - it hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
                 </div>
                 {% endif %}
 
-                {% if item.guidanceItem %}
+                {% if faq.guidanceItem %}
                 <div class="faq-warning faq-guidance">
                   <p><strong>Pending Guidance</strong></p>
-                  {% if item.guidanceItem.guidanceText %}
+                  {% if faq.guidanceItem.guidanceText %}
                     <div class="guidance-content">
                       <p>This FAQ awaits commission guidance on:</p>
-                      <p class="guidance-phrase">{{ item.guidanceItem.guidanceText | truncate(300) }}</p>
+                      <p class="guidance-phrase">{{ faq.guidanceItem.guidanceText | truncate(300) }}</p>
                     </div>
                     <div class="guidance-actions">
-                      <a href="{{ item.guidanceItem.permalink }}" class="guidance-link">View full guidance request →</a>
+                      <a href="{{ faq.guidanceItem.permalink }}" class="guidance-link">View full guidance request →</a>
                     </div>
                   {% else %}
                     <p>This FAQ awaits commission guidance.</p>
@@ -107,22 +103,22 @@
             </div>
 
             <div class="faq-admin-info" style="display: {{ 'block' if componentData.showAdminIndicators else 'none' }};">
-              {% if item["guidance-id"] %}
+              {% if faq["guidance-id"] %}
               <div class="pending-guidance-link">
-                <strong>🛑 Related Pending Guidance:</strong> <a href="{{ item.guidanceItem.permalink }}">{{ item["guidance-id"] | replace('-', ' ') | title }}</a>
+                <strong>🛑 Related Pending Guidance:</strong> <a href="{{ faq.guidanceItem.permalink }}">{{ faq["guidance-id"] | replace('-', ' ') | title }}</a>
                 <p><em>This FAQ is affected by pending guidance that is currently being developed.</em></p>
               </div>
               {% endif %}
 
-              {% if item["Related issue"] %}
+              {% if faq["Related issue"] %}
               <div class="related-issue">
-                <strong>Related issue:</strong> <a href="{{ item["Related issue"] }}">{{ item["Related issue"] }}</a>
+                <strong>Related issue:</strong> <a href="{{ faq["Related issue"] }}">{{ faq["Related issue"] }}</a>
               </div>
               {% endif %}
 
               <div class="edit-on-github">
                 <span class="edit-icon">✏️</span>
-                <a href="https://github.com/orcwg/cra-hub/edit/main/faq/{{ item.category }}/{{ item.filename }}" target="_blank" rel="noopener">Edit this FAQ on GitHub</a>
+                <a href="https://github.com/orcwg/cra-hub/edit/main/faq/{{ faq.category }}/{{ faq.filename }}" target="_blank" rel="noopener">Edit this FAQ on GitHub</a>
               </div>
 
               <div class="faq-link">

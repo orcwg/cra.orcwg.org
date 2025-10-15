@@ -142,7 +142,7 @@ function processFaqItem(parsedItem) {
     question,
     answer: body,
     pageTitle: markdownToPlainText(question),
-    hasAnswer: Boolean(body && body.trim().length > 0),
+    answerMissing: !body || body.trim().length == 0,
     permalink: `/faq/${category}/${filename.replace('.md', '')}/`
   };
 }
@@ -174,17 +174,29 @@ function processGuidanceItem(parsedItem) {
 // Cross-reference enrichment
 function enrichWithGuidance(faqItems, guidanceItems) {
   return faqItems.map(faqItem => {
-    if (faqItem['guidance-id']) {
-      const relatedGuidance = guidanceItems.find(guidance =>
-        guidance.filename === faqItem['guidance-id'] + '.md'
-      );
+    const hasGuidanceId = Boolean(faqItem['guidance-id']);
 
-      return {
-        ...faqItem,
-        guidanceItem: relatedGuidance || null
-      };
+    // Find related guidance document if guidance-id exists
+    const guidanceItem = hasGuidanceId
+      ? guidanceItems.find(guidance => guidance.filename === faqItem['guidance-id'] + '.md') || null
+      : null;
+
+    // Determine danger indicators
+    const guidanceFileNotFound = hasGuidanceId && !guidanceItem;
+
+    // Throw error if guidance ID is missing for pending-guidance status
+    if (faqItem.status === 'pending-guidance' && !hasGuidanceId) {
+      throw new Error(
+        `Missing guidance-id for FAQ with status 'pending-guidance':\n` +
+        `  Permalink: ${faqItem.permalink}\n`
+      );
     }
-    return faqItem;
+
+    return {
+      ...faqItem,
+      guidanceItem,
+      guidanceFileNotFound
+    };
   });
 }
 
