@@ -2,21 +2,37 @@
 layout: layout.njk
 title: All FAQs
 permalink: "/faq-list/"
+listOrder:
+  - cra-itself
+  - projects
+  - maintainers
+  - stewards
+  - manufacturers
+  - standards
+  - important-and-critical-products
+  - attestations
+  - legislation
 ---
 
 <div class="faq-list-intro">
-  <p>Complete collection of all FAQ topics organized by category. This includes questions and answers covering all aspects of the Cyber Resilience Act, from basic concepts to detailed implementation guidance.</p>
-  <p><strong>Note:</strong> This list includes all FAQs regardless of completion status. Some entries may be drafts, have missing content, or require additional guidance. For curated collections of complete FAQs, visit the <a href="/lists/">Curated Lists</a> section.</p>
+  <p>Complete collection of all FAQ topics organized thematically. This includes questions and answers covering all aspects of the Cyber Resilience Act as it relates to open source.</p>
+  <p><strong>Note:</strong> This list includes all FAQs regardless of completion status. Some entries may be drafts, have missing content, or require additional guidance.</p>
 </div>
 
 <div class="faq-list-container">
-  {% for category, questions in data.faqsByCategory %}
-    {% set componentData = {
-      title: category | categoryTitle,
-      faqs: questions,
-      mode: "list",
-      showAdminIndicators: false
-    } %}
-    {% include "components/faq-list.njk" %}
+  {% for listKey in listOrder %}
+    {% for listItem in curatedLists %}
+      {% if listItem.key == listKey and listItem.value.count > 0 %}
+        {% set componentData = {
+          title: listItem.value.title,
+          description: listItem.value.description,
+          icon: listItem.value.icon,
+          faqs: listItem.value.items,
+          mode: "list",
+          showAdminIndicators: false
+        } %}
+        {% include "components/faq-list.njk" %}
+      {% endif %}
+    {% endfor %}
   {% endfor %}
 </div>

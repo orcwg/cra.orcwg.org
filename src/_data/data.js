@@ -126,6 +126,11 @@ function extractGuidanceText(content) {
 function processFaqItem(parsedItem) {
   const { frontmatter, filename, category, question, body } = parsedItem;
 
+  // Validate that FAQ has a question/title
+  if (!question) {
+    throw new Error(`FAQ ${category}/${filename} has no question/title. All FAQs must have a # heading in their markdown content.`);
+  }
+
   // Normalize status by removing emojis and converting to lowercase
   const status = frontmatter.Status.replace(/^(⚠️|🛑|✅)\s*/, '').trim().toLowerCase();
 

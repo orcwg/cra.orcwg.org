@@ -31,55 +31,34 @@ function loadCuratedListsFromYAML() {
   return listsConfig;
 }
 
-function isCompleteItem(item) {
-  // Only include FAQs that have both question and answer
-  return item.question &&
-    item.answer &&
-    item.answer.trim().length > 0;
-}
 
 module.exports = function () {
   const faqData = data().faqsByCategory;
   const curatedListsConfig = loadCuratedListsFromYAML();
   const result = [];
 
-  // Sort lists by order field if present
-  const sortedLists = Object.entries(curatedListsConfig).sort(([, a], [, b]) => {
-    return (a.order || 999) - (b.order || 999);
-  });
-
-  for (const [listKey, listConfig] of sortedLists) {
+  for (const [listKey, listConfig] of Object.entries(curatedListsConfig)) {
     const listItems = [];
 
     for (const faqRef of listConfig.faqs) {
       let category, filename;
 
-      // Support both new simple format (string) and old format (object)
-      if (typeof faqRef === 'string') {
-        // New format: "directory/filename" (without .md)
-        const parts = faqRef.split('/');
-        if (parts.length === 2) {
-          category = parts[0];
-          filename = parts[1] + '.md'; // Add .md extension
-        } else {
-          console.warn(`Invalid FAQ reference format: ${faqRef}. Expected "category/filename"`);
-          continue;
-        }
+      const parts = faqRef.split('/');
+      if (parts.length === 2) {
+        category = parts[0];
+        filename = parts[1] + '.md'; // Add .md extension
       } else {
-        // Old format: { category: "...", filename: "..." }
-        category = faqRef.category;
-        filename = faqRef.filename;
+        throw new Error(`Invalid FAQ reference format: ${faqRef}. Expected "category/filename"`);
       }
-
+  
       // Find the FAQ item in the data
       const categoryItems = faqData[category];
       if (categoryItems) {
         const faqItem = categoryItems.find(item => item.filename === filename);
-        if (faqItem && isCompleteItem(faqItem)) {
+        if (faqItem) {
           listItems.push({
             ...faqItem,
-            category: category,
-            url: faqItem.permalink
+            category: category
           });
         }
       }

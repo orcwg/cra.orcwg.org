@@ -41,7 +41,15 @@
 {% set isAccordion = mode == "accordion" %}
 
 <section class="faq-category faq-category--{{ mode }}{{ ' ' + componentData.categoryClass if componentData.categoryClass }}">
-  <h2 class="category-title">{{ componentData.title }}</h2>
+  <h2 class="category-title">
+    {% if componentData.icon %}
+      <span class="category-icon">{{ componentData.icon }}</span>
+    {% endif %}
+    {{ componentData.title }}
+  </h2>
+  {% if componentData.description %}
+    <p class="category-description">{{ componentData.description }}</p>
+  {% endif %}
 
   <div class="faq-items">
     {% for faq in componentData.faqs %}
@@ -53,7 +61,7 @@
             {% include "components/faq-badges.njk" %}
           </button>
         {% else %}
-          <a href="{{ faq.url or faq.permalink }}" class="faq-trigger">
+          <a href="{{ item.permalink }}" class="faq-trigger">
             <span class="question-text">
               {{ faq.question | markdown | safe }}
               {% include "components/faq-badges.njk" %}
@@ -114,7 +122,7 @@
               </div>
 
               <div class="faq-link">
-                <a href="{{ faq.url or faq.permalink }}" class="standalone-link">📄 View standalone page</a>
+                <a href="{{ item.permalink }}" class="standalone-link">📄 View standalone page</a>
               </div>
             </div>
           </div>
