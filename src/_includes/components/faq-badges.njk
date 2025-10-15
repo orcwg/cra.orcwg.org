@@ -3,9 +3,8 @@
 
   Expects 'faq' variable from parent scope with:
   - faq.status: FAQ status (pending-guidance, draft, approved)
-  - faq.hasAnswer: Boolean indicating if FAQ has answer text
-  - faq.guidanceIdMissing: Boolean flag
-  - faq.guidanceFileNotFound: Boolean flag
+  - faq.answerMissing: Boolean indicating if FAQ has no answer text
+  - faq.guidanceFileNotFound: Boolean flag when guidance-id references non-existent file
 
   Usage (assumes 'faq' exists in parent scope):
   {% include "components/faq-badges.njk" %}
@@ -26,9 +25,6 @@
   {# Danger indicators - can have multiple #}
   {% if faq.answerMissing %}
   <span class="badge danger">⚠️ Missing Answer</span>
-  {% endif %}
-  {% if faq.guidanceIdMissing %}
-  <span class="badge danger">⚠️ Missing Guidance ID</span>
   {% endif %}
   {% if faq.guidanceFileNotFound %}
   <span class="badge danger">⚠️ Guidance File Not Found</span>

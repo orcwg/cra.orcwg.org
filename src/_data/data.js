@@ -177,13 +177,19 @@ function enrichWithGuidance(faqItems, guidanceItems) {
       : null;
 
     // Determine danger indicators
-    const guidanceIdMissing = faqItem.status === 'pending-guidance' && !hasGuidanceId;
     const guidanceFileNotFound = hasGuidanceId && !guidanceItem;
+
+    // Throw error if guidance ID is missing for pending-guidance status
+    if (faqItem.status === 'pending-guidance' && !hasGuidanceId) {
+      throw new Error(
+        `Missing guidance-id for FAQ with status 'pending-guidance':\n` +
+        `  Permalink: ${faqItem.permalink}\n`
+      );
+    }
 
     return {
       ...faqItem,
       guidanceItem,
-      guidanceIdMissing,
       guidanceFileNotFound
     };
   });
