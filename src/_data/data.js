@@ -137,7 +137,7 @@ function processFaqItem(parsedItem) {
     question,
     answer: body,
     pageTitle: markdownToPlainText(question),
-    answerMissing: !body || !body.trim(),
+    answerMissing: !body || body.trim().length == 0,
     permalink: `/faq/${category}/${filename.replace('.md', '')}/`
   };
 }
