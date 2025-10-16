@@ -61,7 +61,7 @@
             {% include "components/faq-badges.njk" %}
           </button>
         {% else %}
-          <a href="{{ item.permalink }}" class="faq-trigger">
+          <a href="{{ faq.permalink }}" class="faq-trigger">
             <span class="question-text">
               {{ faq.question | markdown | safe }}
               {% include "components/faq-badges.njk" %}
@@ -122,7 +122,7 @@
               </div>
 
               <div class="faq-link">
-                <a href="{{ item.permalink }}" class="standalone-link">📄 View standalone page</a>
+                <a href="{{ faq.permalink }}" class="standalone-link">📄 View standalone page</a>
               </div>
             </div>
           </div>
