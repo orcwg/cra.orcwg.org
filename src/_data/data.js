@@ -1,13 +1,17 @@
+// ============================================================================
+// Dependencies
+// ============================================================================
 const fs = require("fs");
 const path = require("path");
 const matter = require("gray-matter");
 const markdownIt = require("markdown-it");
 const plainTextPlugin = require("markdown-it-plain-text");
 const yaml = require("js-yaml");
-const curatedLists = require("../../_tmp/curatedLists");
 
+// ============================================================================
+// Constants
+// ============================================================================
 const CACHE_DIR = path.join(__dirname, "..", "..", "_cache");
-const OUTPUT_DIR = path.join(__dirname, "..", "..", "_tmp");
 
 const FAQ_DIR = path.join(CACHE_DIR, "faq");
 const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
@@ -16,13 +20,17 @@ const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
 
 const mdPlain = markdownIt().use(plainTextPlugin);
 
-// Helper function to convert markdown to plain text for page titles
+// ============================================================================
+// Utility Functions - Text Processing
+// ============================================================================
+
+// Convert markdown to plain text (used for page titles)
 function markdownToPlainText(markdownText) {
   mdPlain.render(markdownText);
   return mdPlain.plainText.trim();
 }
 
-// Helper function to extract the guidance request abstract
+// Extract the "Guidance Needed" section from markdown content
 function extractGuidanceText(content) {
   const lines = content.split('\n');
 
@@ -47,41 +55,11 @@ function extractGuidanceText(content) {
   return markdownToPlainText(rawText).trim();
 }
 
-// Process AUTHORS.md
-function processAuthorsFile() {
-  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
+// ============================================================================
+// Utility Functions - File Operations
+// ============================================================================
 
-  if (!fs.existsSync(authorsPath)) {
-    throw new Error(`AUTHORS.md not found at ${authorsPath}. Ensure the cache is populated.`);
-  }
-
-  const rawContent = fs.readFileSync(authorsPath, "utf-8");
-  const parsed = matter(rawContent);
-  const content = parsed.content.trim();
-
-  if (!content) {
-    throw new Error(`AUTHORS.md at ${authorsPath} is empty or has no content after frontmatter.`);
-  }
-
-  return content;
-}
-
-// Utility to fetch file paths from FAQ directory
-function getFaqFiles(dir) {
-  const files = fs.readdirSync(dir, { withFileTypes: true, recursive: true });
-
-  faqFiles = files.filter(entry => {
-    return entry.parentPath !== GUIDANCE_DIR &&  // Reject pending-guidance files
-      entry.parentPath !== dir &&     // Reject files at the root of the FAQ
-      entry.isFile() &&                     // Reject directories
-      entry.name.endsWith('.md');           // Keep only markdown files
-  });
-
-  return faqFiles;
-}
-
-// Takes an array of files from readdirSync, returns array of file objects with
-// filename, front-matter data and md content.
+// Read and parse multiple markdown files with frontmatter
 function getParsedFiles(files) {
   return files.map(file => {
     const fullPath = path.join(file.parentPath, file.name);
@@ -97,7 +75,25 @@ function getParsedFiles(files) {
   });
 }
 
-// Creates the array containing the FAQs.
+// ============================================================================
+// FAQ Processing
+// ============================================================================
+
+// Get FAQ markdown files (excludes pending-guidance and root files)
+function getFaqFiles(dir) {
+  const files = fs.readdirSync(dir, { withFileTypes: true, recursive: true });
+
+  faqFiles = files.filter(entry => {
+    return entry.parentPath !== GUIDANCE_DIR &&  // Reject pending-guidance files
+      entry.parentPath !== dir &&     // Reject files at the root of the FAQ
+      entry.isFile() &&                     // Reject directories
+      entry.name.endsWith('.md');           // Keep only markdown files
+  });
+
+  return faqFiles;
+}
+
+// Process all FAQ files into structured objects
 function createProcessedFaqs(faqDir) {
   const faqFiles = getFaqFiles(faqDir);
   const rawFaqs = getParsedFiles(faqFiles);
@@ -135,7 +131,11 @@ function createProcessedFaqs(faqDir) {
   });
 };
 
-// Creates the array containing the guidance requests.
+// ============================================================================
+// Guidance Request Processing
+// ============================================================================
+
+// Get guidance request markdown files
 function getGuidanceFiles(dir) {
   const files = fs.readdirSync(dir, { withFileTypes: true });
 
@@ -147,6 +147,7 @@ function getGuidanceFiles(dir) {
   return guidanceFiles;
 }
 
+// Process all guidance request files into structured objects
 function createProcessedGuidanceRequests(guidanceDir) {
   const guidanceFiles = getGuidanceFiles(guidanceDir);
   const guidanceRequests = getParsedFiles(guidanceFiles);
@@ -179,20 +180,11 @@ function createProcessedGuidanceRequests(guidanceDir) {
   });
 };
 
-// Connects FAQ and related guidance request objects
-function connectRelatedGuidanceAndFaqs(guidanceRequests, faqs) {
-  guidanceRequests.forEach(guidanceRequest => {
-    guidanceRequest.relatedFaqs = [];
-    relatedFaqs = faqs.filter(faq => (faq.guidanceId == guidanceRequest.id));
-    relatedFaqs.forEach(relatedFaq => {
-      guidanceRequest.relatedFaqs.push(relatedFaq);
-      relatedFaq.relatedGuidanceRequest = guidanceRequest;
-      relatedFaq.hasGuidanceId = true;
-    })
-  });
-};
+// ============================================================================
+// Curated List Processing
+// ============================================================================
 
-// Gets and parses curated list files
+// Get README.yml files from FAQ subdirectories
 function getCuratedListFiles(faqDir) {
   const files = fs.readdirSync(faqDir, { withFileTypes: true, recursive: true });
 
@@ -215,7 +207,7 @@ function getCuratedListFiles(faqDir) {
   });
 }
 
-// Parses curated list files and normalizes FAQ references
+// Process curated list files and normalize FAQ references
 function createCuratedLists(faqDir) {
   const rawCuratedListFiles = getCuratedListFiles(faqDir);
   const result = [];
@@ -252,7 +244,47 @@ function createCuratedLists(faqDir) {
   return result;
 };
 
-// Connects curated lists with FAQs
+// ============================================================================
+// Authors Processing
+// ============================================================================
+
+// Read and return AUTHORS.md content
+function processAuthorsFile() {
+  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
+
+  if (!fs.existsSync(authorsPath)) {
+    throw new Error(`AUTHORS.md not found at ${authorsPath}. Ensure the cache is populated.`);
+  }
+
+  const rawContent = fs.readFileSync(authorsPath, "utf-8");
+  const parsed = matter(rawContent);
+  const content = parsed.content.trim();
+
+  if (!content) {
+    throw new Error(`AUTHORS.md at ${authorsPath} is empty or has no content after frontmatter.`);
+  }
+
+  return content;
+}
+
+// ============================================================================
+// Relationship Building Functions
+// ============================================================================
+
+// Link FAQs with their related guidance requests
+function connectRelatedGuidanceAndFaqs(guidanceRequests, faqs) {
+  guidanceRequests.forEach(guidanceRequest => {
+    guidanceRequest.relatedFaqs = [];
+    relatedFaqs = faqs.filter(faq => (faq.guidanceId == guidanceRequest.id));
+    relatedFaqs.forEach(relatedFaq => {
+      guidanceRequest.relatedFaqs.push(relatedFaq);
+      relatedFaq.relatedGuidanceRequest = guidanceRequest;
+      relatedFaq.hasGuidanceId = true;
+    })
+  });
+};
+
+// Link curated lists with their FAQs (bidirectional)
 function connectCuratedListsAndFaqs(curatedLists, faqs) {
   for (const list of curatedLists) {
     const listItems = [];
@@ -278,8 +310,11 @@ function connectCuratedListsAndFaqs(curatedLists, faqs) {
   }
 };
 
+// ============================================================================
+// Main Pipeline
+// ============================================================================
 
-// Main data pipeline function
+// Orchestrate the complete data processing pipeline
 function processAllContent() {
 
   // 1. Get and parse FAQs
@@ -309,7 +344,11 @@ function processAllContent() {
   };
 }
 
-// Main export with debug output
+// ============================================================================
+// Module Export
+// ============================================================================
+
+// Main entry point for 11ty data processing
 module.exports = function () {
   const content = processAllContent();
 
