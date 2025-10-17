@@ -18,9 +18,7 @@ eleventyComputed:
 {% set componentData = {
   title: list.title,
   icon: list.icon,
-  faqs: list.faqs,
-  mode: "accordion",
-  showAdminIndicators: false
+  faqs: list.faqs
 } %}
-{% include "components/faq-list.njk" %}
-</article>
+{% include "components/faq-accordion.njk" %}
+
