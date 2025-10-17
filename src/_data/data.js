@@ -3,248 +3,53 @@ const path = require("path");
 const matter = require("gray-matter");
 const markdownIt = require("markdown-it");
 const plainTextPlugin = require("markdown-it-plain-text");
+const yaml = require("js-yaml");
+const curatedLists = require("../../_tmp/curatedLists");
 
-const CACHE_DIR = path.join(__dirname, "..", "..", "_cache", "faq");
+const CACHE_DIR = path.join(__dirname, "..", "..", "_cache");
 const OUTPUT_DIR = path.join(__dirname, "..", "..", "_tmp");
+
+const FAQ_DIR = path.join(CACHE_DIR, "faq");
+const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
+
+const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
 
 const mdPlain = markdownIt().use(plainTextPlugin);
 
 // Helper function to convert markdown to plain text for page titles
 function markdownToPlainText(markdownText) {
-  if (!markdownText) return "";
   mdPlain.render(markdownText);
-  return mdPlain.plainText;
+  return mdPlain.plainText.trim();
 }
 
-// Pure file system operations
-function walkAllFiles(dir, category = "") {
-  const files = [];
-  if (!fs.existsSync(dir)) return files;
-
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const fullPath = path.join(dir, entry.name);
-
-    if (entry.isDirectory()) {
-      const subFiles = walkAllFiles(fullPath, entry.name);
-      files.push(...subFiles);
-    } else if (entry.isFile() && entry.name.endsWith(".md")) {
-      files.push({
-        fullPath,
-        filename: entry.name,
-        category
-      });
-    }
-  }
-
-  return files;
-}
-
-
-// Pure content parsing functions
-function parseMarkdown(rawContent, filename, category) {
-  const parsed = matter(rawContent);
-
-  // Skip files with no gray-matter
-  if (!parsed.data || Object.keys(parsed.data).length === 0) {
-    return null;
-  }
-
-  const content = parsed.content.trim();
-
-  // Parse question from first # heading
-  const titleMatch = content.match(/^#\s+(.+)$/m);
-  const question = titleMatch ? titleMatch[1] : null;
-
-  // Everything after the first heading is the body content
-  let body = null;
-  if (titleMatch) {
-    const afterTitle = content.substring(content.indexOf(titleMatch[0]) + titleMatch[0].length).trim();
-    body = afterTitle;
-  } else {
-    // Fallback: treat entire content as body if no title found
-    body = content;
-  }
-
-  return {
-    filename,
-    category,
-    frontmatter: parsed.data,
-    question,
-    body
-  };
-}
-
+// Helper function to extract the guidance request abstract
 function extractGuidanceText(content) {
-  if (!content) return "";
-
   const lines = content.split('\n');
-  let isInGuidanceSection = false;
-  let shouldStop = false;
-  let guidanceLines = [];
 
-  lines.forEach(line => {
-    if (shouldStop) return;
+  // Find the start and end of the Guidance Needed section
+  const guidanceStart = lines.findIndex(line =>
+    line.trim().match(/^#+\s*Guidance Needed/i)
+  );
 
-    const trimmedLine = line.trim();
+  // Find the next heading after guidance section starts
+  const guidanceEnd = lines.findIndex((line, index) =>
+    index > guidanceStart && line.trim().match(/^#+\s/)
+  );
 
-    // Check if we're entering the "Guidance Needed" section
-    if (trimmedLine.match(/^#+\s*Guidance Needed/i)) {
-      isInGuidanceSection = true;
-      return;
-    }
+  // Extract lines between start and end
+  const endIndex = guidanceEnd === -1 ? lines.length : guidanceEnd;
+  const guidanceLines = lines
+    .slice(guidanceStart + 1, endIndex)
+    .filter(line => line);
 
-    // Check if we're entering another section (any heading)
-    if (isInGuidanceSection && trimmedLine.match(/^#+\s/)) {
-      shouldStop = true;
-      return;
-    }
-
-    // Collect lines while in the guidance section
-    if (isInGuidanceSection && trimmedLine) {
-      guidanceLines.push(trimmedLine);
-    }
-  });
-
-  // Join the guidance text and process markdown
-  const rawText = guidanceLines
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  // Convert markdown to HTML and then strip HTML tags for clean text
-  if (rawText) {
-    const markdownIt = require("markdown-it")();
-    const htmlContent = markdownIt.render(rawText);
-    return htmlContent.replace(/<[^>]*>/g, "").trim();
-  }
-
-  return "";
-}
-
-
-// Data enrichment for FAQ items
-function processFaqItem(parsedItem) {
-  const { frontmatter, filename, category, question, body } = parsedItem;
-
-  // Validate that FAQ has a question/title
-  if (!question) {
-    throw new Error(`FAQ ${category}/${filename} has no question/title. All FAQs must have a # heading in their markdown content.`);
-  }
-
-  // Normalize status by removing emojis and converting to lowercase
-  const status = frontmatter.Status.replace(/^(⚠️|🛑|✅)\s*/, '').trim().toLowerCase();
-
-  return {
-    filename,
-    category,
-    ...frontmatter,
-    status,
-    question,
-    answer: body,
-    pageTitle: markdownToPlainText(question),
-    answerMissing: !body || body.trim().length == 0,
-    permalink: `/faq/${category}/${filename.replace('.md', '')}/`
-  };
-}
-
-// Data enrichment for guidance items
-function processGuidanceItem(parsedItem) {
-  const { frontmatter, filename, category, question, body } = parsedItem;
-
-  // Extract title - prefer frontmatter, fallback to question, then filename
-  let title = frontmatter.title || question;
-  if (!title) {
-    // Fallback to filename
-    title = filename.replace('.md', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  }
-
-  return {
-    filename,
-    category,
-    data: frontmatter,
-    status: frontmatter.status,
-    title,
-    body,
-    pageTitle: markdownToPlainText(title),
-    guidanceText: extractGuidanceText(body),
-    permalink: `/pending-guidance/${filename.replace('.md', '')}/`
-  };
-}
-
-// Cross-reference enrichment
-function enrichWithGuidance(faqItems, guidanceItems) {
-  return faqItems.map(faqItem => {
-    const hasGuidanceId = Boolean(faqItem['guidance-id']);
-
-    // Find related guidance document if guidance-id exists
-    const guidanceItem = hasGuidanceId
-      ? guidanceItems.find(guidance => guidance.filename === faqItem['guidance-id'] + '.md') || null
-      : null;
-
-    // Determine danger indicators
-    const guidanceFileNotFound = hasGuidanceId && !guidanceItem;
-
-    // Throw error if guidance ID is missing for pending-guidance status
-    if (faqItem.status === 'pending-guidance' && !hasGuidanceId) {
-      throw new Error(
-        `Missing guidance-id for FAQ with status 'pending-guidance':\n` +
-        `  Permalink: ${faqItem.permalink}\n`
-      );
-    }
-
-    return {
-      ...faqItem,
-      guidanceItem,
-      guidanceFileNotFound
-    };
-  });
-}
-
-function enrichWithRelatedFaqs(guidanceItems, faqItems) {
-  return guidanceItems.map(guidance => {
-    // Find all related FAQs that reference this guidance
-    const relatedFaqs = [];
-    const guidanceKey = guidance.filename.replace('.md', '');
-
-    for (const faqItem of faqItems) {
-      if (faqItem['guidance-id'] === guidanceKey) {
-        relatedFaqs.push({
-          category: faqItem.category,
-          filename: faqItem.filename,
-          question: faqItem.question,
-          permalink: faqItem.permalink
-        });
-      }
-    }
-
-    return {
-      ...guidance,
-      relatedFaqs,
-      relatedFaq: relatedFaqs[0] || null // Keep for backward compatibility
-    };
-  });
-}
-
-// Data organization
-function organizeFaqsByCategory(faqItems) {
-  const result = {};
-
-  for (const item of faqItems) {
-    if (!result[item.category]) {
-      result[item.category] = [];
-    }
-
-    // Remove category from individual item since it's now the key
-    const { category, ...itemWithoutCategory } = item;
-    result[item.category].push(itemWithoutCategory);
-  }
-
-  return result;
+  // Convert to plain text
+  const rawText = guidanceLines.join(' ');
+  return markdownToPlainText(rawText).trim();
 }
 
 // Process AUTHORS.md
 function processAuthorsFile() {
-  const authorsPath = path.join(CACHE_DIR, "AUTHORS.md");
+  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
 
   if (!fs.existsSync(authorsPath)) {
     throw new Error(`AUTHORS.md not found at ${authorsPath}. Ensure the cache is populated.`);
@@ -261,42 +66,245 @@ function processAuthorsFile() {
   return content;
 }
 
-// Main content processing function
-function processAllContent() {
-  // Step 1: Extract all content
-  const allFiles = walkAllFiles(CACHE_DIR);
-  const parsedContent = allFiles
-    .map(file => {
-      const rawContent = fs.readFileSync(file.fullPath, "utf-8");
-      const parsed = parseMarkdown(rawContent, file.filename, file.category);
-      return parsed ? { ...parsed, fullPath: file.fullPath } : null;
+// Utility to fetch file paths from FAQ directory
+function getFaqFiles(dir) {
+  const files = fs.readdirSync(dir, { withFileTypes: true, recursive: true });
+
+  faqFiles = files.filter(entry => {
+    return entry.parentPath !== GUIDANCE_DIR &&  // Reject pending-guidance files
+      entry.parentPath !== dir &&     // Reject files at the root of the FAQ
+      entry.isFile() &&                     // Reject directories
+      entry.name.endsWith('.md');           // Keep only markdown files
+  });
+
+  return faqFiles;
+}
+
+// Takes an array of files from readdirSync, returns array of file objects with
+// filename, front-matter data and md content.
+function getParsedFiles(files) {
+  return files.map(file => {
+    const fullPath = path.join(file.parentPath, file.name);
+    const rawFile = fs.readFileSync(fullPath, "utf-8");
+    const parsed = matter(rawFile);
+
+    return {
+      filename: file.name,
+      path: path.relative(CACHE_DIR, file.parentPath),
+      data: parsed.data,
+      content: parsed.content.trim()
+    };
+  });
+}
+
+// Creates the array containing the FAQs.
+function createProcessedFaqs(faqDir) {
+  const faqFiles = getFaqFiles(faqDir);
+  const rawFaqs = getParsedFiles(faqFiles);
+
+  return rawFaqs.map(faq => {
+    // Set ID to basedir/filename-without-extension.
+    const id = path.join(path.basename(faq.path), faq.filename.replace('.md', ''));
+
+    // Normalize status
+    const status = faq.data.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
+
+    // Generate edit on github URL
+    const editOnGithubUrl = new URL(`${faq.path}/${faq.filename}`, EDIT_ON_GITHUB_ROOT).href;
+
+    // Extract question and answer
+    const questionMatch = faq.content.match(/^#\s+(.+)$/m);
+    const question = questionMatch[1].trim(); // Extract just the text without the #
+    const answer = faq.content.replace(questionMatch[0], '').trim();
+
+    // Set guidance ID
+    const guidanceId = faq.data["guidance-id"] ? faq.data["guidance-id"].trim() : false;
+
+    return {
+      id: id,
+      status: status,
+      permalink: `/faq/${id}/`,
+      editOnGithubUrl: editOnGithubUrl,
+      relatedIssue: faq.data["Related issue"],
+      pageTitle: markdownToPlainText(question),
+      question: question,
+      answer: answer,
+      answerMissing: (answer.length == 0),
+      guidanceId: guidanceId
+    };
+  });
+};
+
+// Creates the array containing the guidance requests.
+function getGuidanceFiles(dir) {
+  const files = fs.readdirSync(dir, { withFileTypes: true });
+
+  const guidanceFiles = files.filter(entry => {
+    return entry.isFile() &&                     // Reject directories
+      entry.name.endsWith('.md');           // Keep only markdown files
+  });
+
+  return guidanceFiles;
+}
+
+function createProcessedGuidanceRequests(guidanceDir) {
+  const guidanceFiles = getGuidanceFiles(guidanceDir);
+  const guidanceRequests = getParsedFiles(guidanceFiles);
+  return guidanceRequests.map(guidance => {
+    // Set ID to basedir/filename-without-extension.
+    const id = guidance.filename.replace('.md', '');
+
+    // Normalize status
+    const status = guidance.data.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
+
+    // Generate edit on github URL
+    const editOnGithubUrl = new URL(`${guidance.path}/${guidance.filename}`, EDIT_ON_GITHUB_ROOT).href;
+
+    // Extract title and body
+    const titleMatch = guidance.content.match(/^#\s+(.+)$/m);
+    const title = titleMatch[1].trim(); // Extract just the text without the #
+    const body = guidance.content.replace(titleMatch[0], '').trim();
+
+    return {
+      id: id,
+      status: status,
+      permalink: `/${id}/`,
+      editOnGithubUrl: editOnGithubUrl,
+      relatedIssue: guidance.data["Related issue"],
+      pageTitle: markdownToPlainText(title),
+      title: title,
+      body: body,
+      guidanceText: extractGuidanceText(body),
+    };
+  });
+};
+
+// Connects FAQ and related guidance request objects
+function connectRelatedGuidanceAndFaqs(guidanceRequests, faqs) {
+  guidanceRequests.forEach(guidanceRequest => {
+    guidanceRequest.relatedFaqs = [];
+    relatedFaqs = faqs.filter(faq => (faq.guidanceId == guidanceRequest.id));
+    relatedFaqs.forEach(relatedFaq => {
+      guidanceRequest.relatedFaqs.push(relatedFaq);
+      relatedFaq.relatedGuidanceRequest = guidanceRequest;
+      relatedFaq.hasGuidanceId = true;
     })
-    .filter(Boolean);
+  });
+};
 
-  // Step 2: Classify and process content types
-  const faqItems = [];
-  const guidanceItems = [];
+// Gets and parses curated list files
+function getCuratedListFiles(faqDir) {
+  const files = fs.readdirSync(faqDir, { withFileTypes: true, recursive: true });
 
-  for (const item of parsedContent) {
-    if (item.frontmatter.type === 'guidance-request') {
-      guidanceItems.push(processGuidanceItem(item));
-    } else {
-      faqItems.push(processFaqItem(item));
+  const curatedListFiles = files.filter(entry => {
+    return entry.isFile() &&                    // Only files
+      entry.name === 'README.yml' &&            // Must be named README.yml
+      entry.parentPath !== faqDir;              // Not at the root of FAQ directory
+  });
+
+  return curatedListFiles.map(file => {
+    const fullPath = path.join(file.parentPath, file.name);
+    const rawFile = fs.readFileSync(fullPath, "utf-8");
+    const parsedYaml = yaml.load(rawFile);
+
+    return {
+      filename: file.name,
+      path: path.relative(CACHE_DIR, file.parentPath),
+      data: parsedYaml
+    };
+  });
+}
+
+// Parses curated list files and normalizes FAQ references
+function createCuratedLists(faqDir) {
+  const rawCuratedListFiles = getCuratedListFiles(faqDir);
+  const result = [];
+
+  for (const listFile of rawCuratedListFiles) {
+    const listKey = path.basename(listFile.path);
+    const listConfig = listFile.data;
+    const normalizedFaqRefs = [];
+
+    // Normalize FAQ references to always include category/filename format
+    for (const faqRef of listConfig.faqs) {
+      let normalizedRef;
+
+      if (faqRef.includes('/')) {
+        // Already in "category/filename" format
+        normalizedRef = faqRef;
+      } else {
+        // Missing category - use the list's category (basename of path)
+        normalizedRef = `${listKey}/${faqRef}`;
+      }
+
+      normalizedFaqRefs.push(normalizedRef);
     }
+
+    result.push({
+      key: listKey,
+      value: {
+        ...listConfig,
+        faqRefs: normalizedFaqRefs
+      }
+    });
   }
 
-  // Step 3: Cross-reference and enrich
-  const enrichedFaqs = enrichWithGuidance(faqItems, guidanceItems);
-  const enrichedGuidance = enrichWithRelatedFaqs(guidanceItems, faqItems);
+  return result;
+};
 
-  // Step 4: Process authors
+// Connects curated lists with FAQs
+function connectCuratedListsAndFaqs(curatedLists, faqs) {
+  for (const list of curatedLists) {
+    const listItems = [];
+
+    // Build items array for this list
+    for (const faqRef of list.value.faqRefs) {
+      const faqItem = faqs.find(faq => faq.id === faqRef);
+
+      if (faqItem) {
+        listItems.push(faqItem);
+
+        // Add this list to the FAQ's relatedLists array
+        if (!faqItem.relatedLists) {
+          faqItem.relatedLists = [];
+        }
+        faqItem.relatedLists.push(list);
+      }
+    }
+
+    // Add items and count to the list
+    list.value.items = listItems;
+    list.value.count = listItems.length;
+  }
+};
+
+
+// Main data pipeline function
+function processAllContent() {
+
+  // 1. Get and parse FAQs
+  const faqs = createProcessedFaqs(FAQ_DIR);
+
+  // 2. Get and parse Guidance Requests
+  const guidanceRequests = createProcessedGuidanceRequests(GUIDANCE_DIR);
+
+  // 3. Enrich FAQs and Guidance Requests with their cross references
+  connectRelatedGuidanceAndFaqs(guidanceRequests, faqs);
+
+  // 4. Get curated lists
+  const curatedLists = createCuratedLists(FAQ_DIR);
+
+  // 5. Connect curated lists with FAQs
+  connectCuratedListsAndFaqs(curatedLists, faqs);
+
+  // 6. Get and process AUTHORS.md
   const authorsContent = processAuthorsFile();
 
   return {
-    faqs: enrichedFaqs,
-    guidance: enrichedGuidance,
-    faqsByCategory: organizeFaqsByCategory(enrichedFaqs),
-    faqItems: enrichedFaqs, // Flat array for pagination
+    faqs: faqs,
+    guidance: guidanceRequests,
+    faqItems: faqs,
+    curatedLists: curatedLists,
     authorsContent
   };
 }
@@ -304,21 +312,6 @@ function processAllContent() {
 // Main export with debug output
 module.exports = function () {
   const content = processAllContent();
-
-  // Write to _tmp/faq.json for debugging/inspection
-  try {
-    if (!fs.existsSync(OUTPUT_DIR)) {
-      fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-    }
-    fs.writeFileSync(
-      path.join(OUTPUT_DIR, "faq.json"),
-      JSON.stringify(content.faqsByCategory, null, 2),
-      "utf-8"
-    );
-    console.log("✅ Wrote faq.json to _tmp/");
-  } catch (err) {
-    console.error("⚠️ Could not write faq.json:", err);
-  }
 
   return content;
 };

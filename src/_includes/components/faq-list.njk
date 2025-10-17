@@ -56,14 +56,14 @@
       <div class="faq-item"{% if isAccordion %} data-faq-key="{{ faq.filename | replace('.md', '') }}"{% endif %}>
         {% if isAccordion %}
           <button class="faq-trigger" onclick="toggleAccordion(this)">
-            <span class="question-text">{{ faq.question | markdown | safe }}</span>
+            <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
             <span class="accordion-icon">▼</span>
             {% include "components/faq-badges.njk" %}
           </button>
         {% else %}
-          <a href="{{ item.permalink }}" class="faq-trigger">
+          <a href="{{ faq.permalink }}" class="faq-trigger">
             <span class="question-text">
-              {{ faq.question | markdown | safe }}
+              {{ faq.question | markdownInline | safe }}
               {% include "components/faq-badges.njk" %}
             </span>
           </a>
@@ -122,7 +122,7 @@
               </div>
 
               <div class="faq-link">
-                <a href="{{ item.permalink }}" class="standalone-link">📄 View standalone page</a>
+                <a href="{{ faq.permalink }}" class="standalone-link">📄 View standalone page</a>
               </div>
             </div>
           </div>

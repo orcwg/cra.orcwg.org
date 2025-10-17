@@ -16,7 +16,7 @@ permalink: "/pending-guidance/"
         <li class="question-item">
           <a href="{{ item.permalink }}" class="question-link">
             <span class="question-text">
-              {{ item.title }}
+              {{ item.title | markdownInline | safe }}
             </span>
           </a>
         </li>
