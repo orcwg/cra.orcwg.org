@@ -32,12 +32,16 @@ This is an Eleventy site that acts as a content processor and renderer for exter
 
 1. **External Content** - FAQ content is maintained in the [`orcwg/cra-hub`](https://github.com/orcwg/cra-hub) repository
 2. **Cache Update** - The `update-cache.sh` script clones/updates external content into `_cache/faq/`
-3. **Data Processing** - Unified content processor parses cached markdown files
-   - **Single Source of Truth**: `allContent.js` provides unified data access
-   - **Content Processing**: `contentProcessor.js` handles file parsing and data enrichment
-   - **Cross-referencing**: Automatic linking between FAQs and guidance requests
+3. **Data Processing** - `src/_data/data.js` orchestrates the complete data pipeline:
+   - **Text Processing**: Markdown to plain text conversion for titles and summaries
+   - **File Operations**: Parsing markdown files with frontmatter
+   - **FAQ Processing**: Extract questions, answers, and metadata from FAQ markdown files
+   - **Guidance Request Processing**: Parse pending guidance request documents
+   - **Curated List Processing**: Load and normalize README.yml files from FAQ subdirectories
+   - **Authors Processing**: Load AUTHORS.md content
+   - **Relationship Building**: Cross-reference FAQs with guidance requests and curated lists
    - **Permalink Generation**: URLs computed once in data layer, not reconstructed in templates
-4. **Template Rendering** - Nunjucks templates consume processed data through `allContent`
+4. **Template Rendering** - Nunjucks templates consume processed data
 5. **Site Generation** - Final site is output to `_site/` for deployment
 
 ### Content Types
@@ -45,20 +49,32 @@ This is an Eleventy site that acts as a content processor and renderer for exter
 - **FAQs**: Questions and answers with status tracking (`draft`, `approved`, `pending guidance`)
 - **Guidance Requests**: Items awaiting EU Commission clarification
 
-### FAQ Processing
+### Data Pipeline Details
 
-- FAQ content comes from markdown files in the external `orcwg/cra-hub` repository
-- Content is organized by directory structure and processed by `src/_data/faq.js`
-- Questions are extracted from markdown `#` headings
-- Answers are content following the first heading
-- Status tracking: `draft`, `approved`, `pending-guidance`
+The data processing pipeline in `src/_data/data.js` is organized into modular sections:
+
+1. **Utility Functions**
+   - Text processing: Convert markdown to plain text for page titles
+   - File operations: Parse markdown files with frontmatter using gray-matter
+
+2. **Content Processors**
+   - **FAQs**: Extract questions from `#` headings, answers from subsequent content, status badges, and GitHub edit links
+   - **Guidance Requests**: Parse pending guidance documents, extract titles and "Guidance Needed" sections
+   - **Curated Lists**: Load README.yml files from FAQ subdirectories, normalize FAQ references
+   - **Authors**: Load AUTHORS.md content from the FAQ repository
+
+3. **Relationship Building**
+   - Link FAQs to their related guidance requests via `guidance-id` frontmatter field
+   - Bidirectionally connect curated lists with their referenced FAQs
+   - Each FAQ knows which lists include it; each list knows its FAQs
 
 ### Curated Lists
 
-- YAML files in `src/_lists/` define curated FAQ collections
-- Each YAML file creates a new list page at `/lists/{filename}/`
-- Lists reference specific FAQs by category and filename
-- Automatic quality control filters incomplete/draft content
+- README.yml files in FAQ subdirectories define curated FAQ collections
+- Each README.yml file creates a new list page at `/lists/{category}/`
+- Lists reference FAQs by filename (short form) or category/filename (long form)
+- FAQ references are automatically normalized to category/filename format
+- Lists maintain bidirectional links with FAQs for navigation
 - Lists are displayed using accordion components for compact navigation
 
 ### FAQ List Component
