@@ -1,7 +1,7 @@
 {#
   FAQ Accordion Component
 
-  Parameters (set via componentData variable):
+  Parameters (set via accordionData variable):
   - title: Section title to display
   - faqs: Array of FAQ item objects
   - categoryClass: Optional CSS class for styling variations
@@ -9,7 +9,7 @@
   - icon: Optional icon to display before title
 
   Usage Example:
-  {% set componentData = {
+  {% set accordionData = {
     title: "Advanced Topics",
     faqs: faqItems,
     description: "Frequently asked questions about advanced topics"
@@ -17,19 +17,19 @@
   {% include "components/faq-accordion.njk" %}
 #}
 
-<section class="faq-category faq-category--accordion{{ ' ' + componentData.categoryClass if componentData.categoryClass }}">
+<section class="faq-category faq-category--accordion{{ ' ' + accordionData.categoryClass if accordionData.categoryClass }}">
   <h2 class="category-title">
-    {% if componentData.icon %}
-      <span class="category-icon">{{ componentData.icon }}</span>
+    {% if accordionData.icon %}
+      <span class="category-icon">{{ accordionData.icon }}</span>
     {% endif %}
-    {{ componentData.title }}
+    {{ accordionData.title }}
   </h2>
-  {% if componentData.description %}
-    <p class="category-description">{{ componentData.description }}</p>
+  {% if accordionData.description %}
+    <p class="category-description">{{ accordionData.description }}</p>
   {% endif %}
 
   <div class="faq-items">
-    {% for faq in componentData.faqs %}
+    {% for faq in accordionData.faqs %}
       <div class="faq-item" data-faq-key="{{ faq.filename | replace('.md', '') }}">
         <button class="faq-trigger" onclick="toggleAccordion(this)">
           <span class="question-text">{{ faq.question | markdownInline | safe }}</span>

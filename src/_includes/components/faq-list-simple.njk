@@ -17,16 +17,16 @@
   {% include "components/faq-list-simple.njk" %}
 #}
 
-<section class="faq-category faq-category--list{{ ' ' + componentData.categoryClass if componentData.categoryClass }}">
+<section class="faq-category faq-category--list{{ ' ' + listData.categoryClass if listData.categoryClass }}">
   <h2 class="category-title">
-    {% if componentData.icon %}
-      <span class="category-icon">{{ componentData.icon }}</span>
+    {% if listData.icon %}
+      <span class="category-icon">{{ listData.icon }}</span>
     {% endif %}
-    {{ componentData.title }}
+    {{ listData.title }}
   </h2>
 
   <div class="faq-items">
-    {% for faq in componentData.faqs %}
+    {% for faq in listData.faqs %}
       <div class="faq-item">
         <a href="{{ faq.permalink }}" class="faq-trigger">
           <span class="question-text">

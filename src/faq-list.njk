@@ -23,7 +23,7 @@ listOrder:
   {% for listId in listOrder %}
     {% for list in data.lists %}
       {% if list.id == listId %}
-        {% set componentData = {
+        {% set listData = {
           title: list.title,
           description: list.description,
           icon: list.icon,
