@@ -70,7 +70,7 @@ function splitMarkdownAtFirstH1(content) {
 // ============================================================================
 
 // Read and parse multiple markdown files
-function getParsedMarkdownFiles(files) {
+function parseMarkdownFiles(files) {
   const parsedMarkdownFiles = files.map(file => {
     const fullPath = path.join(file.parentPath, file.name);
     const rawFile = fs.readFileSync(fullPath, "utf-8");
@@ -88,7 +88,7 @@ function getParsedMarkdownFiles(files) {
 }
 
 // Read and parse multiple yml files
-function getParsedYamlFiles(files) {
+function parseYamlFiles(files) {
   const parsedYamlFiles = files.map(file => {
     const fullPath = path.join(file.parentPath, file.name);
     const rawFile = fs.readFileSync(fullPath, "utf-8");
@@ -158,7 +158,7 @@ function getProcessedFaq(faq) {
 // Process all FAQ files into structured objects
 function createProcessedFaqs(faqDir) {
   const faqFiles = getFaqFiles(faqDir);
-  const rawFaqs = getParsedMarkdownFiles(faqFiles);
+  const rawFaqs = parseMarkdownFiles(faqFiles);
   const processedFaqs = rawFaqs.map(faq => {
     return getProcessedFaq(faq);
   });
@@ -211,7 +211,7 @@ function getProcessedGuidanceRequest(guidanceRequest) {
 // Process all guidance request files into structured objects
 function createProcessedGuidanceRequests(guidanceDir) {
   const guidanceFiles = getGuidanceFiles(guidanceDir);
-  const guidanceRequests = getParsedMarkdownFiles(guidanceFiles);
+  const guidanceRequests = parseMarkdownFiles(guidanceFiles);
   const processedGuidanceRequests = guidanceRequests.map(guidanceRequest => {
     return getProcessedGuidanceRequest(guidanceRequest);
   });
@@ -260,13 +260,13 @@ function getProcessedCuratedList(curatedList) {
   }
 }
 
-// Process curated list files and normalize FAQ references
-function createCuratedLists(faqDir) {
-  const rawCuratedListFiles = getCuratedListFiles(faqDir);
-  const parsedCuratedLists = getParsedYamlFiles(rawCuratedListFiles);
-  const curatedLists = parsedCuratedLists.map(getProcessedCuratedList);
+// Process list files and normalize FAQ references
+function createLists(faqDir) {
+  const rawListFiles = getCuratedListFiles(faqDir);
+  const parsedLists = parseYamlFiles(rawListFiles);
+  const lists = parsedLists.map(getProcessedCuratedList);
 
-  return curatedLists;
+  return lists;
 };
 
 // ============================================================================
@@ -308,12 +308,12 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
   });
 };
 
-// Link curated lists with their FAQs (bidirectional)
-function crossReferenceCuratedListsAndFaqs(curatedLists, faqs) {
-  curatedLists.forEach(curatedList => {
-    curatedList.faqs = curatedList.faqs.map(faqId => {
+// Link lists with their FAQs (bidirectional)
+function crossReferenceListsAndFaqs(lists, faqs) {
+  lists.forEach(list => {
+    list.faqs = list.faqs.map(faqId => {
       const faqObject = faqs.find(faq => faq.id === faqId);
-      faqObject.relatedLists.push(curatedList);
+      faqObject.relatedLists.push(list);
       return faqObject;
     });
   });
@@ -335,11 +335,11 @@ function processAllContent() {
   // 3. Enrich FAQs and Guidance Requests with their cross references
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
 
-  // 4. Get curated lists
-  const curatedLists = createCuratedLists(FAQ_DIR);
+  // 4. Get lists
+  const lists = createLists(FAQ_DIR);
 
-  // 5. Connect curated lists with FAQs
-  crossReferenceCuratedListsAndFaqs(curatedLists, faqs);
+  // 5. Connect lists with FAQs
+  crossReferenceListsAndFaqs(lists, faqs);
 
   // 6. Get and process AUTHORS.md
   const authorsContent = processAuthorsFile();
@@ -348,7 +348,7 @@ function processAllContent() {
     faqs: faqs,
     guidance: guidanceRequests,
     faqItems: faqs,
-    curatedLists: curatedLists,
+    lists: lists,
     authorsContent
   };
 }

@@ -21,7 +21,7 @@ listOrder:
 
 <div class="faq-list-container">
   {% for listId in listOrder %}
-    {% for list in data.curatedLists %}
+    {% for list in data.lists %}
       {% if list.id == listId %}
         {% set componentData = {
           title: list.title,
