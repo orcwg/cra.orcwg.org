@@ -1,0 +1,113 @@
+---
+layout: layout.njk
+title: Style Guide
+permalink: "/style-guide/"
+eleventyExcludeFromCollections: true
+---
+
+<div class="home-intro">
+  <p><strong>Living Style Guide</strong> - This page demonstrates all design patterns and components used throughout the site using real component includes and live data.</p>
+  <p>Edit <code>_data/style-guide-content.md</code> or <code>_data/styleGuideData.js</code> to update examples.</p>
+</div>
+
+<h2>Markdown Content Examples</h2>
+
+<article class="faq-main-content">
+  {{ styleGuideData.markdownContent | markdown | safe }}
+</article>
+
+<h2>FAQ List Component (Simple Links)</h2>
+<p>Component: <code>components/faq-list-simple.njk</code> | Data: <code>styleGuideData.sampleListFaqs</code></p>
+
+<div class="faq-list-container">
+  {% set componentData = {
+    title: "Getting Started Questions",
+    description: "Basic questions about the Cyber Resilience Act",
+    icon: "🚀",
+    faqs: styleGuideData.sampleListFaqs
+  } %}
+  {% include "components/faq-list-simple.njk" %}
+</div>
+
+<h2>FAQ Accordion Component</h2>
+<p>Component: <code>components/faq-accordion.njk</code> | Data: <code>styleGuideData.sampleAccordionFaqs</code></p>
+
+<article>
+  {% set componentData = {
+    title: "Technical Questions",
+    description: "Detailed technical questions with expandable answers",
+    icon: "🔧",
+    faqs: styleGuideData.sampleAccordionFaqs
+  } %}
+  {% include "components/faq-accordion.njk" %}
+</article>
+
+<h2>Status Badges</h2>
+<p>Component: <code>components/faq-badges.njk</code> | Data: <code>styleGuideData.sampleBadgeFaqs</code></p>
+
+<div class="faq-list-intro">
+  <p>Status badges appear on FAQs to indicate their review state. Enable admin mode (click the ✏️ button) to see them on live pages.</p>
+</div>
+
+<div class="faq-list-container">
+  {% for faq in styleGuideData.sampleBadgeFaqs %}
+    <div class="faq-category faq-category--list">
+      <div class="faq-items">
+        <div class="faq-item">
+          <a href="#" class="faq-trigger">
+            <span class="question-text">
+              {{ faq.question }}
+              {% include "components/faq-badges.njk" %}
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<h2>Design Tokens</h2>
+
+<div class="disclaimer">
+  <h3>CSS Custom Properties</h3>
+  <p>These design tokens are defined in <code>assets/css/styles.css</code> and available site-wide.</p>
+</div>
+
+<article class="faq-main-content">
+  <h3>Color System</h3>
+  <ul>
+    <li><code>--color-info</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-info); border: 1px solid #999; vertical-align: middle;"></span> Informational content</li>
+    <li><code>--color-success</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-success); border: 1px solid #999; vertical-align: middle;"></span> Success states, approved items</li>
+    <li><code>--color-warning</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-warning); border: 1px solid #999; vertical-align: middle;"></span> Warnings, drafts</li>
+    <li><code>--color-danger</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-danger); border: 1px solid #999; vertical-align: middle;"></span> Errors, critical issues</li>
+    <li><code>--color-important</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-important); border: 1px solid #999; vertical-align: middle;"></span> Important callouts</li>
+  </ul>
+
+  <h3>Spacing Scale</h3>
+  <ul>
+    <li><code>--space-xs: 8px</code> <span style="display: inline-block; width: 8px; height: 15px; background: var(--primary-color);"></span></li>
+    <li><code>--space-sm: 12px</code> <span style="display: inline-block; width: 12px; height: 15px; background: var(--primary-color);"></span></li>
+    <li><code>--space-md: 20px</code> <span style="display: inline-block; width: 20px; height: 15px; background: var(--primary-color);"></span></li>
+    <li><code>--space-lg: 30px</code> <span style="display: inline-block; width: 30px; height: 15px; background: var(--primary-color);"></span></li>
+    <li><code>--space-xl: 40px</code> <span style="display: inline-block; width: 40px; height: 15px; background: var(--primary-color);"></span></li>
+  </ul>
+
+  <h3>Typography Scale</h3>
+  <p><span style="font-size: var(--text-xs);">Extra Small (--text-xs: 0.75em)</span></p>
+  <p><span style="font-size: var(--text-sm);">Small (--text-sm: 0.85em)</span></p>
+  <p><span style="font-size: var(--text-base);">Base (--text-base: 1em)</span></p>
+  <p><span style="font-size: var(--text-lg);">Large (--text-lg: 1.3em)</span></p>
+  <p><span style="font-size: var(--text-xl);">Extra Large (--text-xl: 1.5em)</span></p>
+  <p><span style="font-size: var(--text-2xl);">2X Large (--text-2xl: 2.5em)</span></p>
+</article>
+
+<script>
+// Make admin indicators visible on style guide
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.admin-indicators').forEach(el => {
+    el.style.display = 'flex';
+    el.style.gap = 'var(--space-xs)';
+    el.style.flexWrap = 'wrap';
+  });
+});
+</script>
