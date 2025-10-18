@@ -3,23 +3,24 @@ layout: layout.njk
 pagination:
   data: data.curatedLists
   size: 1
-  alias: listData
+  alias: list
   addAllPagesToCollections: true
-permalink: "/lists/{{ listData.key }}/"
+permalink: "{{ list.permalink }}/"
 eleventyComputed:
-  title: "{{ listData.value.title }}"
+  title: "{{ list.title }}"
 ---
 
 <div class="curated-list-description">
-  <p>{{ listData.value.description }}</p>
+  <p>{{ list.description }}</p>
 </div>
 
+<article>
 {% set componentData = {
-  title: listData.value.title,
-  icon: listData.value.icon,
-  faqs: listData.value.items,
+  title: list.title,
+  icon: list.icon,
+  faqs: list.faqs,
   mode: "accordion",
   showAdminIndicators: false
 } %}
 {% include "components/faq-list.njk" %}
-
+</article>
