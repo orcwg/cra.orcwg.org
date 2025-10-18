@@ -1,18 +1,16 @@
 {#
   FAQ List Component (Simple Links)
 
-  Parameters (set via componentData variable):
+  Parameters (set via listData variable):
   - title: Section title to display
   - faqs: Array of FAQ item objects
   - categoryClass: Optional CSS class for styling variations
-  - description: Optional description text
   - icon: Optional icon to display before title
 
   Usage Example:
-  {% set componentData = {
+  {% set listData = {
     title: "Getting Started",
-    faqs: faqItems,
-    description: "Basic questions about getting started"
+    faqs: faqItems
   } %}
   {% include "components/faq-list-simple.njk" %}
 #}
