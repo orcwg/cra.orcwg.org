@@ -1,0 +1,38 @@
+{#
+  FAQ List Component (Simple Links)
+
+  Parameters (set via listData variable):
+  - title: Section title to display
+  - faqs: Array of FAQ item objects
+  - categoryClass: Optional CSS class for styling variations
+  - icon: Optional icon to display before title
+
+  Usage Example:
+  {% set listData = {
+    title: "Getting Started",
+    faqs: faqItems
+  } %}
+  {% include "components/faq-list-simple.njk" %}
+#}
+
+<section class="faq-category faq-category--list{{ ' ' + listData.categoryClass if listData.categoryClass }}">
+  <h2 class="category-title">
+    {% if listData.icon %}
+      <span class="category-icon">{{ listData.icon }}</span>
+    {% endif %}
+    {{ listData.title }}
+  </h2>
+
+  <div class="faq-items">
+    {% for faq in listData.faqs %}
+      <div class="faq-item">
+        <a href="{{ faq.permalink }}" class="faq-trigger">
+          <span class="question-text">
+            {{ faq.question | markdownInline | safe }}
+            {% include "components/faq-badges.njk" %}
+          </span>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
