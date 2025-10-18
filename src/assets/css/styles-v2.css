@@ -1,0 +1,16 @@
+/* ===================================================================
+   CRA FAQ Stylesheet V2 - Minimal Semantic Markup
+   Refactored with utility-first approach
+   =================================================================== */
+
+/* Temporary: Basic reset and typography for testing structure */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}

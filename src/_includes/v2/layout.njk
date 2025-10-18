@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site.title }} - {% if title %}{{ title | striptags }}{% endif %}</title>
+    <link rel="stylesheet" href="/assets/fonts/roboto.css">
+    <link rel="stylesheet" href="/assets/css/styles-v2.css">
+    <script src="/assets/js/mermaid.min.js"></script>
+</head>
+<body>
+    <header>
+        <a href="/v2/"><h1>{{ site.title }}</h1></a>
+        <nav>
+            <a href="/v2/faq-list/"{% if page.url.startsWith('/v2/faq-list/') or page.url.startsWith('/v2/faq/') %} aria-current="page"{% endif %}>All FAQs</a>
+            <a href="/v2/lists/"{% if page.url.startsWith('/v2/lists/') %} aria-current="page"{% endif %}>Curated Lists</a>
+            <a href="/v2/pending-guidance/"{% if page.url.startsWith('/v2/pending-guidance/') %} aria-current="page"{% endif %}>Pending Guidance</a>
+        </nav>
+        <img src="/assets/images/orcwg_orc.png" alt="Open Regulatory Compliance Working Group Orc mascott">
+    </header>
+
+    <main>
+        {{ content | safe }}
+    </main>
+
+    {% include "v2/footer.njk" %}
+
+    <script>
+        // Convert markdown code blocks with language-mermaid to mermaid divs
+        document.addEventListener('DOMContentLoaded', function() {
+            const mermaidBlocks = document.querySelectorAll('code.language-mermaid');
+            mermaidBlocks.forEach(function(block) {
+                const mermaidDiv = document.createElement('div');
+                mermaidDiv.className = 'mermaid';
+                mermaidDiv.textContent = block.textContent;
+                block.parentNode.parentNode.replaceChild(mermaidDiv, block.parentNode);
+            });
+
+            // Initialize Mermaid after converting blocks
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: 'default'
+            });
+
+            // Manually trigger Mermaid rendering
+            mermaid.run();
+        });
+    </script>
+    <script src="/assets/js/site.js"></script>
+</body>
+</html>

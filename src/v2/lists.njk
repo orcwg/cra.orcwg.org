@@ -1,0 +1,19 @@
+---
+layout: v2/layout.njk
+title: Curated Lists
+permalink: "/v2/lists/"
+---
+
+<section>
+  <p>Curated collections of FAQs organized for specific audiences and use cases. Each list contains carefully selected questions most relevant to that topic or role.</p>
+</section>
+
+<nav>
+  {% for list in data.lists %}
+    <a href="/v2{{ list.permalink }}/">
+      <h2>{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</h2>
+      <p>{{ list.description }}</p>
+      <p><strong>{{ list.faqs.length }} FAQs</strong></p>
+    </a>
+  {% endfor %}
+</nav>

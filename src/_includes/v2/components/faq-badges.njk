@@ -1,0 +1,27 @@
+{#
+  FAQ Status and Danger Badges Component - V2 Minimal Markup
+
+  Expects 'faq' variable from parent scope with:
+  - faq.status: FAQ status (pending-guidance, draft, approved)
+  - faq.answerMissing: Boolean indicating if FAQ has no answer text
+  - faq.guidanceFileNotFound: Boolean flag when guidance-id references non-existent file
+#}
+
+<span hidden>
+  {% if faq.status == 'pending-guidance' %}
+  <data value="pending-guidance">🛑 Pending Guidance</data>
+  {% elif faq.status == 'draft' %}
+  <data value="draft">⚠️ Draft</data>
+  {% elif faq.status == "approved" %}
+  <data value="approved">✅ Approved</data>
+  {% else %}
+  <data value="unknown">🛑 Status not set</data>
+  {% endif %}
+
+  {% if faq.answerMissing %}
+  <data value="missing-answer">⚠️ Missing Answer</data>
+  {% endif %}
+  {% if faq.guidanceFileNotFound %}
+  <data value="guidance-not-found">⚠️ Guidance File Not Found</data>
+  {% endif %}
+</span>

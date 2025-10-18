@@ -1,0 +1,24 @@
+---
+layout: v2/layout.njk
+pagination:
+  data: data.lists
+  size: 1
+  alias: list
+  addAllPagesToCollections: true
+permalink: "/v2{{ list.permalink }}/"
+eleventyComputed:
+  title: "{{ list.title }}"
+---
+
+<section>
+  <p>{{ list.description }}</p>
+</section>
+
+<article>
+{% set componentData = {
+  title: list.title,
+  icon: list.icon,
+  faqs: list.faqs
+} %}
+{% include "v2/components/faq-accordion.njk" %}
+</article>

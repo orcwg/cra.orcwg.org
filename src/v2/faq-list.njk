@@ -1,0 +1,34 @@
+---
+layout: v2/layout.njk
+title: All FAQs
+permalink: "/v2/faq-list/"
+listOrder:
+  - cra-itself
+  - projects
+  - maintainers
+  - stewards
+  - manufacturers
+  - standards
+  - important-and-critical-products
+  - attestations
+  - legislation
+---
+
+<section>
+  <p>Complete collection of all FAQ topics organized thematically. This includes questions and answers covering all aspects of the Cyber Resilience Act as it relates to open source.</p>
+  <p><strong>Note:</strong> This list includes all FAQs regardless of completion status. Some entries may be drafts, have missing content, or require additional guidance.</p>
+</section>
+
+{% for listId in listOrder %}
+  {% for list in data.lists %}
+    {% if list.id == listId %}
+      {% set componentData = {
+        title: list.title,
+        description: list.description,
+        icon: list.icon,
+        faqs: list.faqs
+      } %}
+      {% include "v2/components/faq-list-simple.njk" %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}

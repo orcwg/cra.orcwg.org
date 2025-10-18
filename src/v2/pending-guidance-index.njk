@@ -1,0 +1,23 @@
+---
+layout: v2/layout.njk
+title: "Pending Guidance Requests"
+permalink: "/v2/pending-guidance/"
+---
+
+<section>
+  <p>These topics have been identified as needing additional clarification or guidance from regulatory bodies. The FAQ Task Force is actively working to develop these guidance requests.</p>
+</section>
+
+<nav>
+  {% for item in data.guidance %}
+    <a href="/v2{{ item.permalink }}/">
+      <h2>{{ item.title | markdownInline | safe }}</h2>
+      {% if item.data.status %}
+        <p><strong>Status:</strong> {{ item.data.status | replace('-', ' ') | title }}</p>
+      {% endif %}
+      {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
+        <p>{{ item.relatedFaqs.length }} related FAQ{{ 's' if item.relatedFaqs.length != 1 }}</p>
+      {% endif %}
+    </a>
+  {% endfor %}
+</nav>

@@ -1,0 +1,50 @@
+{#
+  FAQ Accordion Component - V2 Minimal Markup
+
+  Parameters (set via componentData variable):
+  - title: Section title to display
+  - faqs: Array of FAQ item objects
+  - description: Optional description text
+  - icon: Optional icon to display before title
+#}
+
+<section>
+  <h2>
+    {% if componentData.icon %}{{ componentData.icon }} {% endif %}{{ componentData.title }}
+  </h2>
+  {% if componentData.description %}
+    <p>{{ componentData.description }}</p>
+  {% endif %}
+
+  {% for faq in componentData.faqs %}
+    <details>
+      <summary>
+        {{ faq.question | markdownInline | safe }}
+        {% include "v2/components/faq-badges.njk" %}
+      </summary>
+
+      <article>
+        {{ faq.answer | markdown | safe }}
+
+        {% if faq.status == "draft" or faq.guidanceItem %}
+        <aside>
+          {% if faq.status == "draft" %}
+          <p><strong>This FAQ is a draft</strong> - it hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
+          {% endif %}
+
+          {% if faq.guidanceItem %}
+          <p><strong>Pending Guidance</strong></p>
+          {% if faq.guidanceItem.guidanceText %}
+            <p>This FAQ awaits commission guidance on:</p>
+            <blockquote>{{ faq.guidanceItem.guidanceText | truncate(300) }}</blockquote>
+            <p><a href="{{ faq.guidanceItem.permalink }}">View full guidance request →</a></p>
+          {% else %}
+            <p>This FAQ awaits commission guidance.</p>
+          {% endif %}
+          {% endif %}
+        </aside>
+        {% endif %}
+      </article>
+    </details>
+  {% endfor %}
+</section>
