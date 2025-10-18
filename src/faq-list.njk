@@ -20,14 +20,14 @@ listOrder:
 </div>
 
 <div class="faq-list-container">
-  {% for listKey in listOrder %}
-    {% for listItem in curatedLists %}
-      {% if listItem.key == listKey and listItem.value.count > 0 %}
+  {% for listId in listOrder %}
+    {% for list in data.lists %}
+      {% if list.id == listId %}
         {% set componentData = {
-          title: listItem.value.title,
-          description: listItem.value.description,
-          icon: listItem.value.icon,
-          faqs: listItem.value.items,
+          title: list.title,
+          description: list.description,
+          icon: list.icon,
+          faqs: list.faqs,
           mode: "list",
           showAdminIndicators: false
         } %}
