@@ -39,7 +39,7 @@ This is an Eleventy site that acts as a content processor and renderer for exter
    - **Guidance Request Processing**: Parse pending guidance request documents
    - **Curated List Processing**: Load and normalize README.yml files from FAQ subdirectories
    - **Authors Processing**: Load AUTHORS.md content
-   - **Relationship Building**: Cross-reference FAQs with guidance requests and curated lists
+   - **Cross-referencing**: Cross-reference FAQs with guidance requests and curated lists
    - **Permalink Generation**: URLs computed once in data layer, not reconstructed in templates
 4. **Template Rendering** - Nunjucks templates consume processed data
 5. **Site Generation** - Final site is output to `_site/` for deployment
