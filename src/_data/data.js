@@ -264,9 +264,7 @@ function getProcessedCuratedList(curatedList) {
 function createCuratedLists(faqDir) {
   const rawCuratedListFiles = getCuratedListFiles(faqDir);
   const parsedCuratedLists = getParsedYamlFiles(rawCuratedListFiles);
-  const curatedLists = parsedCuratedLists.map(curatedList => {
-    return getProcessedCuratedList(curatedList);
-  });
+  const curatedLists = parsedCuratedLists.map(getProcessedCuratedList);
 
   return curatedLists;
 };
