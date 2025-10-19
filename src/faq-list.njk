@@ -4,23 +4,23 @@ title: All FAQs
 permalink: "/faq-list/"
 ---
 
-<div class="faq-list-intro">
+<section class="section-intro">
   <p>Complete collection of all FAQ topics organized thematically. This includes questions and answers covering all aspects of the Cyber Resilience Act as it relates to open source.</p>
   <p><strong>Note:</strong> This list includes all FAQs regardless of completion status. Some entries may be drafts, have missing content, or require additional guidance.</p>
-</div>
+</section>
 
-<div class="faq-list-container">
+
+<section class="section-card">
   {% for listId in site.listOrder %}
     {% for list in data.lists %}
       {% if list.id == listId %}
-        {% set listData = {
+        {% set componentData = {
           title: list.title,
-          description: list.description,
           icon: list.icon,
           faqs: list.faqs
-          } %}
+        } %}
         {% include "components/faq-list-simple.njk" %}
       {% endif %}
     {% endfor %}
   {% endfor %}
-</div>
+</section>

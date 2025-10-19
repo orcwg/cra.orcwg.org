@@ -5,20 +5,20 @@ pagination:
   size: 1
   alias: list
   addAllPagesToCollections: true
-permalink: "{{ list.permalink }}/"
+permalink: "{{ list.permalink }}"
 eleventyComputed:
   title: "{{ list.title }}"
 ---
 
-<div class="curated-list-description">
+<section class="section-intro">
   <p>{{ list.description }}</p>
-</div>
+</section>
 
-<article>
-{% set accordionData = {
+<article class="section-card">
+{% set componentData = {
   title: list.title,
   icon: list.icon,
   faqs: list.faqs
 } %}
 {% include "components/faq-accordion.njk" %}
-
+</article>

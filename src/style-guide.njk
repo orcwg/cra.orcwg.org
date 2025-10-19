@@ -5,34 +5,34 @@ permalink: "/style-guide/"
 eleventyExcludeFromCollections: true
 ---
 
-<div class="home-intro">
-  <p><strong>Living Style Guide</strong> - This page demonstrates all design patterns and components used throughout the site using real component includes and live data.</p>
+<section class="section-intro">
+  <p><strong>Living Style Guide </strong> - This page demonstrates all design patterns and components using semantic HTML with minimal component classes.</p>
   <p>Edit <code>_data/style-guide-content.md</code> or <code>_data/styleGuideData.js</code> to update examples.</p>
-</div>
+</section>
 
 <h2>Markdown Content Examples</h2>
 
-<article class="faq-main-content">
+<article class="section-card">
   {{ styleGuideData.markdownContent | markdown | safe }}
 </article>
 
 <h2>FAQ List Component (Simple Links)</h2>
 <p>Component: <code>components/faq-list-simple.njk</code> | Data: <code>styleGuideData.sampleListFaqs</code></p>
+<article class="section-card">
 
-<div class="faq-list-container">
-  {% set componentData = {
-    title: "Getting Started Questions",
-    description: "Basic questions about the Cyber Resilience Act",
-    icon: "🚀",
-    faqs: styleGuideData.sampleListFaqs
-  } %}
-  {% include "components/faq-list-simple.njk" %}
-</div>
+{% set componentData = {
+  title: "Getting Started Questions",
+  description: "Basic questions about the Cyber Resilience Act",
+  icon: "🚀",
+  faqs: styleGuideData.sampleListFaqs
+} %}
+{% include "components/faq-list-simple.njk" %}
+</article>
 
 <h2>FAQ Accordion Component</h2>
 <p>Component: <code>components/faq-accordion.njk</code> | Data: <code>styleGuideData.sampleAccordionFaqs</code></p>
 
-<article>
+<article class="section-card">
   {% set componentData = {
     title: "Technical Questions",
     description: "Detailed technical questions with expandable answers",
@@ -45,69 +45,112 @@ eleventyExcludeFromCollections: true
 <h2>Status Badges</h2>
 <p>Component: <code>components/faq-badges.njk</code> | Data: <code>styleGuideData.sampleBadgeFaqs</code></p>
 
-<div class="faq-list-intro">
-  <p>Status badges appear on FAQs to indicate their review state. Enable admin mode (click the ✏️ button) to see them on live pages.</p>
-</div>
+<section class="section-card">
+  <p>Status badges appear on FAQs to indicate their review state. They use <code>&lt;data&gt;</code> elements with semantic values.</p>
 
-<div class="faq-list-container">
-  {% for faq in styleGuideData.sampleBadgeFaqs %}
-    <div class="faq-category faq-category--list">
-      <div class="faq-items">
-        <div class="faq-item">
-          <a href="#" class="faq-trigger">
-            <span class="question-text">
-              {{ faq.question }}
-              {% include "components/faq-badges.njk" %}
-            </span>
-          </a>
-        </div>
-      </div>
-    </div>
-  {% endfor %}
-</div>
+  <ul class="link-list">
+    {% for faq in styleGuideData.sampleBadgeFaqs %}
+      <li>
+        <a href="#">
+          <span class="question-text">{{ faq.question }}</span>
+          <span class="badges" visible>{% include "components/faq-badges.njk" %}</span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
 
-<h2>Design Tokens</h2>
+<h2>Navigation Cards</h2>
+<p>Used on home page and list indexes with hover effects and arrows. Uses <code>.card-grid</code> and <code>.card</code> classes.</p>
 
-<div class="disclaimer">
-  <h3>CSS Custom Properties</h3>
-  <p>These design tokens are defined in <code>assets/css/styles.css</code> and available site-wide.</p>
-</div>
+<nav class="card-grid">
+  <a href="#" class="card">
+    <h2>Example Card 1</h2>
+    <p>This is a navigation card with hover effects and an animated arrow</p>
+  </a>
+  <a href="#" class="card">
+    <h2>Example Card 2</h2>
+    <p>Cards use the <code>.card</code> class for consistent styling</p>
+  </a>
+  <a href="#" class="card">
+    <h2>Example Card 3</h2>
+    <p>Grid layout responds to screen size automatically</p>
+  </a>
+</nav>
 
-<article class="faq-main-content">
-  <h3>Color System</h3>
+<h2>Half-Width Cards</h2>
+<p>Cards can be displayed in a two-column layout using <code>.card-grid.half-width</code>.</p>
+
+<nav class="card-grid half-width">
+  <a href="#" class="card">
+    <h2>Half Width 1</h2>
+    <p>Two columns on larger screens, with arrows positioned at bottom-right</p>
+  </a>
+  <a href="#" class="card">
+    <h2>Half Width 2</h2>
+    <p>Responsive layout adapts to screen size</p>
+  </a>
+</nav>
+
+<h2>Disclaimer/Warning Block</h2>
+<p>Uses semantic <code>&lt;aside&gt;</code> element.</p>
+
+<aside class="warning">
+  <h3>Important Notice</h3>
+  <p><strong>This is an example warning block.</strong> It uses an <code>&lt;aside&gt;</code> element with automatic styling for disclaimers and important notices.</p>
+</aside>
+
+<h2>Semantic HTML Structure</h2>
+
+<section class="section-card">
+  <h3> Markup Philosophy</h3>
+  <p>The  templates use semantic HTML5 elements with minimal component classes:</p>
   <ul>
-    <li><code>--color-info</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-info); border: 1px solid #999; vertical-align: middle;"></span> Informational content</li>
-    <li><code>--color-success</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-success); border: 1px solid #999; vertical-align: middle;"></span> Success states, approved items</li>
-    <li><code>--color-warning</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-warning); border: 1px solid #999; vertical-align: middle;"></span> Warnings, drafts</li>
-    <li><code>--color-danger</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-danger); border: 1px solid #999; vertical-align: middle;"></span> Errors, critical issues</li>
-    <li><code>--color-important</code> - <span style="display: inline-block; width: 30px; height: 15px; background: var(--color-important); border: 1px solid #999; vertical-align: middle;"></span> Important callouts</li>
+    <li><code>&lt;header class="site-header"&gt;</code> - Site header with logo and navigation</li>
+    <li><code>&lt;nav class="site-nav"&gt;</code> - Navigation menu links</li>
+    <li><code>&lt;nav class="card-grid"&gt;</code> - Card navigation grids</li>
+    <li><code>&lt;main&gt;</code> - Main content area</li>
+    <li><code>&lt;section class="section-card"&gt;</code> - Content boxes and FAQ categories</li>
+    <li><code>&lt;section class="section-intro"&gt;</code> - Intro/description sections</li>
+    <li><code>&lt;article class="section-card"&gt;</code> - FAQ answers and standalone content</li>
+    <li><code>&lt;ul class="link-list"&gt;</code> - Styled link lists with badges</li>
+    <li><code>&lt;aside&gt;</code> - Disclaimers and warnings (no class needed)</li>
+    <li><code>&lt;details&gt;</code> + <code>&lt;summary&gt;</code> - Native HTML accordions</li>
+    <li><code>&lt;data class="badge"&gt;</code> - Status badges</li>
+  </ul>
+</section>
+
+<h2>CSS Architecture</h2>
+
+<section class="section-card">
+  <h3>Hybrid Approach</h3>
+  <p> uses a hybrid CSS architecture combining semantic HTML with light component classes:</p>
+
+  <h4>Component Classes</h4>
+  <ul>
+    <li><code>.section-card</code> - White content boxes with shadow and border</li>
+    <li><code>.section-intro</code> - Light gray intro/description boxes</li>
+    <li><code>.card-grid</code> - Grid layout for navigation cards</li>
+    <li><code>.card</code> - Individual card styling with hover effects</li>
+    <li><code>.link-list</code> - Styled lists with hover states and badges</li>
+    <li><code>.site-header</code> - Header layout and spacing</li>
+    <li><code>.site-nav</code> - Navigation menu styling</li>
   </ul>
 
-  <h3>Spacing Scale</h3>
+  <h4>Utility Classes</h4>
   <ul>
-    <li><code>--space-xs: 8px</code> <span style="display: inline-block; width: 8px; height: 15px; background: var(--primary-color);"></span></li>
-    <li><code>--space-sm: 12px</code> <span style="display: inline-block; width: 12px; height: 15px; background: var(--primary-color);"></span></li>
-    <li><code>--space-md: 20px</code> <span style="display: inline-block; width: 20px; height: 15px; background: var(--primary-color);"></span></li>
-    <li><code>--space-lg: 30px</code> <span style="display: inline-block; width: 30px; height: 15px; background: var(--primary-color);"></span></li>
-    <li><code>--space-xl: 40px</code> <span style="display: inline-block; width: 40px; height: 15px; background: var(--primary-color);"></span></li>
+    <li><code>.half-width</code> - Two-column card grid layout</li>
+    <li><code>.full-width</code> - Full-width grid items</li>
+    <li><code>.badge</code> - Badge base styling</li>
+    <li><code>.success</code>, <code>.warning</code>, <code>.danger</code> - Semantic color variants</li>
   </ul>
 
-  <h3>Typography Scale</h3>
-  <p><span style="font-size: var(--text-xs);">Extra Small (--text-xs: 0.75em)</span></p>
-  <p><span style="font-size: var(--text-sm);">Small (--text-sm: 0.85em)</span></p>
-  <p><span style="font-size: var(--text-base);">Base (--text-base: 1em)</span></p>
-  <p><span style="font-size: var(--text-lg);">Large (--text-lg: 1.3em)</span></p>
-  <p><span style="font-size: var(--text-xl);">Extra Large (--text-xl: 1.5em)</span></p>
-  <p><span style="font-size: var(--text-2xl);">2X Large (--text-2xl: 2.5em)</span></p>
-</article>
-
-<script>
-// Make admin indicators visible on style guide
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.admin-indicators').forEach(el => {
-    el.style.display = 'flex';
-    el.style.gap = 'var(--space-xs)';
-    el.style.flexWrap = 'wrap';
-  });
-});
-</script>
+  <h4>CSS Features</h4>
+  <ul>
+    <li>CSS Custom Properties for theming and colors</li>
+    <li><code>color-mix()</code> for automatic background/border tints</li>
+    <li><code>grid-template-rows</code> for smooth CSS-only accordion animations</li>
+    <li>Native <code>&lt;details&gt;</code> with <code>name</code> attribute for exclusive accordions</li>
+    <li>Minimal JavaScript - only for badge visibility toggles</li>
+  </ul>
+</section>

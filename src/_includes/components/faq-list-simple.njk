@@ -1,38 +1,27 @@
 {#
-  FAQ List Component (Simple Links)
+  FAQ List Component (Simple Links) -  Minimal Markup
 
-  Parameters (set via listData variable):
+  Parameters (set via componentData variable):
   - title: Section title to display
   - faqs: Array of FAQ item objects
-  - categoryClass: Optional CSS class for styling variations
+  - description: Optional description text
   - icon: Optional icon to display before title
-
-  Usage Example:
-  {% set listData = {
-    title: "Getting Started",
-    faqs: faqItems
-  } %}
-  {% include "components/faq-list-simple.njk" %}
 #}
 
-<section class="faq-category faq-category--list{{ ' ' + listData.categoryClass if listData.categoryClass }}">
-  <h2 class="category-title">
-    {% if listData.icon %}
-      <span class="category-icon">{{ listData.icon }}</span>
-    {% endif %}
-    {{ listData.title }}
+  <h2>
+    {% if componentData.icon %}{{ componentData.icon }} {% endif %}{{ componentData.title }}
   </h2>
+  {% if componentData.description %}
+    <p>{{ componentData.description }}</p>
+  {% endif %}
 
-  <div class="faq-items">
-    {% for faq in listData.faqs %}
-      <div class="faq-item">
-        <a href="{{ faq.permalink }}" class="faq-trigger">
-          <span class="question-text">
-            {{ faq.question | markdownInline | safe }}
-            {% include "components/faq-badges.njk" %}
-          </span>
+  <ul class="link-list">
+    {% for faq in componentData.faqs %}
+      <li>
+        <a href="{{ faq.permalink }}">
+          <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+          <span class="badges" hidden>{% include "components/faq-badges.njk" %}</span>
         </a>
-      </div>
+      </li>
     {% endfor %}
-  </div>
-</section>
+  </ul>

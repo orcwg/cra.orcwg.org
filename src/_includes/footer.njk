@@ -1,19 +1,17 @@
-<footer class="site-footer">
-    <div class="footer-content">
-        {% for section in site.footer.sections %}
-        <div class="footer-section">
-            <h4>{{ section.title }}</h4>
-            {% if section.content %}
-                <p>{{ section.content | markdown | safe }}</p>
-            {% endif %}
-            {% if section.list %}
-                <ul>
-                {% for item in section.list %}
-                    <li>{{ item | markdownInline | safe }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        </div>
-        {% endfor %}
-    </div>
+<footer>
+    {% for section in site.footer.sections %}
+    <section>
+        <h4>{{ section.title }}</h4>
+        {% if section.content %}
+            {{ section.content | markdown | safe }}
+        {% endif %}
+        {% if section.list %}
+            <ul>
+            {% for item in section.list %}
+                <li>{{ item | markdownInline | safe }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+    {% endfor %}
 </footer>
