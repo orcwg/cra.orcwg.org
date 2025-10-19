@@ -14,21 +14,27 @@ listOrder:
   - legislation
 ---
 
-<section>
+<section class="section-intro">
   <p>Complete collection of all FAQ topics organized thematically. This includes questions and answers covering all aspects of the Cyber Resilience Act as it relates to open source.</p>
   <p><strong>Note:</strong> This list includes all FAQs regardless of completion status. Some entries may be drafts, have missing content, or require additional guidance.</p>
 </section>
 
-{% for listId in listOrder %}
-  {% for list in data.lists %}
-    {% if list.id == listId %}
-      {% set componentData = {
-        title: list.title,
-        description: list.description,
-        icon: list.icon,
-        faqs: list.faqs
-      } %}
-      {% include "v2/components/faq-list-simple.njk" %}
-    {% endif %}
+<section class="section-card">
+  {% for listId in listOrder %}
+    {% for list in data.lists %}
+      {% if list.id == listId %}
+        <h2>{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</h2>
+        <ul class="link-list">
+          {% for faq in list.faqs %}
+            <li>
+              <a href="{{ faq.permalink }}">
+                <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+                <span class="badges">{% include "v2/components/faq-badges.njk" %}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endfor %}
   {% endfor %}
-{% endfor %}
+</section>

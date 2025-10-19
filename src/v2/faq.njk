@@ -9,12 +9,12 @@ eleventyComputed:
   title: "{{ item.pageTitle }}"
 ---
 
-<article>
-  <h1>{{ item.question | markdownInline | safe }}</h1>
+<article class="section-card">
+  <h1 class="section-header">{{ item.question | markdownInline | safe }}</h1>
   {{ item.answer | markdown | safe }}
 
   {% if item.status == "draft" or item.relatedGuidanceRequest %}
-  <aside>
+  <aside class="warning">
     {% if item.status == "draft" %}
     <p><strong>This FAQ is a draft</strong> - it hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
     {% endif %}

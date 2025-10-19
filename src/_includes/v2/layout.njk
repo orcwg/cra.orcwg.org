@@ -9,9 +9,9 @@
     <script src="/assets/js/mermaid.min.js"></script>
 </head>
 <body>
-    <header>
+    <header class="site-header">
         <a href="/v2/"><h1>{{ site.title }}</h1></a>
-        <nav>
+        <nav class="site-nav">
             <a href="/v2/faq-list/"{% if page.url.startsWith('/v2/faq-list/') or page.url.startsWith('/v2/faq/') %} aria-current="page"{% endif %}>All FAQs</a>
             <a href="/v2/lists/"{% if page.url.startsWith('/v2/lists/') %} aria-current="page"{% endif %}>Curated Lists</a>
             <a href="/v2/pending-guidance/"{% if page.url.startsWith('/v2/pending-guidance/') %} aria-current="page"{% endif %}>Pending Guidance</a>

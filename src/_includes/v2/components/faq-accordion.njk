@@ -8,7 +8,6 @@
   - icon: Optional icon to display before title
 #}
 
-<section>
   <h2>
     {% if componentData.icon %}{{ componentData.icon }} {% endif %}{{ componentData.title }}
   </h2>
@@ -17,19 +16,19 @@
   {% endif %}
 
   {% for faq in componentData.faqs %}
-    <details>
+    <details class="faq-accordion-item" name="faq-accordion">
       <summary>
-        {{ faq.question | markdownInline | safe }}
-        {% include "v2/components/faq-badges.njk" %}
+        <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
       </summary>
 
       <article>
-        {{ faq.answer | markdown | safe }}
+        <div>
+          {{ faq.answer | markdown | safe }}
 
         {% if faq.status == "draft" or faq.guidanceItem %}
-        <aside>
+        <aside class="warning">
           {% if faq.status == "draft" %}
-          <p><strong>This FAQ is a draft</strong> - it hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
+          <p>This FAQ is a draft</p> <p>It hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
           {% endif %}
 
           {% if faq.guidanceItem %}
@@ -44,7 +43,7 @@
           {% endif %}
         </aside>
         {% endif %}
+        </div>
       </article>
     </details>
   {% endfor %}
-</section>

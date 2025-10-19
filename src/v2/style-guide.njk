@@ -5,19 +5,20 @@ permalink: "/v2/style-guide/"
 eleventyExcludeFromCollections: true
 ---
 
-<section>
-  <p><strong>Living Style Guide V2</strong> - This page demonstrates all design patterns and components using semantic HTML and the new v2 stylesheet.</p>
+<section class="section-intro">
+  <p><strong>Living Style Guide V2</strong> - This page demonstrates all design patterns and components using semantic HTML with minimal component classes.</p>
   <p>Edit <code>_data/style-guide-content.md</code> or <code>_data/styleGuideData.js</code> to update examples.</p>
 </section>
 
 <h2>Markdown Content Examples</h2>
 
-<article>
+<article class="section-card">
   {{ styleGuideData.markdownContent | markdown | safe }}
 </article>
 
 <h2>FAQ List Component (Simple Links)</h2>
 <p>Component: <code>v2/components/faq-list-simple.njk</code> | Data: <code>styleGuideData.sampleListFaqs</code></p>
+<article class="section-card">
 
 {% set componentData = {
   title: "Getting Started Questions",
@@ -26,11 +27,12 @@ eleventyExcludeFromCollections: true
   faqs: styleGuideData.sampleListFaqs
 } %}
 {% include "v2/components/faq-list-simple.njk" %}
+</article>
 
 <h2>FAQ Accordion Component</h2>
 <p>Component: <code>v2/components/faq-accordion.njk</code> | Data: <code>styleGuideData.sampleAccordionFaqs</code></p>
 
-<article>
+<article class="section-card">
   {% set componentData = {
     title: "Technical Questions",
     description: "Detailed technical questions with expandable answers",
@@ -43,38 +45,50 @@ eleventyExcludeFromCollections: true
 <h2>Status Badges</h2>
 <p>Component: <code>v2/components/faq-badges.njk</code> | Data: <code>styleGuideData.sampleBadgeFaqs</code></p>
 
-<section>
+<section class="section-card">
   <p>Status badges appear on FAQs to indicate their review state. They use <code>&lt;data&gt;</code> elements with semantic values.</p>
 
-  {% for faq in styleGuideData.sampleBadgeFaqs %}
-    <section>
-      <ul>
-        <li>
-          <a href="#">
-            {{ faq.question }}
-            {% include "v2/components/faq-badges.njk" %}
-          </a>
-        </li>
-      </ul>
-    </section>
-  {% endfor %}
+  <ul class="link-list">
+    {% for faq in styleGuideData.sampleBadgeFaqs %}
+      <li>
+        <a href="#">
+          <span class="question-text">{{ faq.question }}</span>
+          <span class="badges">{% include "v2/components/faq-badges.njk" %}</span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
 </section>
 
 <h2>Navigation Cards</h2>
-<p>Used on home page and list indexes with hover effects and arrows.</p>
+<p>Used on home page and list indexes with hover effects and arrows. Uses <code>.card-grid</code> and <code>.card</code> classes.</p>
 
-<nav>
-  <a href="#">
+<nav class="card-grid">
+  <a href="#" class="card">
     <h2>Example Card 1</h2>
     <p>This is a navigation card with hover effects and an animated arrow</p>
   </a>
-  <a href="#">
+  <a href="#" class="card">
     <h2>Example Card 2</h2>
-    <p>Cards are created with simple <code>&lt;nav&gt;</code> and <code>&lt;a&gt;</code> elements</p>
+    <p>Cards use the <code>.card</code> class for consistent styling</p>
   </a>
-  <a href="#">
+  <a href="#" class="card">
     <h2>Example Card 3</h2>
-    <p>No classes needed - all styling comes from semantic selectors</p>
+    <p>Grid layout responds to screen size automatically</p>
+  </a>
+</nav>
+
+<h2>Half-Width Cards</h2>
+<p>Cards can be displayed in a two-column layout using <code>.card-grid.half-width</code>.</p>
+
+<nav class="card-grid half-width">
+  <a href="#" class="card">
+    <h2>Half Width 1</h2>
+    <p>Two columns on larger screens, with arrows positioned at bottom-right</p>
+  </a>
+  <a href="#" class="card">
+    <h2>Half Width 2</h2>
+    <p>Responsive layout adapts to screen size</p>
   </a>
 </nav>
 
@@ -86,57 +100,59 @@ eleventyExcludeFromCollections: true
   <p><strong>This is an example warning block.</strong> It uses an <code>&lt;aside&gt;</code> element with automatic styling for disclaimers and important notices.</p>
 </aside>
 
-<h2>Details/Summary (Native Accordion)</h2>
-<p>V2 uses native HTML <code>&lt;details&gt;</code> and <code>&lt;summary&gt;</code> elements instead of custom JavaScript.</p>
-
-<details>
-  <summary>Click to expand this native accordion</summary>
-  <article>
-    <p>This content is inside a <code>&lt;details&gt;</code> element. It uses browser-native expand/collapse behavior.</p>
-    <p>The arrow rotation and styling are handled purely with CSS - no JavaScript required!</p>
-  </article>
-</details>
-
-<details>
-  <summary>Another accordion example</summary>
-  <article>
-    <p>Multiple accordions can be used on the same page.</p>
-    <p>Each operates independently without any custom code.</p>
-  </article>
-</details>
-
 <h2>Semantic HTML Structure</h2>
 
-<section>
+<section class="section-card">
   <h3>V2 Markup Philosophy</h3>
-  <p>The V2 templates use semantic HTML5 elements with zero classes:</p>
+  <p>The V2 templates use semantic HTML5 elements with minimal component classes:</p>
   <ul>
-    <li><code>&lt;header&gt;</code> - Site header with logo and navigation</li>
-    <li><code>&lt;nav&gt;</code> - Navigation menus and card grids</li>
+    <li><code>&lt;header class="site-header"&gt;</code> - Site header with logo and navigation</li>
+    <li><code>&lt;nav class="site-nav"&gt;</code> - Navigation menu links</li>
+    <li><code>&lt;nav class="card-grid"&gt;</code> - Card navigation grids</li>
     <li><code>&lt;main&gt;</code> - Main content area</li>
-    <li><code>&lt;section&gt;</code> - Content sections and FAQ categories</li>
-    <li><code>&lt;article&gt;</code> - FAQ answers and standalone content</li>
-    <li><code>&lt;aside&gt;</code> - Disclaimers and warnings</li>
-    <li><code>&lt;footer&gt;</code> - Site footer</li>
-    <li><code>&lt;details&gt;</code> + <code>&lt;summary&gt;</code> - Accordions</li>
-    <li><code>&lt;data&gt;</code> - Badges with semantic values</li>
+    <li><code>&lt;section class="section-card"&gt;</code> - Content boxes and FAQ categories</li>
+    <li><code>&lt;section class="section-intro"&gt;</code> - Intro/description sections</li>
+    <li><code>&lt;article class="section-card"&gt;</code> - FAQ answers and standalone content</li>
+    <li><code>&lt;ul class="link-list"&gt;</code> - Styled link lists with badges</li>
+    <li><code>&lt;aside&gt;</code> - Disclaimers and warnings (no class needed)</li>
+    <li><code>&lt;details&gt;</code> + <code>&lt;summary&gt;</code> - Native HTML accordions</li>
+    <li><code>&lt;data class="badge"&gt;</code> - Status badges</li>
   </ul>
 </section>
 
 <h2>CSS Architecture</h2>
 
-<section>
-  <h3>Semantic Selectors</h3>
-  <p>All styles use element selectors, pseudo-classes, and combinators:</p>
+<section class="section-card">
+  <h3>Hybrid Approach</h3>
+  <p>V2 uses a hybrid CSS architecture combining semantic HTML with light component classes:</p>
+
+  <h4>Component Classes</h4>
   <ul>
-    <li><code>body > header</code> - Direct child selector for page header</li>
-    <li><code>main > section</code> - FAQ category sections</li>
-    <li><code>main > nav > a</code> - Navigation cards</li>
-    <li><code>details[open]</code> - Attribute selector for open accordions</li>
-    <li><code>summary::before</code> - Pseudo-element for accordion arrow</li>
-    <li><code>a:hover</code> - Hover states throughout</li>
+    <li><code>.section-card</code> - White content boxes with shadow and border</li>
+    <li><code>.section-intro</code> - Light gray intro/description boxes</li>
+    <li><code>.card-grid</code> - Grid layout for navigation cards</li>
+    <li><code>.card</code> - Individual card styling with hover effects</li>
+    <li><code>.link-list</code> - Styled lists with hover states and badges</li>
+    <li><code>.site-header</code> - Header layout and spacing</li>
+    <li><code>.site-nav</code> - Navigation menu styling</li>
   </ul>
-  <p><strong>Zero classes</strong> - All styling is based on document structure and semantic meaning.</p>
+
+  <h4>Utility Classes</h4>
+  <ul>
+    <li><code>.half-width</code> - Two-column card grid layout</li>
+    <li><code>.full-width</code> - Full-width grid items</li>
+    <li><code>.badge</code> - Badge base styling</li>
+    <li><code>.success</code>, <code>.warning</code>, <code>.danger</code> - Semantic color variants</li>
+  </ul>
+
+  <h4>CSS Features</h4>
+  <ul>
+    <li>CSS Custom Properties for theming and colors</li>
+    <li><code>color-mix()</code> for automatic background/border tints</li>
+    <li><code>grid-template-rows</code> for smooth CSS-only accordion animations</li>
+    <li>Native <code>&lt;details&gt;</code> with <code>name</code> attribute for exclusive accordions</li>
+    <li>Minimal JavaScript - only for badge visibility toggles</li>
+  </ul>
 </section>
 
 <script>

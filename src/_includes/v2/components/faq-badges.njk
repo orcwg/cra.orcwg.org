@@ -7,7 +7,7 @@
   - faq.guidanceFileNotFound: Boolean flag when guidance-id references non-existent file
 #}
 
-<span hidden>
+<span visible>
   {% if faq.status == 'pending-guidance' %}
   <data class="badge danger" value="pending-guidance">Pending Guidance</data>
   {% elif faq.status == 'draft' %}

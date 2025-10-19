@@ -9,23 +9,16 @@ eleventyComputed:
   title: "{{ item.pageTitle }}"
 ---
 
-<article>
-  <h1>Commission Guidance Request: {{ item.title or 'Pending Guidance' }}</h1>
-
-  {% if item.data.status %}
-  <p><strong>Status:</strong> {{ item.data.status | replace('-', ' ') | title }}</p>
-  {% endif %}
+<article class="section-card">
+  <h1 class="section-header">{{ item.title or 'Pending Guidance' }}</h1>
 
   {{ item.body | markdown | safe }}
 
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
-  <section>
-    <h2>Related FAQs</h2>
-    <ul>
-      {% for faq in item.relatedFaqs %}
-        <li><a href="/v2{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
-      {% endfor %}
-    </ul>
-  </section>
+  <ul>
+    {% for faq in item.relatedFaqs %}
+    <li><a href="/v2{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
+    {% endfor %}
+  </ul>
   {% endif %}
 </article>

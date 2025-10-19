@@ -8,7 +8,6 @@
   - icon: Optional icon to display before title
 #}
 
-<section>
   <h2>
     {% if componentData.icon %}{{ componentData.icon }} {% endif %}{{ componentData.title }}
   </h2>
@@ -16,14 +15,13 @@
     <p>{{ componentData.description }}</p>
   {% endif %}
 
-  <ul>
+  <ul class="link-list">
     {% for faq in componentData.faqs %}
       <li>
         <a href="{{ faq.permalink }}">
-          {{ faq.question | markdownInline | safe }}
-          {% include "v2/components/faq-badges.njk" %}
+          <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+          <span class="badges">{% include "v2/components/faq-badges.njk" %}</span>
         </a>
       </li>
     {% endfor %}
   </ul>
-</section>

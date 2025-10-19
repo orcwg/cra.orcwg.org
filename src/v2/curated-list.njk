@@ -10,11 +10,11 @@ eleventyComputed:
   title: "{{ list.title }}"
 ---
 
-<section>
+<section class="section-intro">
   <p>{{ list.description }}</p>
 </section>
 
-<article>
+<article class="section-card">
 {% set componentData = {
   title: list.title,
   icon: list.icon,

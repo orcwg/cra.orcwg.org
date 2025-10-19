@@ -4,13 +4,13 @@ title: "Pending Guidance Requests"
 permalink: "/v2/pending-guidance/"
 ---
 
-<section>
+<section class="section-intro">
   <p>These topics have been identified as needing additional clarification or guidance from regulatory bodies. The FAQ Task Force is actively working to develop these guidance requests.</p>
 </section>
 
-<nav>
+<nav class="card-grid">
   {% for item in data.guidance %}
-    <a href="/v2{{ item.permalink }}/">
+    <a href="/v2{{ item.permalink }}/" class="card">
       <h2>{{ item.title | markdownInline | safe }}</h2>
       {% if item.data.status %}
         <p><strong>Status:</strong> {{ item.data.status | replace('-', ' ') | title }}</p>
