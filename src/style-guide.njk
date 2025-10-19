@@ -154,17 +154,3 @@ eleventyExcludeFromCollections: true
     <li>Minimal JavaScript - only for badge visibility toggles</li>
   </ul>
 </section>
-
-<script>
-// Make badges visible for demo
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('[hidden]').forEach(el => {
-    if (el.querySelector('data')) {
-      el.removeAttribute('hidden');
-      el.style.display = 'inline-flex';
-      el.style.gap = '8px';
-      el.style.marginLeft = '10px';
-    }
-  });
-});
-</script>
