@@ -26,7 +26,41 @@ npm install
 
 ## Architecture
 
-This is an Eleventy site that acts as a content processor and renderer for external FAQ content rather than managing content locally.
+This is an Eleventy site that acts as a content processor and renderer for external FAQ content rather than managing content locally. The site uses a **semantic HTML-first architecture** with minimal component classes and CSS-only interactions.
+
+### Design Philosophy
+
+- **Semantic HTML Elements**: Uses native HTML5 elements (`<details>`, `<summary>`, `<aside>`, `<article>`) with minimal class names
+- **CSS-Only Interactions**: Accordions and animations use native browser features without JavaScript
+- **Component Independence**: Components are self-contained and don't rely on parent context
+- **Modern CSS Features**: Leverages `color-mix()`, `:has()`, `:empty`, grid template rows, and CSS Custom Properties
+- **Accessibility First**: Native HTML semantics provide built-in keyboard navigation and screen reader support
+
+### CSS Architecture
+
+The site uses a **hybrid approach** combining semantic HTML selectors with light component classes:
+
+**Semantic Elements:**
+
+- `<header class="site-header">` - Site header with flexbox layout
+- `<nav class="site-nav">` - Navigation menu
+- `<main>` - Main content area
+- `<footer>` - Site footer with grid layout
+- `<aside>` - Warnings and disclaimers (styled automatically)
+- `<blockquote>` - Minimal italic quotes
+
+**Component Classes:**
+
+- `.section-card` - White boxes for FAQ content and list sections
+- `.section-intro` - Light gray introductory text boxes
+- `.card-grid` - Responsive card grids (with `.half-width` variant)
+- `.link-list` - FAQ link lists with hover states
+- `.faq-accordion-item` - Native `<details>` with CSS animations
+
+**Utility Classes:**
+
+- `.badge` - Status indicators with semantic color variants
+- `.info`, `.success`, `.warning`, `.danger`, `.important` - Semantic colors using `color-mix()`
 
 ### Content Flow
 
@@ -41,7 +75,7 @@ This is an Eleventy site that acts as a content processor and renderer for exter
    - **Authors Processing**: Load AUTHORS.md content
    - **Cross-referencing**: Cross-reference FAQs with guidance requests and lists
    - **Permalink Generation**: URLs computed once in data layer, not reconstructed in templates
-4. **Template Rendering** - Nunjucks templates consume processed data
+4. **Template Rendering** - Nunjucks templates consume processed data using semantic HTML components
 5. **Site Generation** - Final site is output to `_site/` for deployment
 
 ### Content Types
@@ -75,20 +109,44 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
 - Lists reference FAQs by filename (short form) or category/filename (long form)
 - FAQ references are automatically normalized to category/filename format
 - Lists maintain bidirectional links with FAQs for navigation
-- Lists are displayed using accordion components for compact navigation
+- Lists are displayed using native HTML `<details>` accordions for compact navigation
 
-### FAQ List Component
+### FAQ Components
 
-- Reusable component at `src/_includes/components/faq-list.njk`
-- Supports two display modes:
-  - **List mode**: Simple links to individual FAQ pages
-  - **Accordion mode**: Expandable/collapsible items with inline answers
-- Used in both the main FAQ list page and curated list pages
+The site uses two reusable FAQ components with minimal markup:
+
+- **`faq-list-simple.njk`** - Simple link lists using semantic `<ul class="link-list">`
+  - Displays FAQ questions as clickable links
+  - Shows status badges when present
+  - Used in main FAQ list page and list indexes
+
+- **`faq-accordion.njk`** - Native `<details>` accordions with CSS-only animations
+  - Uses HTML5 `<details>` and `<summary>` elements
+  - Exclusive accordion behavior via `name="faq-accordion"` attribute
+  - Smooth open/close animations using CSS grid template rows
+  - No JavaScript required for accordion functionality
+  - Used in curated lists for inline FAQ browsing
+
+### Component Structure
+
+Components follow a consistent data pattern:
+
+```javascript
+{% set componentData = {
+  title: "Section Title",
+  description: "Optional description",
+  icon: "🚀",
+  faqs: arrayOfFaqObjects
+} %}
+{% include "components/faq-accordion.njk" %}
+```
 
 ### Site Configuration
 
 - Global site settings in `src/_data/site.json`
-- Footer content and navigation configured via JSON data
+- Navigation menu configuration (used in header, homepage cards, and footer)
+- List ordering controlled via `listOrder` array
+- Footer content structured as sections with titles and lists
 
 ## External Dependencies
 
@@ -102,13 +160,28 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
 
 - **Static Site Generator**: Eleventy 3.x
 - **Template Engine**: Nunjucks
-- **Markdown Processing**: markdown-it
-- **Diagram Support**: Mermaid.js
-- **JavaScript**: Custom scripts in `src/assets/js/site.js` for interactive components
+- **Markdown Processing**: markdown-it with GitHub alerts plugin
+- **Diagram Support**: Mermaid.js (for rendering code blocks with `language-mermaid`)
+- **CSS Architecture**:
+  - Semantic HTML-first approach with minimal utility classes
+  - CSS Custom Properties for theming
+  - Modern CSS features: `color-mix()`, `:has()`, `:empty`, grid template rows
+  - CSS-only accordions using native `<details>` elements
+- **JavaScript**: Minimal - only used for Mermaid diagram initialization (`src/assets/js/site.js`)
 
 ## Development Resources
 
-- **Test Styling Page**: Visit `/test-styling/` to preview all available styles, components, and formatting options used throughout the site. This page is not available on the published production site.
+- **Style Guide**: Visit `/style-guide/` to preview all components, design patterns, and semantic HTML structures used throughout the site. The style guide is excluded from collections but available during development.
+
+### Key Components
+
+- `.section-card` - White content boxes with shadow and border
+- `.section-intro` - Light gray intro/description sections
+- `.card-grid` - Responsive grid layout for navigation cards
+- `.card` - Individual cards with hover effects and animated arrows
+- `.link-list` - Styled FAQ link lists with badge support
+- `.faq-accordion-item` - Native `<details>` elements with CSS animations
+- Semantic color utilities: `.info`, `.success`, `.warning`, `.danger`, `.important`
 
 ## Deployment
 
