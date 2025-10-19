@@ -303,6 +303,14 @@ main {
     position: relative;
 }
 
+.link-list li a .badges:empty {
+    display: none;
+}
+
+.link-list li a:has(.badges:empty) {
+    justify-content: center;
+}
+
 .link-list li a .badges {
     display: flex;
     gap: 6px;
