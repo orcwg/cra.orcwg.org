@@ -288,9 +288,6 @@ main {
 
 .link-list li a {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
     padding: 15px 20px;
     background: var(--background-light);
     border-radius: 6px;
@@ -301,20 +298,29 @@ main {
     font-size: 0.95em;
     min-height: 60px;
     position: relative;
-}
-
-.link-list li a .badges:empty {
-    display: none;
-}
-
-.link-list li a:has(.badges:empty) {
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: center;
+    gap: 0;
+}
+
+.link-list li a:has(.badges:not([hidden])) {
+    gap: 8px;
+}
+
+.link-list li a .question-text {
+    width: 100%;
+    text-align: left;
 }
 
 .link-list li a .badges {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+}
+
+.link-list li a .badges[hidden] {
+    display: none;
 }
 
 .link-list li a::after {

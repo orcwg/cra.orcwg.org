@@ -6,22 +6,19 @@
   - faq.answerMissing: Boolean indicating if FAQ has no answer text
   - faq.guidanceFileNotFound: Boolean flag when guidance-id references non-existent file
 #}
+{% if faq.status == 'pending-guidance' %}
+<data class="badge danger" value="pending-guidance">Pending Guidance</data>
+{% elif faq.status == 'draft' %}
+<data class="badge warning" value="draft">Draft</data>
+{% elif faq.status == "approved" %}
+<data class="badge success" value="approved">Approved</data>
+{% else %}
+<data class="badge danger" value="unknown">Status not set</data>
+{% endif %}
 
-<span hidden>
-  {% if faq.status == 'pending-guidance' %}
-  <data class="badge danger" value="pending-guidance">Pending Guidance</data>
-  {% elif faq.status == 'draft' %}
-  <data class="badge warning" value="draft">Draft</data>
-  {% elif faq.status == "approved" %}
-  <data class="badge success" value="approved">Approved</data>
-  {% else %}
-  <data class="badge danger" value="unknown">Status not set</data>
-  {% endif %}
-
-  {% if faq.answerMissing %}
-  <data class="badge danger" value="missing-answer">Missing Answer</data>
-  {% endif %}
-  {% if faq.guidanceFileNotFound %}
-  <data class="badge danger" value="guidance-not-found">Guidance File Not Found</data>
-  {% endif %}
-</span>
+{% if faq.answerMissing %}
+<data class="badge danger" value="missing-answer">Missing Answer</data>
+{% endif %}
+{% if faq.guidanceFileNotFound %}
+<data class="badge danger" value="guidance-not-found">Guidance File Not Found</data>
+{% endif %}

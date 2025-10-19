@@ -53,7 +53,7 @@ eleventyExcludeFromCollections: true
       <li>
         <a href="#">
           <span class="question-text">{{ faq.question }}</span>
-          <span class="badges">{% include "components/faq-badges.njk" %}</span>
+          <span class="badges" visible>{% include "components/faq-badges.njk" %}</span>
         </a>
       </li>
     {% endfor %}
