@@ -10,7 +10,7 @@ permalink: "/pending-guidance/"
 
 <nav class="card-grid">
   {% for item in data.guidance %}
-    <a href="{{ item.permalink }}/" class="card">
+    <a href="{{ item.permalink }}" class="card">
       <h2>{{ item.title | markdownInline | safe }}</h2>
       {% if item.data.status %}
         <p><strong>Status:</strong> {{ item.data.status | replace('-', ' ') | title }}</p>
