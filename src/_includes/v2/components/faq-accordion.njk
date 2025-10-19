@@ -35,7 +35,7 @@
           <p><strong>Pending Guidance</strong></p>
           {% if faq.guidanceItem.guidanceText %}
             <p>This FAQ awaits commission guidance on:</p>
-            <blockquote>{{ faq.guidanceItem.guidanceText | truncate(300) }}</blockquote>
+            <blockquote>{{ faq.guidanceItem.guidanceText }}</blockquote>
             <p><a href="{{ faq.guidanceItem.permalink }}">View full guidance request →</a></p>
           {% else %}
             <p>This FAQ awaits commission guidance.</p>
