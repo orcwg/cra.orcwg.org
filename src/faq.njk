@@ -33,16 +33,16 @@ eleventyComputed:
   {% endif %}
 </article>
 
-<details>
+<details style="display:none">
   <summary>Admin Information</summary>
   <div>
-    {% if item["guidance-id"] %}
+    {% if item.guidanceId %}
     <p><strong>Related Pending Guidance:</strong> <a href="{{ item.relatedGuidanceRequest.permalink }}">{{ item["guidance-id"] | replace('-', ' ') | title }}</a></p>
     <p><em>This FAQ is affected by pending guidance that is currently being developed.</em></p>
     {% endif %}
 
-    {% if item["Related issue"] %}
-    <p><strong>Related issue:</strong> <a href="{{ item["Related issue"] }}">{{ item["Related issue"] }}</a></p>
+    {% if item.relatedIssue %}
+    <p><strong>Related issue:</strong> <a href="{{ item.relatedIssue }}">{{ item["Related issue"] }}</a></p>
     {% endif %}
 
     <p><a href="{{ item.editOnGithubUrl }}" target="_blank" rel="noopener">✏️ Edit this FAQ on GitHub</a></p>
