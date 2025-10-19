@@ -12,9 +12,9 @@
     <header class="site-header">
         <a href="/v2/"><h1>{{ site.title }}</h1></a>
         <nav class="site-nav">
-            <a href="/v2/faq-list/"{% if page.url.startsWith('/v2/faq-list/') or page.url.startsWith('/v2/faq/') %} aria-current="page"{% endif %}>All FAQs</a>
-            <a href="/v2/lists/"{% if page.url.startsWith('/v2/lists/') %} aria-current="page"{% endif %}>Curated Lists</a>
-            <a href="/v2/pending-guidance/"{% if page.url.startsWith('/v2/pending-guidance/') %} aria-current="page"{% endif %}>Pending Guidance</a>
+            {% for nav in site.navigation %}
+            <a href="/v2{{ nav.url }}" title="{{ nav.description }}"{% if page.url == '/v2' + nav.url or page.url.startsWith('/v2' + nav.url) or (nav.matchPattern and page.url.startsWith('/v2' + nav.matchPattern)) %} aria-current="page"{% endif %}>{{ nav.title }}</a>
+            {% endfor %}
         </nav>
         <img src="/assets/images/orcwg_orc.png" alt="Open Regulatory Compliance Working Group Orc mascott">
     </header>

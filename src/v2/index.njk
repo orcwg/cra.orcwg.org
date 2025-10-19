@@ -14,18 +14,10 @@ permalink: "/v2/"
 </aside>
 
 <nav class="card-grid half-width">
-  <a href="/v2/faq-list/" class="card">
-    <h2>Browse All FAQs</h2>
-    <p>Complete list of all FAQ topics organized by category</p>
+  {% for nav in site.navigation %}
+  <a href="/v2{{ nav.url }}" class="card">
+    <h2>{{ nav.title }}</h2>
+    <p>{{ nav.description }}</p>
   </a>
-
-  <a href="/v2/lists/" class="card">
-    <h2>Curated Lists</h2>
-    <p>Carefully selected FAQ collections for specific audiences and topics</p>
-  </a>
-
-  <a href="/v2/pending-guidance/" class="card">
-    <h2>Pending Guidance</h2>
-    <p>Topics requiring additional clarification currently being developed</p>
-  </a>
+  {% endfor %}
 </nav>
