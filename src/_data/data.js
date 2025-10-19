@@ -108,6 +108,37 @@ function parseYamlFiles(files) {
 // FAQ Processing
 // ============================================================================
 
+// Create internal link index for cross-referencing content
+function createInternalLinkIndex(faqs, lists, guidanceRequests) {
+  const index = {};
+
+  faqs.forEach(faq => {
+    index[faq.id] = {
+      permalink: faq.permalink,
+      title: faq.pageTitle,
+      type: 'FAQ'
+    };
+  });
+
+  lists.forEach(list => {
+    index[`lists/${list.id}`] = {
+      permalink: list.permalink,
+      title: list.title,
+      type: 'FAQ list'
+    };
+  });
+
+  guidanceRequests.forEach(guidance => {
+    index[`guidance/${guidance.id}`] = {
+      permalink: guidance.permalink,
+      title: guidance.pageTitle,
+      type: 'Pending Guidance'
+    };
+  });
+
+  return index;
+}
+
 // Get FAQ markdown files (excludes pending-guidance and root files)
 function getFaqFiles(dir) {
   const files = fs.readdirSync(dir, { withFileTypes: true, recursive: true });
@@ -341,7 +372,10 @@ function processAllContent() {
   // 5. Connect lists with FAQs
   crossReferenceListsAndFaqs(lists, faqs);
 
-  // 6. Get and process AUTHORS.md
+  // 6. Create internal link index for all content types
+  const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
+
+  // 7. Get and process AUTHORS.md
   const authorsContent = processAuthorsFile();
 
   return {
@@ -349,7 +383,8 @@ function processAllContent() {
     guidance: guidanceRequests,
     faqItems: faqs,
     lists: lists,
-    authorsContent
+    authorsContent,
+    internalLinks: internalLinkIndex
   };
 }
 
@@ -361,5 +396,12 @@ function processAllContent() {
 module.exports = function () {
   const content = processAllContent();
 
-  return content;
+  // Load CRA references
+  const craReferencesPath = path.join(__dirname, "cra-references.json");
+  const craReferences = JSON.parse(fs.readFileSync(craReferencesPath, "utf-8"));
+
+  return {
+    ...content,
+    craReferences
+  };
 };
