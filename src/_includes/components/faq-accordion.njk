@@ -1,99 +1,49 @@
 {#
-  FAQ Accordion Component
+  FAQ Accordion Component - V2 Minimal Markup
 
-  Parameters (set via accordionData variable):
+  Parameters (set via componentData variable):
   - title: Section title to display
   - faqs: Array of FAQ item objects
-  - categoryClass: Optional CSS class for styling variations
   - description: Optional description text
   - icon: Optional icon to display before title
-
-  Usage Example:
-  {% set accordionData = {
-    title: "Advanced Topics",
-    faqs: faqItems,
-    description: "Frequently asked questions about advanced topics"
-  } %}
-  {% include "components/faq-accordion.njk" %}
 #}
 
-<section class="faq-category faq-category--accordion{{ ' ' + accordionData.categoryClass if accordionData.categoryClass }}">
-  <h2 class="category-title">
-    {% if accordionData.icon %}
-      <span class="category-icon">{{ accordionData.icon }}</span>
-    {% endif %}
-    {{ accordionData.title }}
+  <h2>
+    {% if componentData.icon %}{{ componentData.icon }} {% endif %}{{ componentData.title }}
   </h2>
-  {% if accordionData.description %}
-    <p class="category-description">{{ accordionData.description }}</p>
+  {% if componentData.description %}
+    <p>{{ componentData.description }}</p>
   {% endif %}
 
-  <div class="faq-items">
-    {% for faq in accordionData.faqs %}
-      <div class="faq-item" data-faq-key="{{ faq.filename | replace('.md', '') }}">
-        <button class="faq-trigger" onclick="toggleAccordion(this)">
-          <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
-          <span class="accordion-icon">▼</span>
-          {% include "components/faq-badges.njk" %}
-        </button>
+  {% for faq in componentData.faqs %}
+    <details class="faq-accordion-item" name="faq-accordion">
+      <summary>
+        <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+      </summary>
 
-        <div class="faq-content">
-          <div class="faq-answer">
-            {{ faq.answer | markdown | safe }}
+      <article>
+        <div>
+          {{ faq.answer | markdown | safe }}
 
-            {% if faq.status == "draft" or faq.guidanceItem %}
-            <aside class="faq-warnings">
-              {% if faq.status == "draft" %}
-              <div class="faq-warning">
-                <p><strong>This FAQ is a draft</strong> - it hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
-              </div>
-              {% endif %}
+        {% if faq.status == "draft" or faq.guidanceItem %}
+        <aside class="warning">
+          {% if faq.status == "draft" %}
+          <p><strong>This FAQ is a draft</strong></p> <p>It hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
+          {% endif %}
 
-              {% if faq.guidanceItem %}
-              <div class="faq-warning faq-guidance">
-                <p><strong>Pending Guidance</strong></p>
-                {% if faq.guidanceItem.guidanceText %}
-                  <div class="guidance-content">
-                    <p>This FAQ awaits commission guidance on:</p>
-                    <p class="guidance-phrase">{{ faq.guidanceItem.guidanceText | truncate(300) }}</p>
-                  </div>
-                  <div class="guidance-actions">
-                    <a href="{{ faq.guidanceItem.permalink }}" class="guidance-link">View full guidance request →</a>
-                  </div>
-                {% else %}
-                  <p>This FAQ awaits commission guidance.</p>
-                {% endif %}
-              </div>
-              {% endif %}
-            </aside>
-            {% endif %}
-          </div>
-
-          <div class="faq-admin-info" style="display: none">
-            {% if faq["guidance-id"] %}
-            <div class="pending-guidance-link">
-              <strong>🛑 Related Pending Guidance:</strong> <a href="{{ faq.guidanceItem.permalink }}">{{ faq["guidance-id"] | replace('-', ' ') | title }}</a>
-              <p><em>This FAQ is affected by pending guidance that is currently being developed.</em></p>
-            </div>
-            {% endif %}
-
-            {% if faq["Related issue"] %}
-            <div class="related-issue">
-              <strong>Related issue:</strong> <a href="{{ faq["Related issue"] }}">{{ faq["Related issue"] }}</a>
-            </div>
-            {% endif %}
-
-            <div class="edit-on-github">
-              <span class="edit-icon">✏️</span>
-              <a href="https://github.com/orcwg/cra-hub/edit/main/faq/{{ faq.category }}/{{ faq.filename }}" target="_blank" rel="noopener">Edit this FAQ on GitHub</a>
-            </div>
-
-            <div class="faq-link">
-              <a href="{{ faq.permalink }}" class="standalone-link">📄 View standalone page</a>
-            </div>
-          </div>
+          {% if faq.guidanceItem %}
+          <p><strong>Pending Guidance</strong></p>
+          {% if faq.guidanceItem.guidanceText %}
+            <p>This FAQ awaits commission guidance on:</p>
+            <blockquote>{{ faq.guidanceItem.guidanceText }}</blockquote>
+            <p><a href="{{ faq.guidanceItem.permalink }}">View full guidance request →</a></p>
+          {% else %}
+            <p>This FAQ awaits commission guidance.</p>
+          {% endif %}
+          {% endif %}
+        </aside>
+        {% endif %}
         </div>
-      </div>
-    {% endfor %}
-  </div>
-</section>
+      </article>
+    </details>
+  {% endfor %}

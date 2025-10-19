@@ -1,30 +1,22 @@
 ---
 layout: layout.njk
-title: "Curated FAQ Lists"
+title: Curated Lists
 permalink: "/lists/"
 ---
 
-<div class="curated-lists-intro">
-  <h3>Curated FAQ lists</h3>
-  <p>Curated collections of FAQs for specific topics and audiences. These lists includes questions and answers covering all aspects of the Cyber Resilience Act as it relates to open source.</p>
-  <p><strong>Note:</strong> These list includes FAQs regardless of their completion status. Some entries may be drafts, have missing content, or require additional guidance.
-</div>
+<section class="section-intro">
+  <p>Curated collections of FAQs organized for specific audiences and use cases. Each list contains carefully selected questions most relevant to that topic or role.</p>
+</section>
 
-<div class="curated-lists-grid">
+<nav class="card-grid">
   {% for listId in site.listOrder %}
     {% for list in data.lists %}
       {% if list.id == listId %}
-        <a href="{{ list.permalink }}" class="curated-list-card">
-          <h2 class="list-title">
-            {% if list.icon %}
-              <span class="list-icon">{{ list.icon }}</span>
-            {% endif %}
-            {{ list.title }}
-          </h2>
-          <p class="list-description">{{ list.description }}</p>
+        <a href="/v2{{ list.permalink }}/" class="card">
+          <h2>{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</h2>
+          <p>{{ list.description }}</p>
         </a>
       {% endif %}
     {% endfor %}
   {% endfor %}
-</div>
-
+</nav>

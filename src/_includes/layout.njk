@@ -9,20 +9,21 @@
     <script src="/assets/js/mermaid.min.js"></script>
 </head>
 <body>
-    <main>
-        <header class="site-header">
-            <a href="/" class="site-title"><h1>{{ site.title }}</h1></a>
-            <nav class="site-nav">
-                {% for nav in site.navigation %}
-                <a href="{{ nav.url }}" title="{{ nav.description }}" class="nav-link{% if page.url == nav.url or page.url.startsWith(nav.url) or (nav.matchPattern and page.url.startsWith(nav.matchPattern)) %} active{% endif %}">{{ nav.title }}</a>
-                {% endfor %}
-            </nav>
-            <img src="/assets/images/orcwg_orc.png" alt="Open Regulatory Compliance Working Group Orc mascott" class="site-logo">
-        </header>
-        {{ content | safe }}
+    <header class="site-header">
+        <a href="/"><h1>{{ site.title }}</h1></a>
+        <nav class="site-nav">
+            {% for nav in site.navigation %}
+            <a href="{{ nav.url }}" title="{{ nav.description }}"{% if page.url == nav.url or page.url.startsWith(nav.url) or (nav.matchPattern and page.url.startsWith(nav.matchPattern)) %} aria-current="page"{% endif %}>{{ nav.title }}</a>
+            {% endfor %}
+        </nav>
+        <img src="/assets/images/orcwg_orc.png" alt="Open Regulatory Compliance Working Group Orc mascott">
+    </header>
 
-        {% include "footer.njk" %}
+    <main>
+        {{ content | safe }}
     </main>
+
+    {% include "footer.njk" %}
 
     <script>
         // Convert markdown code blocks with language-mermaid to mermaid divs

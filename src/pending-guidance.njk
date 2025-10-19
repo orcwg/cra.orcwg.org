@@ -4,71 +4,21 @@ pagination:
   data: data.guidance
   size: 1
   alias: item
-permalink: "{{ item.permalink }}"
+permalink: "{{ item.permalink }}/"
 eleventyComputed:
   title: "{{ item.pageTitle }}"
 ---
 
-<article class="faq-main-content faq-main-content--guidance" data-status="{{ item.data.status }}">
-  <h1>
-    <div class="guidance-header-wrapper">
-      <div class="guidance-header-content">
-        <div class="guidance-header-prefix">Commission Guidance Request for:</div>
-        <div class="guidance-header-title">{{ item.title or 'Pending Guidance' }}</div>
-      </div>
-      <div class="guidance-status-badge">
-        {% if item.data.status == "requested" %}
-          <span class="status-badge status-requested">✓ Formally Requested</span>
-        {% else %}
-          <span class="status-badge status-needed">⚠ Not Yet Requested</span>
-        {% endif %}
-      </div>
-    </div>
-  </h1>
+<article class="section-card">
+  <h1 class="section-header">{{ item.title or 'Pending Guidance' }}</h1>
+
   {{ item.body | markdown | safe }}
 
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
-  <div class="related-faqs-inline">
-    <ul>
-      {% for faq in item.relatedFaqs %}
-      <li><a href="{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
-      {% endfor %}
-    </ul>
-  </div>
+  <ul>
+    {% for faq in item.relatedFaqs %}
+    <li><a href="/v2{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
+    {% endfor %}
+  </ul>
   {% endif %}
 </article>
-
-<button class="admin-toggle" onclick="toggleAdminMode()" title="Toggle admin information">
-  ✏️
-</button>
-
-<div class="admin-info" style="display: none;">
-  {% if item.data["Related issue"] %}
-  <div class="related-issue">
-    <strong>Related issue:</strong> <a href="{{ item.data["Related issue"] }}">{{ item.data["Related issue"] }}</a>
-  </div>
-  {% endif %}
-
-  <div class="edit-on-github">
-    <span class="edit-icon">✏️</span>
-    <a href="https://github.com/orcwg/cra-hub/edit/main/faq/pending-guidance/{{ item.filename }}" target="_blank" rel="noopener">Edit this guidance request on GitHub</a>
-  </div>
-</div>
-
-<script>
-function toggleAdminMode() {
-  const adminInfo = document.querySelector('.admin-info');
-  const button = document.querySelector('.admin-toggle');
-
-  if (adminInfo.style.display === 'none' || adminInfo.style.display === '') {
-    adminInfo.style.display = 'block';
-    button.classList.add('active');
-    button.title = 'Hide admin information';
-  } else {
-    adminInfo.style.display = 'none';
-    button.classList.remove('active');
-    button.title = 'Toggle admin information';
-  }
-}
-</script>
-

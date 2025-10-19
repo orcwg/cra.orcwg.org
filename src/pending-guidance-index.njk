@@ -1,26 +1,23 @@
 ---
 layout: layout.njk
-title: "Pending Guidance"
+title: "Pending Guidance Requests"
 permalink: "/pending-guidance/"
 ---
 
-<div class="pending-guidance-intro">
-  <p>These topics require additional guidance from the EU Commission. Each item represents a request for clarification that is to be addressed in future updates.</p>
-</div>
+<section class="section-intro">
+  <p>These topics have been identified as needing additional clarification or guidance from regulatory bodies. The FAQ Task Force is actively working to develop these guidance requests.</p>
+</section>
 
-<div class="faq-index">
-  <section class="category-section">
-    <h2 class="category-title">Pending Guidance</h2>
-    <ul class="question-list">
-      {% for item in data.guidance %}
-        <li class="question-item">
-          <a href="{{ item.permalink }}" class="question-link">
-            <span class="question-text">
-              {{ item.title | markdownInline | safe }}
-            </span>
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  </section>
-</div>
+<nav class="card-grid">
+  {% for item in data.guidance %}
+    <a href="/v2{{ item.permalink }}/" class="card">
+      <h2>{{ item.title | markdownInline | safe }}</h2>
+      {% if item.data.status %}
+        <p><strong>Status:</strong> {{ item.data.status | replace('-', ' ') | title }}</p>
+      {% endif %}
+      {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
+        <p>{{ item.relatedFaqs.length }} related FAQ{{ 's' if item.relatedFaqs.length != 1 }}</p>
+      {% endif %}
+    </a>
+  {% endfor %}
+</nav>

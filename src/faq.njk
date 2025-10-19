@@ -9,75 +9,42 @@ eleventyComputed:
   title: "{{ item.pageTitle }}"
 ---
 
-<article class="faq-main-content" data-status="{{ item.status }}" {% if item.relatedGuidanceRequest %}data-has-guidance="true"{% endif %}>
-  <h1>{{ item.question | markdownInline | safe }}</h1>
+<article class="section-card">
+  <h1 class="section-header">{{ item.question | markdownInline | safe }}</h1>
   {{ item.answer | markdown | safe }}
 
   {% if item.status == "draft" or item.relatedGuidanceRequest %}
-  <aside class="faq-warnings">
+  <aside class="warning">
     {% if item.status == "draft" %}
-    <div class="faq-warning">
-      <p><strong>This FAQ is a draft</strong> - it hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
-    </div>
+    <p><strong>This FAQ is a draft</strong> - it hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
     {% endif %}
 
     {% if item.relatedGuidanceRequest %}
-    <div class="faq-warning faq-guidance">
-      <p><strong>Pending Guidance</strong></p>
-      {% if item.relatedGuidanceRequest.guidanceText %}
-        <div class="guidance-content">
-          <p>This FAQ awaits commission guidance on:</p>
-          <p class="guidance-phrase">{{ item.relatedGuidanceRequest.guidanceText }}</p>
-        </div>
-        <div class="guidance-actions">
-          <a href="{{ item.relatedGuidanceRequest.permalink }}" class="guidance-link">View full guidance request →</a>
-        </div>
-      {% else %}
-        <p>This FAQ awaits commission guidance.</p>
-      {% endif %}
-    </div>
+    <p><strong>Pending Guidance</strong></p>
+    {% if item.relatedGuidanceRequest.guidanceText %}
+      <p>This FAQ awaits commission guidance on:</p>
+      <blockquote>{{ item.relatedGuidanceRequest.guidanceText }}</blockquote>
+      <p><a href="/v2{{ item.relatedGuidanceRequest.permalink }}">View full guidance request →</a></p>
+    {% else %}
+      <p>This FAQ awaits commission guidance.</p>
+    {% endif %}
     {% endif %}
   </aside>
   {% endif %}
 </article>
 
-<button class="admin-toggle" onclick="toggleAdminMode()" title="Toggle admin information">
-  ✏️
-</button>
-
-<div class="admin-info" style="display: none;">
-  {% if item["guidance-id"] %}
-  <div class="pending-guidance-link">
-    <strong>Related Pending Guidance:</strong> <a href="{{ item.relatedGuidanceRequest.permalink }}">{{ item["guidance-id"] | replace('-', ' ') | title }}</a>
+<details>
+  <summary>Admin Information</summary>
+  <div>
+    {% if item["guidance-id"] %}
+    <p><strong>Related Pending Guidance:</strong> <a href="/v2{{ item.relatedGuidanceRequest.permalink }}">{{ item["guidance-id"] | replace('-', ' ') | title }}</a></p>
     <p><em>This FAQ is affected by pending guidance that is currently being developed.</em></p>
+    {% endif %}
+
+    {% if item["Related issue"] %}
+    <p><strong>Related issue:</strong> <a href="{{ item["Related issue"] }}">{{ item["Related issue"] }}</a></p>
+    {% endif %}
+
+    <p><a href="{{ item.editOnGithubUrl }}" target="_blank" rel="noopener">✏️ Edit this FAQ on GitHub</a></p>
   </div>
-  {% endif %}
-
-  {% if item["Related issue"] %}
-  <div class="related-issue">
-    <strong>Related issue:</strong> <a href="{{ item["Related issue"] }}">{{ item["Related issue"] }}</a>
-  </div>
-  {% endif %}
-
-  <div class="edit-on-github">
-    <span class="edit-icon">✏️</span>
-    <a href="{{ item.editOnGithubUrl }}" target="_blank" rel="noopener">Edit this FAQ on GitHub</a>
-  </div>
-</div>
-
-<script>
-function toggleAdminMode() {
-  const adminInfo = document.querySelector('.admin-info');
-  const button = document.querySelector('.admin-toggle');
-
-  if (adminInfo.style.display === 'none' || adminInfo.style.display === '') {
-    adminInfo.style.display = 'block';
-    button.classList.add('active');
-    button.title = 'Hide admin information';
-  } else {
-    adminInfo.style.display = 'none';
-    button.classList.remove('active');
-    button.title = 'Toggle admin information';
-  }
-}
-</script>
+</details>

@@ -4,20 +4,20 @@ title: "CRA FAQ"
 permalink: "/"
 ---
 
-<div class="home-intro">
+<section class="section-intro">
   <p>Welcome to the Cyber Resilience Act FAQ. Find answers to common questions about the CRA and its implications for software developers, maintainers, and businesses.</p>
-</div>
+</section>
 
-<div class="disclaimer">
-  <h3>⚠️ Disclaimer</h3>
-  <p><strong>Nothing contained in this FAQ website constitutes legal advice. If you have any legal questions about the CRA, you should consult with an attorney.</strong></p>
-</div>
+<aside class="warning">
+  <h2>Disclaimer</h2>
+  <p>Nothing contained in this FAQ website constitutes legal advice. If you have any legal questions about the CRA, you should consult with an attorney.</p>
+</aside>
 
-<div class="home-navigation">
+<nav class="card-grid half-width">
   {% for nav in site.navigation %}
-  <a href="{{ nav.url }}" class="home-nav-card">
+  <a href="{{ nav.url }}" class="card">
     <h2>{{ nav.title }}</h2>
     <p>{{ nav.description }}</p>
   </a>
   {% endfor %}
-</div>
+</nav>
