@@ -24,7 +24,7 @@ eleventyComputed:
     {% if item.relatedGuidanceRequest.guidanceText %}
       <p>This FAQ awaits commission guidance on:</p>
       <blockquote>{{ item.relatedGuidanceRequest.guidanceText }}</blockquote>
-      <p><a href="/v2{{ item.relatedGuidanceRequest.permalink }}">View full guidance request →</a></p>
+      <p><a href="{{ item.relatedGuidanceRequest.permalink }}">View full guidance request →</a></p>
     {% else %}
       <p>This FAQ awaits commission guidance.</p>
     {% endif %}
@@ -37,7 +37,7 @@ eleventyComputed:
   <summary>Admin Information</summary>
   <div>
     {% if item["guidance-id"] %}
-    <p><strong>Related Pending Guidance:</strong> <a href="/v2{{ item.relatedGuidanceRequest.permalink }}">{{ item["guidance-id"] | replace('-', ' ') | title }}</a></p>
+    <p><strong>Related Pending Guidance:</strong> <a href="{{ item.relatedGuidanceRequest.permalink }}">{{ item["guidance-id"] | replace('-', ' ') | title }}</a></p>
     <p><em>This FAQ is affected by pending guidance that is currently being developed.</em></p>
     {% endif %}
 

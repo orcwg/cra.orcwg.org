@@ -17,7 +17,7 @@ eleventyComputed:
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
   <ul>
     {% for faq in item.relatedFaqs %}
-    <li><a href="/v2{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
+    <li><a href="{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
     {% endfor %}
   </ul>
   {% endif %}
