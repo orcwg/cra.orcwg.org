@@ -26,8 +26,8 @@
       "description": "FAQs organized by topic and/or audience"
     },
     {
-      "url": "/guidance/",
-      "title": "Guidance Requests",
+      "url": "/pending-guidance/",
+      "title": "Pending Guidance",
       "description": "Topics requiring additional clarification by the European Commission"
     }
   ],
