@@ -113,27 +113,15 @@ function createInternalLinkIndex(faqs, lists, guidanceRequests) {
   const index = {};
 
   faqs.forEach(faq => {
-    index[faq.id] = {
-      permalink: faq.permalink,
-      title: faq.pageTitle,
-      type: 'FAQ'
-    };
+    index[faq.id] = faq;
   });
 
   lists.forEach(list => {
-    index[`lists/${list.id}`] = {
-      permalink: list.permalink,
-      title: list.title,
-      type: 'FAQ list'
-    };
+    index[`lists/${list.id}`] = list;
   });
 
   guidanceRequests.forEach(guidance => {
-    index[`guidance/${guidance.id}`] = {
-      permalink: guidance.permalink,
-      title: guidance.pageTitle,
-      type: 'Pending Guidance'
-    };
+    index[`guidance/${guidance.id}`] = guidance;
   });
 
   return index;
@@ -155,8 +143,10 @@ function getFaqFiles(dir) {
 
 // Process a single FAQ
 function getProcessedFaq(faq) {
-  // Set ID to basedir/filename-without-extension.
-  const id = path.join(path.basename(faq.path), faq.filename.replace('.md', ''));
+  // Extract category and filename
+  const category = path.basename(faq.path);
+  const filename = faq.filename.replace('.md', '');
+  const id = `${ category }/${ filename }`;
 
   // Normalize status
   const status = faq.data.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
@@ -172,6 +162,8 @@ function getProcessedFaq(faq) {
 
   return {
     id: id,
+    category: category,
+    filename: filename,
     status: status,
     permalink: `/faq/${id}/`,
     editOnGithubUrl: editOnGithubUrl,
@@ -393,15 +385,5 @@ function processAllContent() {
 // ============================================================================
 
 // Main entry point for 11ty data processing
-module.exports = function () {
-  const content = processAllContent();
 
-  // Load CRA references
-  const craReferencesPath = path.join(__dirname, "cra-references.json");
-  const craReferences = JSON.parse(fs.readFileSync(craReferencesPath, "utf-8"));
-
-  return {
-    ...content,
-    craReferences
-  };
-};
+module.exports = processAllContent;
