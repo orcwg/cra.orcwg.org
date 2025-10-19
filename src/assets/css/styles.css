@@ -1,5 +1,5 @@
 /* ===================================================================
-   CRA FAQ Stylesheet V2 - Semantic Layout
+   CRA FAQ Stylesheet  - Semantic Layout
    Basic layout styles using semantic HTML elements
    =================================================================== */
 
@@ -95,16 +95,16 @@ a:hover {
     gap: 20px;
 }
 
-.site-header > a {
+.site-header>a {
     white-space: nowrap;
 }
 
-.site-header > a h1 {
+.site-header>a h1 {
     margin: 0;
     transition: color 0.2s ease;
 }
 
-.site-header > a:hover h1 {
+.site-header>a:hover h1 {
     color: var(--primary-color);
 }
 
@@ -130,7 +130,7 @@ a:hover {
     color: var(--primary-color);
 }
 
-.site-header > img {
+.site-header>img {
     width: 90px;
     height: auto;
     align-self: center;
@@ -233,16 +233,16 @@ main {
     margin-bottom: 20px;
 }
 
-.section-card > :first-child {
+.section-card> :first-child {
     margin-top: 0;
 }
 
-.section-card > :last-child {
+.section-card> :last-child {
     margin-bottom: 0;
 }
 
 /* Section Card Header */
-.section-card > .section-header {
+.section-card>.section-header {
     background: var(--background-light);
     padding: 25px 30px 15px 30px;
     border-bottom: 1px solid var(--border-color);
@@ -255,7 +255,7 @@ main {
     line-height: 1.3;
 }
 
-.section-card > h2 {
+.section-card>h2 {
     font-size: 1.4em;
     margin: 0 0 15px 0;
     padding-bottom: 8px;
@@ -263,15 +263,15 @@ main {
     border-image: linear-gradient(90deg, var(--primary-dark), var(--primary-color)) 1;
 }
 
-.section-card h2 + .link-list {
+.section-card h2+.link-list {
     margin-top: 15px;
 }
 
-.section-card .link-list + h2 {
+.section-card .link-list+h2 {
     margin-top: 40px;
 }
 
-.section-card > p {
+.section-card>p {
     margin-bottom: 15px;
 }
 
@@ -426,7 +426,7 @@ main {
     border-bottom: 1px solid var(--border-color);
 }
 
-.faq-accordion-item article > div {
+.faq-accordion-item article>div {
     overflow: hidden;
 }
 
@@ -590,27 +590,27 @@ pre code {
 }
 
 /* First child inherits the color from utility class and gets emoji */
-:is(.info, .success, .warning, .danger, .important) > :first-child {
+:is(.info, .success, .warning, .danger, .important)> :first-child {
     color: var(--color);
 }
 
-.info > :first-child::before {
+.info> :first-child::before {
     content: '💬 ';
 }
 
-.success > :first-child::before {
+.success> :first-child::before {
     content: '✅ ';
 }
 
-.warning > :first-child::before {
+.warning> :first-child::before {
     content: '⚠️ ';
 }
 
-.danger > :first-child::before {
+.danger> :first-child::before {
     content: '🛑 ';
 }
 
-.important > :first-child::before {
+.important> :first-child::before {
     content: '🔔 ';
 }
 
@@ -698,11 +698,25 @@ aside h3 {
 }
 
 /* Map alert types to semantic colors - set --color variable */
-.markdown-alert-note { --color: var(--color-info); }
-.markdown-alert-tip { --color: var(--color-success); }
-.markdown-alert-important { --color: var(--color-important); }
-.markdown-alert-warning { --color: var(--color-warning); }
-.markdown-alert-caution { --color: var(--color-danger); }
+.markdown-alert-note {
+    --color: var(--color-info);
+}
+
+.markdown-alert-tip {
+    --color: var(--color-success);
+}
+
+.markdown-alert-important {
+    --color: var(--color-important);
+}
+
+.markdown-alert-warning {
+    --color: var(--color-warning);
+}
+
+.markdown-alert-caution {
+    --color: var(--color-danger);
+}
 
 /* Apply colors using --color variable (DRY) */
 .markdown-alert-note,
