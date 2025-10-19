@@ -519,6 +519,26 @@ footer section a:hover {
     }
 }
 
+/* Contributors List */
+.contributors-list {
+    text-align: center;
+}
+
+.contributors-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.contributors-list li {
+    line-height: 1.6;
+    transition: all 0.1s ease;
+}
+
+.contributors-list li:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
 /* ===================================================================
    CODE BLOCKS
    =================================================================== */
