@@ -15,19 +15,19 @@
   ],
   "navigation": [
     {
-      "url": "/faq-list/",
+      "url": "/faq/",
       "title": "All FAQs",
       "description": "Browse all FAQs in one single list",
       "matchPattern": "/faq/"
     },
     {
-      "url": "/lists/",
+      "url": "/faq/categories/",
       "title": "Categories",
       "description": "FAQs organized by topic and/or audience"
     },
     {
-      "url": "/pending-guidance/",
-      "title": "Pending Guidance",
+      "url": "/guidance/",
+      "title": "Guidance Requests",
       "description": "Topics requiring additional clarification by the European Commission"
     }
   ],
