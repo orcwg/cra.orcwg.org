@@ -540,6 +540,33 @@ footer section a:hover {
 }
 
 /* ===================================================================
+   GUIDANCE
+   =================================================================== */
+
+body.guidance h1,
+body.guidance h2,
+body.guidance h3 {
+  color: var(--secondary-color);
+}
+
+.section-card > .section-header {
+  color: #fff;
+  background-color: var(--secondary-color);
+}
+
+body.guidance .section-card > h2 {
+    border-image: linear-gradient(90deg, var(--secondary-color), var(--primary-color)) 1;
+}
+
+a {
+    color: var(--secondary-color);
+}
+
+a:hover {
+    color: var(--primary-color);
+}
+
+/* ===================================================================
    CODE BLOCKS
    =================================================================== */
 
