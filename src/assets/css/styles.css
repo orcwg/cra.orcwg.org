@@ -671,7 +671,7 @@ pre code {
 /* Regular blockquote */
 blockquote {
     margin: 16px 0;
-    padding-left: 20px;
+    padding: 0 31px 0 33px; /* Align with 3px left borders elsewhere */
     font-style: italic;
     color: var(--text-light);
 }
