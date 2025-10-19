@@ -1,5 +1,23 @@
 {
   "title": "CRA FAQ",
+  "navigation": [
+    {
+      "url": "/faq-list/",
+      "title": "All FAQs",
+      "description": "Browse all FAQs in one single list",
+      "matchPattern": "/faq/"
+    },
+    {
+      "url": "/lists/",
+      "title": "Categories",
+      "description": "FAQs organized by topic and/or audience"
+    },
+    {
+      "url": "/pending-guidance/",
+      "title": "Pending Guidance",
+      "description": "Topics requiring additional clarification by the European Commission"
+    }
+  ],
   "footer": {
     "sections": [
       {
