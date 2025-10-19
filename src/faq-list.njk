@@ -2,16 +2,6 @@
 layout: layout.njk
 title: All FAQs
 permalink: "/faq-list/"
-listOrder:
-  - cra-itself
-  - projects
-  - maintainers
-  - stewards
-  - manufacturers
-  - standards
-  - important-and-critical-products
-  - attestations
-  - legislation
 ---
 
 <div class="faq-list-intro">
@@ -20,7 +10,7 @@ listOrder:
 </div>
 
 <div class="faq-list-container">
-  {% for listId in listOrder %}
+  {% for listId in site.listOrder %}
     {% for list in data.lists %}
       {% if list.id == listId %}
         {% set listData = {

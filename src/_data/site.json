@@ -1,5 +1,18 @@
 {
   "title": "CRA FAQ",
+  "listOrder": [
+      "cra-itself",
+      "contributors",
+      "maintainers",
+      "projects",
+      "stewards",
+      "manufacturers",
+      "standards",
+      "important-and-critical-products",
+      "due-diligence",
+      "attestations",
+      "legislation"
+  ],
   "navigation": [
     {
       "url": "/faq-list/",

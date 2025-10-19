@@ -2,16 +2,6 @@
 layout: layout.njk
 title: "Curated FAQ Lists"
 permalink: "/lists/"
-listOrder:
-  - cra-itself
-  - projects
-  - maintainers
-  - stewards
-  - manufacturers
-  - standards
-  - important-and-critical-products
-  - attestations
-  - legislation
 ---
 
 <div class="curated-lists-intro">
@@ -21,7 +11,7 @@ listOrder:
 </div>
 
 <div class="curated-lists-grid">
-  {% for listId in listOrder %}
+  {% for listId in site.listOrder %}
     {% for list in data.lists %}
       {% if list.id == listId %}
         <a href="{{ list.permalink }}" class="curated-list-card">
