@@ -1,0 +1,26 @@
+{#
+  Guidance Status Tracker Component
+
+  Displays a delivery tracker for guidance request status progression
+
+  Parameters (passed via guidance object):
+  - guidance.status.stages: Array of stage objects
+  - guidance.status.currentStageIndex: Index of current stage
+#}
+
+<div class="guidance-tracker">
+  {% for stage in guidance.status.stages %}
+    {% set isActive = loop.index0 <= guidance.status.currentStageIndex %}
+    {% set isCurrent = loop.index0 == guidance.status.currentStageIndex %}
+    {% set hasTooltip = isActive and (stage.date or stage.tooltip) %}
+
+    <div class="tracker-step{% if isActive %} active{% endif %}{% if isCurrent %} current{% endif %}">
+      <div class="tracker-dot{% if hasTooltip %} has-tooltip{% endif %}"{% if isActive and stage.date %} data-tooltip="{{ stage.tooltipPrefix }} {{ stage.date | formatDate }}"{% elif isActive and stage.tooltip %} data-tooltip="{{ stage.tooltip }}"{% endif %}></div>
+      <div class="tracker-label">{{ stage.label }}</div>
+    </div>
+
+    {% if not loop.last %}
+      <div class="tracker-line{% if loop.index0 < guidance.status.currentStageIndex %} active{% endif %}"></div>
+    {% endif %}
+  {% endfor %}
+</div>

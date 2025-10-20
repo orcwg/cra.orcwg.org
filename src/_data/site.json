@@ -13,6 +13,31 @@
       "attestations",
       "legislation"
   ],
+  "guidanceStages": [
+    {
+      "label": "Pending"
+    },
+    {
+      "field": "ready",
+      "label": "Ready",
+      "tooltipPrefix": "Request ready on"
+    },
+    {
+      "field": "sent",
+      "label": "Sent",
+      "tooltipPrefix": "Request sent on"
+    },
+    {
+      "field": "acknowledged",
+      "label": "Acknowledged",
+      "tooltipPrefix": "Request acknowledged on"
+    },
+    {
+      "field": "answered",
+      "label": "Answered",
+      "tooltipPrefix": "Request answered on"
+    }
+  ],
   "navigation": [
     {
       "url": "/faq-list/",

@@ -217,8 +217,33 @@ function getProcessedGuidanceRequest(guidanceRequest) {
   // Set ID to basedir/filename-without-extension.
   const id = guidanceRequest.filename.replace('.md', '');
 
-  // Normalize status
-  const status = guidanceRequest.data.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
+  // Normalize status label from frontmatter
+  const statusLabel = guidanceRequest.data.status.replace(/^(⚠️|🛑|✅)\s*/, '').trim();
+
+  // Helper to get field case-insensitively
+  const getField = (key) => {
+    return guidanceRequest.data[key] ||
+      guidanceRequest.data[key.charAt(0).toUpperCase() + key.slice(1)] ||
+      null;
+  };
+
+  // Extract dates (YAML parser converts YYYY-MM-DD to Date objects automatically)
+  const ready = getField('ready');
+  const sent = getField('sent');
+  const acknowledged = getField('acknowledged');
+  const answered = getField('answered');
+
+  // Define tracker stages
+  const stages = [
+    { label: "Pending", tooltip: "Request is being processed by the FAQ task force" },
+    { label: "Ready", tooltipPrefix: "Request ready on", date: ready },
+    { label: "Sent", tooltipPrefix: "Request sent on", date: sent },
+    { label: "Acknowledged", tooltipPrefix: "Request acknowledged on", date: acknowledged },
+    { label: "Answered", tooltipPrefix: "Request answered on", date: answered }
+  ];
+
+  // Find the last stage with a date (default to 0 = Pending)
+  const currentStageIndex = Math.max(0, stages.findLastIndex(stage => stage.date));
 
   // Generate edit on github URL
   const editOnGithubUrl = new URL(`${guidanceRequest.path}/${guidanceRequest.filename}`, EDIT_ON_GITHUB_ROOT).href;
@@ -228,7 +253,11 @@ function getProcessedGuidanceRequest(guidanceRequest) {
 
   return {
     id: id,
-    status: status,
+    status: {
+      label: statusLabel,
+      currentStageIndex: currentStageIndex,
+      stages: stages
+    },
     permalink: `/${id}/`,
     editOnGithubUrl: editOnGithubUrl,
     relatedIssue: guidanceRequest.data["Related issue"],

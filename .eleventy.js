@@ -91,6 +91,17 @@ module.exports = async function (eleventyConfig) {
     return md.renderInline(content || "");
   });
 
+  // Add date formatting filter
+  eleventyConfig.addFilter("formatDate", function (date) {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return "";
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+    return formatter.format(date);
+  });
+
   return {
     dir: {
       input: "src",

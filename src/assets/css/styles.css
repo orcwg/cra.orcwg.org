@@ -845,3 +845,111 @@ aside h3 {
 .markdown-alert-caution .markdown-alert-title::before {
     content: '🛑 ';
 }
+
+/* ===================================================================
+   GUIDANCE STATUS TRACKER
+   =================================================================== */
+
+.guidance-tracker {
+    margin: 30px 0;
+    padding: 20px 20px 35px 20px;
+    display: flex;
+    align-items: center;
+    overflow: visible;
+}
+
+.tracker-step {
+    flex: 0 0 auto;
+    position: relative;
+}
+
+.tracker-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--border-color);
+    position: relative;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px var(--border-color);
+}
+
+.tracker-dot.has-tooltip {
+    cursor: help;
+}
+
+.tracker-step.active .tracker-dot {
+    background: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+.tracker-step.current .tracker-dot {
+    background: var(--primary-dark);
+    box-shadow: 0 0 0 1px var(--primary-dark);
+}
+
+.tracker-dot[data-tooltip]::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 100;
+}
+
+.tracker-dot[data-tooltip]:hover::before {
+    opacity: 1;
+}
+
+.tracker-label {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75em;
+    color: var(--text-light);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.tracker-step.active .tracker-label {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.tracker-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border-color);
+}
+
+.tracker-line.active {
+    background: var(--primary-color);
+}
+
+@media (max-width: 600px) {
+    .guidance-tracker {
+        padding: 15px;
+    }
+
+    .tracker-label {
+        font-size: 0.65em;
+    }
+
+    .tracker-dot {
+        width: 12px;
+        height: 12px;
+    }
+
+    .tracker-line {
+        margin: 0 5px;
+    }
+}
