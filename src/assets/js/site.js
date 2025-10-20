@@ -1,3 +1,43 @@
+// Storage utilities
+function getStorageValue(name) {
+    return sessionStorage.getItem(name);
+}
+
+function setStorageValue(name, value) {
+    sessionStorage.setItem(name, value);
+}
+
+// Admin mode functionality
+function applyAdminMode(enabled) {
+    if (enabled) {
+        document.body.classList.add('admin-mode');
+    } else {
+        document.body.classList.remove('admin-mode');
+    }
+}
+
+function toggleAdminMode(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const isEnabled = document.body.classList.contains('admin-mode');
+    const newState = !isEnabled;
+
+    applyAdminMode(newState);
+    setStorageValue('adminMode', newState ? '1' : '0');
+
+    // Scroll to bottom after DOM updates
+    requestAnimationFrame(() => {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+    });
+}
+
+// Initialize admin mode from sessionStorage immediately
+const adminModeValue = getStorageValue('adminMode');
+if (adminModeValue === '1') {
+    applyAdminMode(true);
+}
+
 // Mermaid diagram initialization
 document.addEventListener('DOMContentLoaded', function() {
     const mermaidBlocks = document.querySelectorAll('code.language-mermaid');
@@ -16,6 +56,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Manually trigger Mermaid rendering
     mermaid.run();
+
+    // Attach toggle functionality to existing button
+    const toggleButton = document.querySelector('.admin-toggle');
+    if (toggleButton) {
+        toggleButton.addEventListener('click', toggleAdminMode);
+    }
 
     // Copy link functionality
     document.querySelectorAll('.action-button[data-permalink]').forEach(function(button) {
