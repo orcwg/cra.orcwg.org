@@ -31,6 +31,13 @@ eleventyComputed:
     {% endif %}
   </aside>
   {% endif %}
+
+  <div class="faq-actions">
+    <button class="action-button" data-permalink="{{ item.permalink }}" title="Copy FAQ page link" aria-label="Copy FAQ page link">
+      {% include "icons/copy.svg" %}
+      <span>Copy link</span>
+    </button>
+  </div>
 </article>
 
 <details style="display:none">

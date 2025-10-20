@@ -43,6 +43,17 @@
           {% endif %}
         </aside>
         {% endif %}
+
+          <div class="faq-actions">
+            <button class="action-button" data-permalink="{{ faq.permalink }}" title="Copy FAQ page link" aria-label="Copy FAQ page link">
+              {% include "icons/copy.svg" %}
+              <span>Copy link</span>
+            </button>
+            <a href="{{ faq.permalink }}" class="action-button" title="Go to FAQ page">
+              <span>Go to FAQ page</span>
+              {% include "icons/arrow-right.svg" %}
+            </a>
+          </div>
         </div>
       </article>
     </details>
