@@ -284,6 +284,9 @@ main {
 
 .link-list li {
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .link-list li a {
@@ -302,6 +305,7 @@ main {
     align-items: flex-start;
     justify-content: center;
     gap: 0;
+    flex: 1;
 }
 
 .link-list li a:has(.badges:not([hidden])) {
@@ -376,7 +380,7 @@ main {
     list-style: none;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 15px;
     line-height: 1.4;
     transition: all 0.2s ease;
@@ -409,6 +413,68 @@ main {
 
 .faq-accordion-item[open] summary::after {
     transform: rotate(-180deg);
+}
+
+/* Action Button Utility */
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 0.85em;
+    color: var(--text-light);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.action-button svg {
+    flex-shrink: 0;
+}
+
+.action-button:hover {
+    background: var(--background-light);
+    color: var(--primary-color);
+}
+
+/* Element-specific resets */
+button.action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+a.action-button {
+    text-decoration: none;
+}
+
+/* State modifiers */
+.action-button.copied {
+    color: var(--color-success);
+}
+
+/* FAQ Actions Container */
+.faq-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Context-specific overrides */
+.link-list li .action-button {
+    min-height: 60px;
+    background: var(--background-light);
+    border: 1px solid transparent;
+    padding: 10px 16px;
+}
+
+.link-list li .action-button:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 15px rgba(28, 177, 209, 0.1);
+    transform: translateY(-1px);
 }
 
 .faq-accordion-item summary:hover {
