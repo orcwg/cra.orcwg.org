@@ -12,9 +12,13 @@ eleventyComputed:
 <article class="section-card">
   <h1 class="section-header">{{ item.title or 'Pending Guidance' }}</h1>
 
+  {% set guidance = item %}
+  {% include "components/guidance-status-tracker.njk" %}
+
   {{ item.body | markdown | safe }}
 
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
+  <h2>Related FAQs</h2>
   <ul>
     {% for faq in item.relatedFaqs %}
     <li><a href="{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
