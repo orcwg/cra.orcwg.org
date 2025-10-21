@@ -229,7 +229,7 @@ function getProcessedGuidanceRequest(guidanceRequest) {
   return {
     id: id,
     status: status,
-    permalink: `/guidance/${id}/`,
+    permalink: `/pending-guidance/${id}/`,
     editOnGithubUrl: editOnGithubUrl,
     relatedIssue: guidanceRequest.data["Related issue"],
     pageTitle: markdownToPlainText(title),
