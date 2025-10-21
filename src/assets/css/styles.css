@@ -426,6 +426,8 @@ main {
     border-radius: 4px;
     transition: all 0.2s ease;
     white-space: nowrap;
+    height: 32px;
+    box-sizing: border-box;
 }
 
 .action-button svg {
@@ -456,25 +458,30 @@ a.action-button {
 /* FAQ Actions Container */
 .faq-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     gap: 10px;
     margin-top: 20px;
     padding-top: 15px;
     border-top: 1px solid var(--border-color);
 }
 
-/* Context-specific overrides */
-.link-list li .action-button {
-    min-height: 60px;
-    background: var(--background-light);
-    border: 1px solid transparent;
-    padding: 10px 16px;
+.faq-actions .admin-links {
+    display: flex;
+    gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
-.link-list li .action-button:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 4px 15px rgba(28, 177, 209, 0.1);
-    transform: translateY(-1px);
+.admin-mode .faq-actions .admin-links {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.faq-actions .regular-actions {
+    display: flex;
+    gap: 10px;
 }
 
 .faq-accordion-item summary:hover {
@@ -583,6 +590,57 @@ footer section a:hover {
     footer {
         grid-template-columns: 1fr;
     }
+}
+
+/* Admin Mode Toggle */
+footer .admin-toggle {
+    cursor: pointer;
+}
+
+footer .admin-toggle .toggle-text-on {
+    display: none;
+}
+
+.admin-mode footer .admin-toggle .toggle-text-off {
+    display: none;
+}
+
+.admin-mode footer .admin-toggle .toggle-text-on {
+    display: inline;
+}
+
+/* Admin Content - Hidden by Default */
+.admin-content {
+    display: none;
+}
+
+.admin-mode .admin-content {
+    display: block;
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--primary-color);
+    border-radius: 6px;
+}
+
+.admin-content summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+.admin-content[open] summary {
+    margin-bottom: 15px;
+}
+
+/* Badges - Visible in Admin Mode */
+.admin-mode .badges[hidden] {
+    display: flex !important;
+}
+
+.admin-mode .link-list li a:has(.badges[hidden]) {
+    gap: 8px;
 }
 
 /* Contributors List */
