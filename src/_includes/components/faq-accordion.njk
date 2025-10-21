@@ -23,7 +23,7 @@
 
       <article>
         <div>
-          {{ faq.answer | markdown | safe }}
+          {{ faq.answer | markdown(faq) | safe }}
 
         {% if faq.status == "draft" or faq.guidanceItem %}
         <aside class="warning">

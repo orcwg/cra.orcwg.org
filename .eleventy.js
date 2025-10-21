@@ -8,61 +8,119 @@ module.exports = async function (eleventyConfig) {
 
   // Plugin to add internal links to markdown-it's reference system
   function markdownItInternalLinks(md) {
-    md.core.ruler.after('block', 'add_internal_references', function(state) {
-      const internalLinks = state.env?.internalLinks;
-      if (!internalLinks) return;
+    // Preprocessing rule to convert [[Article X]] syntax to markdown links
+    md.core.ruler.before('normalize', 'convert_cra_autolinks', function(state) {
+      const craRefs = state.env?.craReferences || {};
+      const internalLinks = state.env?.internalLinks || {};
+      const baseUrl = 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202402847';
+      
+      function mdLink(text, url, title) {
+        title = title ? ` "${ title.replace(/"/g, '&quot;') }"` : "";
+        return `[${ text }](${ url }${ title })`;
+      }
 
-      state.env.references = state.env.references || {};
+      const patterns = [
+        // Internal FAQ references [[category/filename]]
+        [/\[\[([a-z0-9-]+\/[a-z0-9-]+)\]\]/gi, (match, faqId) => {
+          const faq = internalLinks[faqId];
+          if (faq) {
+            return mdLink(faq.pageTitle, faq.permalink, `💬 FAQ: ${ faq.pageTitle }`);
+          }
+          return match; // Return unchanged if no match found
+        }],
+        // Category list references [[category]]
+        [/\[\[([a-z0-9-]+)\]\]/gi, (match, categoryName) => {
+          const listId = `lists/${ categoryName }`;
+          const list = internalLinks[listId];
+          if (list) {
+            const icon = list.icon ? `${ list.icon } ` : '';
+            const linkText = `${ icon }${ list.title } FAQ list`;
+            return mdLink(linkText, list.permalink, `${ linkText } - ${ list.description }`);
+          }
+          return match; // Return unchanged if no match found
+        }],
+        // CRA Article references [[Article 17(3)]]
+        [/\[\[(ARTICLE|ART\.)\s+(\d+)(\([^)]*\))?\]\]/gi, (match, type, num, subsection) => {
+          const displayText = `Article ${ num }${ subsection || '' }`;
+          const title = craRefs.articleTitles[num] || "Unknown article";
+          return mdLink(displayText, `${ baseUrl }#art_${ num }`, `⚖️ Article ${ num } - ${ title }`);
+        }],
+        // CRA Annex references [[Annex I]]
+        [/\[\[ANNEX\s+([IVX]+)\]\]/gi, (match, num) => {
+          num = num.toUpperCase();
+          const title = craRefs.annexTitles[num] || "Unknown annex";
+          return mdLink(`Annex ${ num }`, `${ baseUrl }#anx_${ num }`, `⚖️ Annex ${ num } - ${ title }`);
+        }],
+        // CRA Recital references [[Recital 42]]
+        [/\[\[(RECITAL|REC\.)\s+(\d+)\]\]/gi, (match, type, num) => {
+          return mdLink(`Recital ${ num }`, `${ baseUrl }#rct_${ num }`, `⚖️ Recital ${ num }`);
+        }]
+      ];
 
-      // Add internal links to references
-      Object.entries(internalLinks).forEach(([key, linkData]) => {
-        state.env.references[md.utils.normalizeReference(key)] = {
-          href: linkData.permalink,
-          title: `${linkData.type}: ${linkData.title}`
-        };
+      // Apply all patterns to the source text
+      patterns.forEach(([regex, replacer]) => {
+        state.src = state.src.replace(regex, replacer);
       });
+    });
 
-      // Wrap references in proxy to handle CRA legal references and missing links
-      state.env.references = new Proxy(state.env.references, {
-        get(target, prop) {
-          const craRefs = state.env.craReferences || {};
-          const baseUrl = 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202402847';
+    md.core.ruler.after('inline', 'convert_relative_md_links', function(state) {
+      const internalLinks = state.env?.internalLinks || {};
+      const currentContext = state.env?.currentContext;
 
-          const createRef = (fragment, title) => {
-            const ref = { href: `${baseUrl}#${fragment}`, title };
-            target[prop] = ref;
-            return ref;
-          };
+      if (!currentContext || !currentContext.category) return;
 
-          // Check for CRA legal references
-          const patterns = [
-            [/^(ARTICLE|ART\.?)\s+(\d+)[^\]]*$/i, (m) => {
-              const num = m[2];
-              const title = craRefs.articleTitles[num] || "Unknown title";
-              return [`art_${num}`, `CRA Article ${num}: ${title}`];
-            }],
-            [/^ANNEX\s+([IVX]+)[^\]]*$/i, (m) => {
-              const num = m[1].toUpperCase();
-              const title = craRefs.annexTitles[num] || "Unknown title";
-              return [`anx_${num}`, `CRA Annex ${num}: ${title}`];
-            }],
-            [/^(RECITAL|REC\.?)\s+(\d+)$/i, (m) => {
-              const num = m[2];
-              return [`rct_${num}`, `CRA Recital ${num}`];
-            }]
-          ];
+      // Find and convert relative .md links in parsed tokens
+      function processTokens(tokens) {
+        tokens.forEach(token => {
+          if (token.type === 'link_open') {
+            const hrefIndex = token.attrIndex('href');
+            if (hrefIndex >= 0) {
+              const href = token.attrGet('href');
 
-          for (const [regex, handler] of patterns) {
-            const match = prop.match(regex);
-            if (match) {
-              const [fragment, title] = handler(match);
-              return createRef(fragment, title);
+              // Check for relative paths ending in .md or README.yml
+              if (href.match(/^\.\.?\/.*\.(md|yml)$/i)) {
+                // Normalize the path relative to current category
+                const path = require('path');
+                const currentPath = `faq/${ currentContext.category }`;
+                const resolvedPath = path.posix.resolve('/', currentPath, href);
+
+                // Extract category and filename from resolved path
+                const pathMatch = resolvedPath.match(/^\/faq\/([^/]+)\/(.+)\.(md|yml)$/);
+                if (pathMatch) {
+                  const [, targetCategory, filename, extension] = pathMatch;
+
+                  let targetId;
+                  if (extension === 'md') {
+                    targetId = `${ targetCategory }/${ filename }`;
+                  } else if (extension === 'yml' && filename === 'README') {
+                    targetId = `lists/${ targetCategory }`;
+                  }
+
+                  if (targetId) {
+                    const item = internalLinks[targetId];
+                    if (item) {
+                      token.attrSet('href', item.permalink);
+                      if (item.pageTitle) {
+                        // FAQ object
+                        token.attrSet('title', `💬 FAQ: ${ item.pageTitle }`);
+                      } else if (item.title) {
+                        // List object
+                        token.attrSet('title', `💬 FAQ list: ${ item.title }`);
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
 
-          return target[prop];
-        }
-      });
+          if (token.children) {
+            processTokens(token.children);
+          }
+        });
+      }
+
+      processTokens(state.tokens);
     });
   }
 
@@ -74,16 +132,17 @@ module.exports = async function (eleventyConfig) {
   }).use(markdownItGitHubAlerts).use(markdownItInternalLinks);
 
   // Add markdown filter
-  eleventyConfig.addFilter("markdown", function (content) {
+  eleventyConfig.addFilter("markdown", function (content, context = null) {
     if (!content) return "";
 
-    // Pass internal links and CRA references to markdown parser environment
+    // Pass internal links, CRA references, and context to markdown parser environment
     const env = {
       internalLinks: this.ctx.data.internalLinks,
-      craReferences: this.ctx.data.craReferences
+      craReferences: this.ctx.craReferences,
+      currentContext: context
     };
 
-    return md.render(content, env);
+    return  md.render(content, env);
   });
 
   // Add inline markdown filter (no paragraph wrapping)

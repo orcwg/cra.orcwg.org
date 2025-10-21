@@ -11,7 +11,7 @@ eleventyComputed:
 
 <article class="section-card">
   <h1 class="section-header">{{ item.question | markdownInline | safe }}</h1>
-  {{ item.answer | markdown | safe }}
+  {{ item.answer | markdown(item) | safe }}
 
   {% if item.status == "draft" or item.relatedGuidanceRequest %}
   <aside class="warning">
