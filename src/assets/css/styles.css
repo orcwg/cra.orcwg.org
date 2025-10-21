@@ -284,6 +284,9 @@ main {
 
 .link-list li {
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .link-list li a {
@@ -302,6 +305,7 @@ main {
     align-items: flex-start;
     justify-content: center;
     gap: 0;
+    flex: 1;
 }
 
 .link-list li a:has(.badges:not([hidden])) {
@@ -376,7 +380,7 @@ main {
     list-style: none;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 15px;
     line-height: 1.4;
     transition: all 0.2s ease;
@@ -409,6 +413,75 @@ main {
 
 .faq-accordion-item[open] summary::after {
     transform: rotate(-180deg);
+}
+
+/* Action Button Utility */
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 0.85em;
+    color: var(--text-light);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    height: 32px;
+    box-sizing: border-box;
+}
+
+.action-button svg {
+    flex-shrink: 0;
+}
+
+.action-button:hover {
+    background: var(--background-light);
+    color: var(--primary-color);
+}
+
+/* Element-specific resets */
+button.action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+a.action-button {
+    text-decoration: none;
+}
+
+/* State modifiers */
+.action-button.copied {
+    color: var(--color-success);
+}
+
+/* FAQ Actions Container */
+.faq-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.faq-actions .admin-links {
+    display: flex;
+    gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.admin-mode .faq-actions .admin-links {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.faq-actions .regular-actions {
+    display: flex;
+    gap: 10px;
 }
 
 .faq-accordion-item summary:hover {
@@ -517,6 +590,57 @@ footer section a:hover {
     footer {
         grid-template-columns: 1fr;
     }
+}
+
+/* Admin Mode Toggle */
+footer .admin-toggle {
+    cursor: pointer;
+}
+
+footer .admin-toggle .toggle-text-on {
+    display: none;
+}
+
+.admin-mode footer .admin-toggle .toggle-text-off {
+    display: none;
+}
+
+.admin-mode footer .admin-toggle .toggle-text-on {
+    display: inline;
+}
+
+/* Admin Content - Hidden by Default */
+.admin-content {
+    display: none;
+}
+
+.admin-mode .admin-content {
+    display: block;
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--primary-color);
+    border-radius: 6px;
+}
+
+.admin-content summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+.admin-content[open] summary {
+    margin-bottom: 15px;
+}
+
+/* Badges - Visible in Admin Mode */
+.admin-mode .badges[hidden] {
+    display: flex !important;
+}
+
+.admin-mode .link-list li a:has(.badges[hidden]) {
+    gap: 8px;
 }
 
 /* Contributors List */
@@ -671,7 +795,7 @@ pre code {
 /* Regular blockquote */
 blockquote {
     margin: 16px 0;
-    padding-left: 20px;
+    padding: 0 31px 0 33px; /* Align with 3px left borders elsewhere */
     font-style: italic;
     color: var(--text-light);
 }

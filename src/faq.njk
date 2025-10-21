@@ -31,20 +31,23 @@ eleventyComputed:
     {% endif %}
   </aside>
   {% endif %}
-</article>
 
-<details style="display:none">
-  <summary>Admin Information</summary>
-  <div>
-    {% if item.guidanceId %}
-    <p><strong>Related Pending Guidance:</strong> <a href="{{ item.relatedGuidanceRequest.permalink }}">{{ item["guidance-id"] | replace('-', ' ') | title }}</a></p>
-    <p><em>This FAQ is affected by pending guidance that is currently being developed.</em></p>
-    {% endif %}
-
-    {% if item.relatedIssue %}
-    <p><strong>Related issue:</strong> <a href="{{ item.relatedIssue }}">{{ item["Related issue"] }}</a></p>
-    {% endif %}
-
-    <p><a href="{{ item.editOnGithubUrl }}" target="_blank" rel="noopener">✏️ Edit this FAQ on GitHub</a></p>
+  <div class="faq-actions">
+    <div class="admin-links">
+      <a href="{{ item.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit this FAQ on GitHub">
+        {% include "icons/edit.svg" %}
+        <span>Edit on GitHub</span>
+      </a>
+      {% if item.relatedIssue %}
+      <a href="{{ item.relatedIssue }}" class="action-button" target="_blank" rel="noopener" title="View related issue">
+        {% include "icons/issue.svg" %}
+        <span>Related issue</span>
+      </a>
+      {% endif %}
+    </div>
+    <button class="action-button" data-permalink="{{ item.permalink }}" title="Copy FAQ page link" aria-label="Copy FAQ page link">
+      {% include "icons/copy.svg" %}
+      <span>Copy link</span>
+    </button>
   </div>
-</details>
+</article>
