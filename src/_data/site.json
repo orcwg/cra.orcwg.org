@@ -17,8 +17,7 @@
     {
       "url": "/faq/all/",
       "title": "All FAQs",
-      "description": "Browse all FAQs in one single list",
-      "matchPattern": "/faq/all/"
+      "description": "Browse all FAQs in one single list"
     },
     {
       "url": "/faq/",
