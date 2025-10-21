@@ -344,7 +344,9 @@ function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
     list.faqs = list.faqs.map(faqId => {
       const faqObject = faqs.find(faq => faq.id === faqId);
-      faqObject.relatedLists.push(list);
+      if (faqObject && faqObject.relatedLists) {
+        faqObject.relatedLists.push(list);
+      }
       return faqObject;
     });
   });
