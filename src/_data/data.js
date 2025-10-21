@@ -229,7 +229,7 @@ function getProcessedGuidanceRequest(guidanceRequest) {
   return {
     id: id,
     status: status,
-    permalink: `/${id}/`,
+    permalink: `/pending-guidance/${id}/`,
     editOnGithubUrl: editOnGithubUrl,
     relatedIssue: guidanceRequest.data["Related issue"],
     pageTitle: markdownToPlainText(title),
@@ -286,7 +286,7 @@ function getProcessedCuratedList(curatedList) {
     title: values.title,
     icon: values.icon,
     faqs: normalizedFaqRefs,
-    permalink: `/lists/${id}/`,
+    permalink: `/faq/${id}/`,
     description: values.description
   }
 }

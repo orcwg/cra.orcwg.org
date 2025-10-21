@@ -15,13 +15,12 @@
   ],
   "navigation": [
     {
-      "url": "/faq-list/",
+      "url": "/faq/all/",
       "title": "All FAQs",
-      "description": "Browse all FAQs in one single list",
-      "matchPattern": "/faq/"
+      "description": "Browse all FAQs in one single list"
     },
     {
-      "url": "/lists/",
+      "url": "/faq/",
       "title": "Categories",
       "description": "FAQs organized by topic and/or audience"
     },
