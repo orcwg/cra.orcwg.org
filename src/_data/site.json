@@ -24,15 +24,15 @@
     },
     {
       "key": "consensus",
-      "description": "Is there group consensus as to what the outcome should be"
+      "description": "There is group consensus as to what the outcome should be"
     },
     {
       "key": "aligned",
-      "description": "Is the outcome aligned with the expectations"
+      "description": "The outcome is aligned with the expectations"
     },
     {
       "key": "formalized",
-      "description": "Has the consesnsus been formalized in draft guidance accessible only to CRA Experts Group members"
+      "description": "The consensus has been formalized in draft guidance accessible only to CRA Experts Group members"
     },
     {
       "key": "planned",
