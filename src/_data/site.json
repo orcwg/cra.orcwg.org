@@ -13,6 +13,40 @@
       "attestations",
       "legislation"
   ],
+  "guidanceStatusMarkers": [
+    {
+      "key": "raised",
+      "description": "Has been raised with CRA Experts Group"
+    },
+    {
+      "key": "discussed",
+      "description": "Has been discussed in relevant CRA Experts Group work strand"
+    },
+    {
+      "key": "consensus",
+      "description": "Is there group consensus as to what the outcome should be"
+    },
+    {
+      "key": "aligned",
+      "description": "Is the outcome aligned with the expectations"
+    },
+    {
+      "key": "formalized",
+      "description": "Has the consesnsus been formalized in draft guidance accessible only to CRA Experts Group members"
+    },
+    {
+      "key": "planned",
+      "description": "Is there a plan to add this guidance to ..."
+    },
+    {
+      "key": "published",
+      "description": "Has this guidance been published ?"
+    },
+    {
+      "key": "alternative",
+      "description": "Is there other legislation that answers this already ?"
+    }
+  ],
   "navigation": [
     {
       "url": "/faq/all/",
