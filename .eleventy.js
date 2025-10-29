@@ -150,6 +150,27 @@ module.exports = async function (eleventyConfig) {
     return md.renderInline(content || "");
   });
 
+  // Add build timestamp in website footer
+  eleventyConfig.addGlobalData("build", () => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "UTC",
+      timeZoneName: "short",
+    });
+
+    return {
+      formatted: formatter.format(now),
+      iso: now.toISOString(),
+    };
+  });
+
   return {
     dir: {
       input: "src",

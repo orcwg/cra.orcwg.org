@@ -5,6 +5,9 @@
         {% if section.content %}
             {{ section.content | markdown | safe }}
         {% endif %}
+        {% if section.title == "About" %}
+            <p>Website last updated on <time datetime="{{ build.iso }}">{{ build.formatted }}</time>.</p>
+        {% endif %}
         {% if section.list %}
             <ul>
             {% for item in section.list %}
