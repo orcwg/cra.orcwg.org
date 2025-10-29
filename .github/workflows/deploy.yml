@@ -7,7 +7,7 @@ on:
       - main
   # Trigger when cra-hub repo sends a repository_dispatch event
   repository_dispatch:
-    types: [content-updated]
+    types: [cra-hub-update]
   # Allow manual triggering
   workflow_dispatch:
 
