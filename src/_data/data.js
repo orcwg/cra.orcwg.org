@@ -15,6 +15,7 @@ const CACHE_DIR = path.join(__dirname, "..", "..", "_cache");
 
 const FAQ_DIR = path.join(CACHE_DIR, "faq");
 const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
+const REPO_CONTRIBUTORS_FILE = path.join(CACHE_DIR, "repoContributors.json");
 
 const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
 
@@ -58,6 +59,7 @@ function extractGuidanceText(content) {
 // Splits raw Markdown at the first H1, returns [h1, body]
 function splitMarkdownAtFirstH1(content) {
   const firsth1 = content.match(/^#\s+(.+)$/m);
+  if (!firsth1) return ['', content]; // Gracefully handle if no H1 is found
   const h1 = firsth1[1].trim();
   const body = content.replace(firsth1[0], '').trim();
 
@@ -131,7 +133,7 @@ function createInternalLinkIndex(faqs, lists, guidanceRequests) {
 function getFaqFiles(dir) {
   const files = fs.readdirSync(dir, { withFileTypes: true, recursive: true });
 
-  faqFiles = files.filter(entry => {
+  const faqFiles = files.filter(entry => {
     return entry.parentPath !== GUIDANCE_DIR &&  // Reject pending-guidance files
       entry.parentPath !== dir &&     // Reject files at the root of the FAQ
       entry.isFile() &&                     // Reject directories
@@ -190,200 +192,97 @@ function createProcessedFaqs(faqDir) {
 };
 
 // ============================================================================
-// Guidance Request Processing
+// Contributor Processing
 // ============================================================================
 
-// Get guidance request markdown files
-function getGuidanceFiles(dir) {
-  const files = fs.readdirSync(dir, { withFileTypes: true });
+/**
+ * Extracts unique contributors from FAQ frontmatter.
+ * @param {Array} rawFaqs - Array of parsed FAQ markdown files.
+ * @returns {Array} An array of contributor objects.
+ */
+function getFaqContributors(rawFaqs) {
+  const contributors = new Map();
 
-  const guidanceFiles = files.filter(entry => {
-    return entry.isFile() &&                     // Reject directories
-      entry.name.endsWith('.md');           // Keep only markdown files
-  });
+  rawFaqs.forEach(faq => {
+    if (faq.data.contributors && Array.isArray(faq.data.contributors)) {
+      faq.data.contributors.forEach(contributor => {
+        const key = contributor.github?.toLowerCase();
+        if (!key) return; // Skip contributors without a github handle
 
-  return guidanceFiles;
-}
-
-function getProcessedGuidanceRequest(guidanceRequest) {
-  // Set ID to basedir/filename-without-extension.
-  const id = guidanceRequest.filename.replace('.md', '');
-
-  // Normalize status
-  const status = guidanceRequest.data.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
-
-  // Generate edit on github URL
-  const editOnGithubUrl = new URL(`${guidanceRequest.path}/${guidanceRequest.filename}`, EDIT_ON_GITHUB_ROOT).href;
-
-  // Extract title and body
-  const [title, body] = splitMarkdownAtFirstH1(guidanceRequest.content);
-
-  return {
-    id: id,
-    status: status,
-    permalink: `/pending-guidance/${id}/`,
-    editOnGithubUrl: editOnGithubUrl,
-    relatedIssue: guidanceRequest.data["Related issue"],
-    pageTitle: markdownToPlainText(title),
-    title: title,
-    body: body,
-    guidanceText: extractGuidanceText(body),
-  };
-};
-
-// Process all guidance request files into structured objects
-function createProcessedGuidanceRequests(guidanceDir) {
-  const guidanceFiles = getGuidanceFiles(guidanceDir);
-  const guidanceRequests = parseMarkdownFiles(guidanceFiles);
-  const processedGuidanceRequests = guidanceRequests.map(guidanceRequest => {
-    return getProcessedGuidanceRequest(guidanceRequest);
-  });
-
-  return processedGuidanceRequests;
-};
-
-// ============================================================================
-// Curated List Processing
-// ============================================================================
-
-// Get README.yml files from FAQ subdirectories
-function getCuratedListFiles(faqDir) {
-  const files = fs.readdirSync(faqDir, { withFileTypes: true, recursive: true });
-
-  const curatedListFiles = files.filter(entry => {
-    return entry.isFile() &&                    // Only files
-      entry.name === 'README.yml' &&            // Must be named README.yml
-      entry.parentPath !== faqDir;              // Not at the root of FAQ directory
-  });
-
-  return curatedListFiles;
-}
-
-// Parse a curated list
-function getProcessedCuratedList(curatedList) {
-  const values = curatedList.data;
-  const id = path.basename(curatedList.path);
-
-  // Normalize FAQ references so they match FAQ Ids. Allows for a curated list to reference FAQ in or out of its category
-  const normalizedFaqRefs = values.faqs.map(faqRef => {
-    if (faqRef.includes('/')) {
-      return faqRef;
-    } else {
-      return `${id}/${faqRef}`;
+        if (!contributors.has(key)) {
+          contributors.set(key, { ...contributor });
+        }
+      });
     }
   });
 
-  return {
-    id: id,
-    title: values.title,
-    icon: values.icon,
-    faqs: normalizedFaqRefs,
-    permalink: `/faq/${id}/`,
-    description: values.description
+  return Array.from(contributors.values());
+}
+
+/**
+ * Loads repository contributors from the cached JSON file.
+ * @returns {Array} An array of contributor objects.
+ */
+function getRepoContributors() {
+  if (!fs.existsSync(REPO_CONTRIBUTORS_FILE)) {
+    console.warn(`[data.js] Contributor cache file not found at ${REPO_CONTRIBUTORS_FILE}. Run the cache update script.`);
+    return [];
+  }
+
+  try {
+    const rawData = fs.readFileSync(REPO_CONTRIBUTORS_FILE, "utf-8");
+    const repoContributors = JSON.parse(rawData);
+
+    // Normalize data (assuming from GitHub API) to match FAQ contributor structure
+    return repoContributors.map(c => ({
+      name: c.login, // Default name to login, can be overridden by FAQ data
+      github: c.login,
+      avatar_url: c.avatar_url,
+      github_url: c.html_url
+    }));
+  } catch (error) {
+    console.error(`[data.js] Error reading or parsing ${REPO_CONTRIBUTORS_FILE}:`, error);
+    return [];
   }
 }
 
-// Process list files and normalize FAQ references
-function createLists(faqDir) {
-  const rawListFiles = getCuratedListFiles(faqDir);
-  const parsedLists = parseYamlFiles(rawListFiles);
-  const lists = parsedLists.map(getProcessedCuratedList);
+/**
+ * Merges FAQ and repository contributors, deduplicates, and adds contribution types.
+ * @param {Array} faqContributors - Contributors from FAQ frontmatter.
+ * @param {Array} repoContributors - Contributors from repository history.
+ * @returns {Array} A sorted array of unique contributor objects.
+ */
+function mergeContributors(faqContributors, repoContributors) {
+  const allContributors = new Map();
 
-  return lists;
-};
-
-// ============================================================================
-// Authors Processing
-// ============================================================================
-
-// Read and return AUTHORS.md content
-function processAuthorsFile() {
-  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
-
-  if (!fs.existsSync(authorsPath)) {
-    throw new Error(`AUTHORS.md not found at ${authorsPath}. Ensure the cache is populated.`);
-  }
-
-  const rawContent = fs.readFileSync(authorsPath, "utf-8");
-  const parsed = matter(rawContent);
-  const content = parsed.content.trim();
-
-  if (!content) {
-    throw new Error(`AUTHORS.md at ${authorsPath} is empty or has no content after frontmatter.`);
-  }
-
-  return content;
-}
-
-// ============================================================================
-// Cross referencing functions
-// ============================================================================
-
-// Cross reference FAQs and their related guidance requests
-function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
-  guidanceRequests.forEach(guidanceRequest => {
-    guidanceRequest.relatedFaqs = [];
-    relatedFaqs = faqs.filter(faq => (faq.guidanceId == guidanceRequest.id));
-    relatedFaqs.forEach(relatedFaq => {
-      guidanceRequest.relatedFaqs.push(relatedFaq);
-      relatedFaq.relatedGuidanceRequest = guidanceRequest;
-    })
-  });
-};
-
-// Link lists with their FAQs (bidirectional)
-function crossReferenceListsAndFaqs(lists, faqs) {
-  lists.forEach(list => {
-    list.faqs = list.faqs.map(faqId => {
-      const faqObject = faqs.find(faq => faq.id === faqId);
-      faqObject.relatedLists.push(list);
-      return faqObject;
+  // Process FAQ contributors first, as they may have more accurate names.
+  faqContributors.forEach(c => {
+    const key = c.github?.toLowerCase();
+    if (!key) return;
+    allContributors.set(key, {
+      ...c,
+      contributionTypes: ['FAQ']
     });
   });
+
+  // Process repo contributors, merging with existing entries.
+  repoContributors.forEach(c => {
+    const key = c.github?.toLowerCase();
+    if (!key) return;
+
+    if (allContributors.has(key)) {
+      const existing = allContributors.get(key);
+      existing.contributionTypes.push('Repository');
+      // Enrich existing data with details from repo info if missing
+      existing.avatar_url = existing.avatar_url || c.avatar_url;
+      existing.github_url = existing.github_url || c.github_url;
+    } else {
+      allContributors.set(key, {
+        ...c,
+        contributionTypes: ['Repository']
+      });
+    }
+  });
+
+  return Array.from(allContributors.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
-
-// ============================================================================
-// Main Pipeline
-// ============================================================================
-
-// Orchestrate the complete data processing pipeline
-function processAllContent() {
-
-  // 1. Get and parse FAQs
-  const faqs = createProcessedFaqs(FAQ_DIR);
-
-  // 2. Get and parse Guidance Requests
-  const guidanceRequests = createProcessedGuidanceRequests(GUIDANCE_DIR);
-
-  // 3. Enrich FAQs and Guidance Requests with their cross references
-  crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
-
-  // 4. Get lists
-  const lists = createLists(FAQ_DIR);
-
-  // 5. Connect lists with FAQs
-  crossReferenceListsAndFaqs(lists, faqs);
-
-  // 6. Create internal link index for all content types
-  const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
-
-  // 7. Get and process AUTHORS.md
-  const authorsContent = processAuthorsFile();
-
-  return {
-    faqs: faqs,
-    guidance: guidanceRequests,
-    faqItems: faqs,
-    lists: lists,
-    authorsContent,
-    internalLinks: internalLinkIndex
-  };
-}
-
-// ============================================================================
-// Module Export
-// ============================================================================
-
-// Main entry point for 11ty data processing
-
-module.exports = processAllContent;
