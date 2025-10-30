@@ -194,58 +194,52 @@ This repository (`cra.orcwg.org`) acts as the **website generator**, while [`orc
 ```mermaid
 flowchart TD
     A[orcwg/cra-hub<br/>Content Repository]
-    B[Push to main branch]
-    C[GitHub Action<br/>repository_dispatch]
-    D[orcwg/cra.orcwg.org<br/>Website Generator]
-    E[cra.orcwg.org<br/>Live Website]
+    B[Push to main]
+    C[orcwg/cra.orcwg.org<br/>Website Repository]
+    D[Push to main]
+    E[Build and Deploy<br/>GitHub Actions]
+    F[cra.orcwg.org<br/>Live Website]
 
-    A -->|Updated content| B
-    B --> C
-    C -->|Webhook event| D
-    D -->|Deploy| E
+    A -->|Update content source| B
+    B -->|Webhook trigger| E
+    C -->|Update  website generator| D
+    D -->|Direct trigger| E
+    E -->|Deploy to Pages| F
 
     style A fill:#e1f5ff
-    style D fill:#fff4e1
-    style E fill:#e8f5e9
+    style C fill:#fff4e1
+    style E fill:#ffe1e1
+    style F fill:#e8f5e9
 ```
 
 ### Automatic Update Workflow
 
-When content is pushed to the `main` branch of `orcwg/cra-hub`, a GitHub Action automatically triggers a rebuild of this website:
+The website automatically rebuilds and deploys through two triggers:
 
-**In `orcwg/cra-hub` repository:**
+1. **Content updates** - When content is pushed to `main` in `orcwg/cra-hub`
+2. **Website changes** - When code is pushed to `main` in this repository
 
-```yaml
-name: Notify cra.orcwg.org repository on Push
+#### Trigger 1: Content Repository Updates
 
-on:
-  push:
-    branches:
-      - main
+When content is pushed to the `main` branch of `orcwg/cra-hub`, a [GitHub Action workflow](https://github.com/orcwg/cra-hub/blob/main/.github/workflows/notify-website.yml) sends a `repository_dispatch` webhook to trigger a rebuild of this website.
 
-jobs:
-  dispatch-to-cra-website:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send repository dispatch to cra.orcwg.org
-        run: |
-          curl -L \
-            -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.WEBSITE_DISPATCH_TOKEN }}" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            https://api.github.com/repos/orcwg/cra.orcwg.org/dispatches \
-            -d '{"event_type":"cra-hub-update"}'
-```
+**How it works:**
 
-This workflow:
+1. The workflow listens for pushes to the `main` branch in `cra-hub`
+2. It sends a `repository_dispatch` event with type `cra-hub-update` to this repository via the GitHub API using a GitHub token (`WEBSITE_DISPATCH_TOKEN` secret stored in `cra-hub`).
 
-1. Listens for pushes to the `main` branch in `cra-hub`
-2. Sends a `repository_dispatch` event with type `cra-hub-update` using a GitHub token stored as the `WEBSITE_DISPATCH_TOKEN` repository secret in the `cra-hub` repo
+> [!NOTE]
+> The **`WEBSITE_DISPATCH_TOKEN`** must be renewed annually and requires the permissions listed below.
+>
+> - **Repository access**: Only `orcwg/cra.orcwg.org`
+> - **Contents**: Read & Write (required for repository_dispatch)
+> - **Metadata**: Read (auto-selected)
 
-**In this repository (`cra.orcwg.org`):**
+#### Trigger 2: Website Repository Updates
 
-The website listens for the `repository_dispatch` event and rebuilds automatically:
+When changes are pushed to the `main` branch of this repository (template updates, styling changes, configuration), the deployment workflow runs directly without needing a webhook.
+
+**Both triggers execute the same deployment workflow:**
 
 1. Pulls latest content from `cra-hub` via `update-cache.sh`
 2. Processes FAQ data through the Eleventy data pipeline
