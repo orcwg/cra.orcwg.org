@@ -241,11 +241,7 @@ jobs:
 This workflow:
 
 1. Listens for pushes to the `main` branch in `cra-hub`
-2. Sends a `repository_dispatch` event with type `cra-hub-update` to this repository
-3. Uses a GitHub token (`WEBSITE_DISPATCH_TOKEN`) with permissions:
-   - **Repository access**: Only `orcwg/cra.orcwg.org`
-   - **Contents**: Read & Write (required for repository_dispatch)
-   - **Metadata**: Read (auto-selected)
+2. Sends a `repository_dispatch` event with type `cra-hub-update` using a GitHub token stored as the `WEBSITE_DISPATCH_TOKEN` repository secret in the `cra-hub` repo
 
 **In this repository (`cra.orcwg.org`):**
 
