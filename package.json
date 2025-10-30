@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "update-cache": "./update-cache.sh",
-    "build": "npm run update-cache && eleventy",
-    "serve": "npm run update-cache && eleventy --serve",
+    "build": "eleventy",
+    "serve": "eleventy --serve",
     "watch": "eleventy --watch"
   },
   "author": "UnlockOpen, LLC",
