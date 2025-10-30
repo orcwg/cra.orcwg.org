@@ -34,6 +34,55 @@ function markdownToPlainText(markdownText) {
 // Utility Functions - Content Specific Extractions from Markdown Data
 // ============================================================================
 
+// Extract GitHub issue number from URL
+// Returns the issue number or null if not found
+function extractIssueNumber(issueUrl) {
+  if (!issueUrl || typeof issueUrl !== 'string') {
+    return null;
+  }
+
+  // Match GitHub issue URL pattern: /issues/123
+  const match = issueUrl.match(/\/issues\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+// Parse related issues from frontmatter
+// Input can be a single string or an array of strings
+// Returns an array of issue objects with url and number
+function parseRelatedIssues(relatedIssueField) {
+  if (!relatedIssueField) {
+    return [];
+  }
+
+  let issueUrls = [];
+
+  // If it's already an array, use it
+  if (Array.isArray(relatedIssueField)) {
+    issueUrls = relatedIssueField.filter(issue => issue && issue.trim());
+  }
+  // If it's a string, parse it
+  else if (typeof relatedIssueField === 'string') {
+    const trimmed = relatedIssueField.trim();
+    if (!trimmed) {
+      return [];
+    }
+
+    // Split by comma and filter out empty strings
+    if (trimmed.includes(',')) {
+      issueUrls = trimmed.split(',').map(issue => issue.trim()).filter(issue => issue);
+    } else {
+      // Single issue
+      issueUrls = [trimmed];
+    }
+  }
+
+  // Transform URLs to objects with url and number
+  return issueUrls.map(url => ({
+    url: url,
+    number: extractIssueNumber(url)
+  }));
+}
+
 // Extract the "Guidance Needed" section from markdown content
 function extractGuidanceText(content) {
   const lines = content.split('\n');
@@ -160,6 +209,16 @@ function getProcessedFaq(faq) {
   // Set guidance ID
   const guidanceId = faq.data["guidance-id"] ? faq.data["guidance-id"].trim() : false;
 
+  // Parse related issues (supports single issue or multiple issues)
+  // Check for field names: "Related issue", "Related issues", case-insensitive
+  const relatedIssueField = faq.data["Related issue"]
+    || faq.data["related issue"]
+    || faq.data["Related issues"]
+    || faq.data["related issues"]
+    || faq.data["Related Issue"]
+    || faq.data["Related Issues"];
+  const relatedIssues = parseRelatedIssues(relatedIssueField);
+
   return {
     id: id,
     category: category,
@@ -167,7 +226,7 @@ function getProcessedFaq(faq) {
     status: status,
     permalink: `/faq/${id}/`,
     editOnGithubUrl: editOnGithubUrl,
-    relatedIssue: faq.data["Related issue"],
+    relatedIssues: relatedIssues,
     pageTitle: markdownToPlainText(question),
     question: question,
     answer: answer,
