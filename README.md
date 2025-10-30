@@ -185,12 +185,97 @@ Components follow a consistent data pattern:
 
 ## Deployment
 
-The site is designed to be deployed as a static site. The build process:
+The site is deployed to GitHub Pages at [cra.orcwg.org](https://cra.orcwg.org/) with automatic updates triggered by changes to the content repository.
 
-1. Clones `cra-hub` repository using Git
-2. Processes FAQ data from cloned repository
+### Deployment Architecture
+
+This repository (`cra.orcwg.org`) acts as the **website generator**, while [`orcwg/cra-hub`](https://github.com/orcwg/cra-hub) is the **content source**. The two repositories work together through an automated workflow:
+
+```mermaid
+flowchart TD
+    A[orcwg/cra-hub<br/>Content Repository]
+    B[Push to main]
+    C[orcwg/cra.orcwg.org<br/>Website Repository]
+    D[Push to main]
+    E[Build and Deploy<br/>GitHub Actions]
+    F[cra.orcwg.org<br/>Live Website]
+
+    A -->|Update content source| B
+    B -->|Webhook trigger| E
+    C -->|Update  website generator| D
+    D -->|Direct trigger| E
+    E -->|Deploy to Pages| F
+
+    style A fill:#e1f5ff
+    style C fill:#fff4e1
+    style E fill:#ffe1e1
+    style F fill:#e8f5e9
+```
+
+### Automatic Update Workflow
+
+The website automatically rebuilds and deploys through two triggers:
+
+1. **Content updates** - When content is pushed to `main` in `orcwg/cra-hub`
+2. **Website changes** - When code is pushed to `main` in this repository
+
+#### Trigger 1: Content Repository Updates
+
+When content is pushed to the `main` branch of `orcwg/cra-hub`, a [GitHub Action workflow](https://github.com/orcwg/cra-hub/blob/main/.github/workflows/notify-website.yml) sends a `repository_dispatch` webhook to trigger a rebuild of this website.
+
+**How it works:**
+
+1. The workflow listens for pushes to the `main` branch in `cra-hub`
+2. It sends a `repository_dispatch` event with type `cra-hub-update` to this repository via the GitHub API using a GitHub token (`WEBSITE_DISPATCH_TOKEN` secret stored in `cra-hub`).
+
+> [!NOTE]
+> The **`WEBSITE_DISPATCH_TOKEN`** must be renewed annually and requires the permissions listed below.
+>
+> - **Repository access**: Only `orcwg/cra.orcwg.org`
+> - **Contents**: Read & Write (required for repository_dispatch)
+> - **Metadata**: Read (auto-selected)
+
+#### Trigger 2: Website Repository Updates
+
+When changes are pushed to the `main` branch of this repository (template updates, styling changes, configuration), the deployment workflow runs directly without needing a webhook.
+
+**Both triggers execute the same deployment workflow:**
+
+1. Pulls latest content from `cra-hub` via `update-cache.sh`
+2. Processes FAQ data through the Eleventy data pipeline
 3. Generates static HTML pages
-4. Outputs complete site to `_site/` directory
+4. Publishes to GitHub Pages at `https://cra.orcwg.org`
+
+### Manual Deployment
+
+For manual deployments or testing, the build process:
+
+1. Runs `update-cache.sh` to clone/update `cra-hub` into `_cache/`
+2. Extracts repository contributors from git history
+3. Processes FAQ data from cloned repository via `src/_data/data.js`
+4. Generates static HTML pages using Eleventy
+5. Outputs complete site to `_site/` directory
+
+### Local Development
+
+When developing locally:
+
+```bash
+# Start development server (updates cache and serves with live reload)
+npm run serve
+
+# Build production site (updates cache and builds)
+npm run build
+
+# Manually update content cache only
+npm run update-cache
+```
+
+The `update-cache.sh` script:
+
+1. Clones or pulls the latest `cra-hub` content into `_cache/`
+2. Extracts unique contributors from git commit history
+3. Saves contributor data to `src/_data/repoContributors.json`
 
 ## License
 
