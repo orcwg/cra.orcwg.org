@@ -36,6 +36,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Pull contents from CRA-HUB
+        run: npm run update-cache
+
       - name: Build site
         run: npm run build
         env:
