@@ -415,8 +415,9 @@ main {
     transform: rotate(-180deg);
 }
 
-/* Action Button Utility */
-.action-button {
+/* Shared styles for action buttons and labels */
+.action-button,
+.action-label {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -430,13 +431,20 @@ main {
     box-sizing: border-box;
 }
 
-.action-button svg {
+.action-button svg,
+.action-label svg {
     flex-shrink: 0;
 }
 
-.action-button:hover {
+.action-button:hover,
+.action-label:hover {
     background: var(--background-light);
     color: var(--primary-color);
+}
+
+/* Action label specific: wider gap for pills container */
+.action-label {
+    gap: 8px;
 }
 
 /* Element-specific resets */
@@ -453,6 +461,35 @@ a.action-button {
 /* State modifiers */
 .action-button.copied {
     color: var(--color-success);
+}
+
+/* Container for issue pills inside action label */
+.issue-pills {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* Individual issue pill styling */
+.issue-pill {
+    padding: 2px 8px;
+    font-size: 0.8em;
+    border-radius: 10px;
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.issue-pill:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* FAQ Actions Container */

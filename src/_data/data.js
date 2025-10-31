@@ -34,6 +34,31 @@ function markdownToPlainText(markdownText) {
 // Utility Functions - Content Specific Extractions from Markdown Data
 // ============================================================================
 
+// Extract GitHub issue number from URL
+// Returns the issue number or null if not found
+function extractIssueNumber(issueUrl) {
+  // Match GitHub issue URL pattern: /issues/123
+  const match = issueUrl.match(/\/issues\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+// Parse related issues from frontmatter
+// Input can be a single string or an array of strings
+// Returns an array of issue objects with url and number
+function parseRelatedIssues(relatedIssues) {
+  if (!relatedIssues) {
+    return [];
+  }
+
+  const issueUrls = relatedIssues.trim().split(/,\s*/);
+  // Transform URLs to objects with url and number
+
+  return issueUrls.map(url => ({
+    url: url,
+    number: extractIssueNumber(url)
+  }));
+}
+
 // Extract the "Guidance Needed" section from markdown content
 function extractGuidanceText(content) {
   const lines = content.split('\n');
@@ -146,7 +171,7 @@ function getProcessedFaq(faq) {
   // Extract category and filename
   const category = path.basename(faq.path);
   const filename = faq.filename.replace('.md', '');
-  const id = `${ category }/${ filename }`;
+  const id = `${category}/${filename}`;
 
   // Normalize status
   const status = faq.data.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
@@ -167,7 +192,7 @@ function getProcessedFaq(faq) {
     status: status,
     permalink: `/faq/${id}/`,
     editOnGithubUrl: editOnGithubUrl,
-    relatedIssue: faq.data["Related issue"],
+    relatedIssues: parseRelatedIssues(faq.data["Related issue"] || faq.data["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
     pageTitle: markdownToPlainText(question),
     question: question,
     answer: answer,

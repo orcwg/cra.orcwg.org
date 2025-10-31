@@ -1,0 +1,22 @@
+{#
+  Related Issues Component
+
+  Displays related GitHub issues as pills
+
+  Parameters (passed via relatedIssues variable):
+  - relatedIssues: Array of issue objects with { url, number }
+
+  Note: The calling template should check relatedIssues.length > 0 before including this component
+#}
+
+<div class="action-label">
+  {% include "icons/issue.svg" %}
+  <span>Related issues:</span>
+  <div class="issue-pills">
+    {% for issue in relatedIssues %}
+    <a href="{{ issue.url }}" class="issue-pill" target="_blank" rel="noopener" title="View related issue #{{ issue.number }}">
+      #{{ issue.number }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
