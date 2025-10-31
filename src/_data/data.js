@@ -37,10 +37,6 @@ function markdownToPlainText(markdownText) {
 // Extract GitHub issue number from URL
 // Returns the issue number or null if not found
 function extractIssueNumber(issueUrl) {
-  if (!issueUrl || typeof issueUrl !== 'string') {
-    return null;
-  }
-
   // Match GitHub issue URL pattern: /issues/123
   const match = issueUrl.match(/\/issues\/(\d+)/);
   return match ? match[1] : null;
