@@ -19,10 +19,11 @@ npm install
 
 ### Build Commands
 
-- **`npm run serve`** - Start development server with live reload and cache update
+- **`npm run serve`** - Start development server with live reload (no cache update)
 - **`npm run watch`** - Watch for file changes and rebuild (no cache update)
-- **`npm run build`** - Build the production site with cache update
-- **`npm run update-cache`** - Manually update external content cache
+- **`npm run build`** - Build the production site (no cache update)
+- **`npm run update-cache`** - Update external content cache
+- **`npm run update-cache -- branch-name`** - Update the external content cache to use a different branch of the [`orcwg/cra-hub`][] repositiory. Great for testing the build with unmerged pull requests.
 
 ## Architecture
 
@@ -64,7 +65,7 @@ The site uses a **hybrid approach** combining semantic HTML selectors with light
 
 ### Content Flow
 
-1. **External Content** - FAQ content is maintained in the [`orcwg/cra-hub`](https://github.com/orcwg/cra-hub) repository
+1. **External Content** - FAQ content is maintained in the [`orcwg/cra-hub`][] repository
 2. **Cache Update** - The `update-cache.sh` script clones/updates external content into `_cache/faq/`
 3. **Data Processing** - `src/_data/data.js` orchestrates the complete data pipeline:
    - **Text Processing**: Markdown to plain text conversion for titles and summaries
@@ -152,7 +153,7 @@ Components follow a consistent data pattern:
 
 ### Primary Content Source
 
-- **Repository**: [`orcwg/cra-hub`](https://github.com/orcwg/cra-hub)
+- **Repository**: [`orcwg/cra-hub`][]
 - **Purpose**: Contains all FAQ content and guidance requests in markdown format
 - **Update**: Automatically pulled during builds via `update-cache.sh`
 
@@ -189,7 +190,7 @@ The site is deployed to GitHub Pages at [cra.orcwg.org](https://cra.orcwg.org/) 
 
 ### Deployment Architecture
 
-This repository (`cra.orcwg.org`) acts as the **website generator**, while [`orcwg/cra-hub`](https://github.com/orcwg/cra-hub) is the **content source**. The two repositories work together through an automated workflow:
+This repository (`cra.orcwg.org`) acts as the **website generator**, while [`orcwg/cra-hub`][] is the **content source**. The two repositories work together through an automated workflow:
 
 ```mermaid
 flowchart TD
@@ -282,3 +283,5 @@ The `update-cache.sh` script:
 This project is licensed under the terms of the Apache License Version 2.0.
 
 SPDX-License-Identifier: Apache-2.0
+
+[`orcwg/cra-hub`]: https://github.com/orcwg/cra-hub
