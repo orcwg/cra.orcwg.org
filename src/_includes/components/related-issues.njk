@@ -1,21 +1,14 @@
 {#
   Related Issues Component
 
-  Displays related GitHub issues as either:
-  - Single issue: button with "Related issue: #XX"
-  - Multiple issues: container with pills for each issue
+  Displays related GitHub issues as pills
 
   Parameters (passed via relatedIssues variable):
   - relatedIssues: Array of issue objects with { url, number }
+
+  Note: The calling template should check relatedIssues.length > 0 before including this component
 #}
 
-{% if relatedIssues.length > 0 %}
-  {% if relatedIssues.length == 1 %}
-<a href="{{ relatedIssues[0].url }}" class="action-button" target="_blank" rel="noopener" title="View related issue #{{ relatedIssues[0].number }}">
-  {% include "icons/issue.svg" %}
-  <span>Related issue: #{{ relatedIssues[0].number }}</span>
-</a>
-  {% else %}
 <div class="action-label">
   {% include "icons/issue.svg" %}
   <span>Related issues:</span>
@@ -27,5 +20,3 @@
     {% endfor %}
   </div>
 </div>
-  {% endif %}
-{% endif %}

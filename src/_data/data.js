@@ -45,14 +45,14 @@ function extractIssueNumber(issueUrl) {
 // Parse related issues from frontmatter
 // Input can be a single string or an array of strings
 // Returns an array of issue objects with url and number
-function parseRelatedIssues(relatedIssuesField) {
-  if (!relatedIssuesField) {
+function parseRelatedIssues(relatedIssues) {
+  if (!relatedIssues) {
     return [];
   }
 
-  const issueUrls = relatedIssuesField.trim().split(/ ,\s*/);
-
+  const issueUrls = relatedIssues.trim().split(/,\s*/);
   // Transform URLs to objects with url and number
+
   return issueUrls.map(url => ({
     url: url,
     number: extractIssueNumber(url)
