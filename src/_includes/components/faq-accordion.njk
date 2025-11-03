@@ -50,11 +50,9 @@
                 {% include "icons/edit.svg" %}
                 <span>Edit on GitHub</span>
               </a>
-              {% if faq.relatedIssue %}
-              <a href="{{ faq.relatedIssue }}" class="action-button" target="_blank" rel="noopener" title="View related issue">
-                {% include "icons/issue.svg" %}
-                <span>Related issue</span>
-              </a>
+              {% if faq.relatedIssues.length > 0 %}
+              {% set relatedIssues = faq.relatedIssues %}
+              {% include "components/related-issues.njk" %}
               {% endif %}
             </div>
             <div class="regular-actions">
