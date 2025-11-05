@@ -25,18 +25,18 @@
         <div>
           {{ faq.answer | markdown(faq) | safe }}
 
-        {% if faq.status == "draft" or faq.guidanceItem %}
+        {% if faq.status == "draft" or faq.relatedGuidanceRequest %}
         <aside class="warning">
           {% if faq.status == "draft" %}
-          <p><strong>This FAQ is a draft</strong></p> <p>It hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
+          <p><strong>This FAQ is a draft</strong> - It hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
           {% endif %}
 
-          {% if faq.guidanceItem %}
+          {% if faq.relatedGuidanceRequest %}
           <p><strong>Pending Guidance</strong></p>
-          {% if faq.guidanceItem.guidanceText %}
+          {% if faq.relatedGuidanceRequest.guidanceText %}
             <p>This FAQ awaits commission guidance on:</p>
-            <blockquote>{{ faq.guidanceItem.guidanceText }}</blockquote>
-            <p><a href="{{ faq.guidanceItem.permalink }}">View full guidance request →</a></p>
+            <blockquote>{{ faq.relatedGuidanceRequest.guidanceText }}</blockquote>
+            <p><a href="{{ faq.relatedGuidanceRequest.permalink }}">View full guidance request →</a></p>
           {% else %}
             <p>This FAQ awaits commission guidance.</p>
           {% endif %}
