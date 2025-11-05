@@ -5,10 +5,9 @@
 
   Parameters (passed via relatedIssues variable):
   - relatedIssues: Array of issue objects with { url, number }
-
-  Note: The calling template should check relatedIssues.length > 0 before including this component
 #}
 
+{% if relatedIssues and relatedIssues.length > 0 %}
 <div class="action-label">
   {% include "icons/issue.svg" %}
   <span>Related issues:</span>
@@ -20,3 +19,4 @@
     {% endfor %}
   </div>
 </div>
+{% endif %}

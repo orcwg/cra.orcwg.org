@@ -50,10 +50,8 @@
                 {% include "icons/edit.svg" %}
                 <span>Edit on GitHub</span>
               </a>
-              {% if faq.relatedIssues.length > 0 %}
               {% set relatedIssues = faq.relatedIssues %}
               {% include "components/related-issues.njk" %}
-              {% endif %}
             </div>
             <div class="regular-actions">
               <button class="action-button" data-permalink="{{ faq.permalink }}" title="Copy FAQ page link" aria-label="Copy FAQ page link">
