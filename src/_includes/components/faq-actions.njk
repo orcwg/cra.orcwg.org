@@ -1,0 +1,32 @@
+{#
+  FAQ Actions Component
+
+  Displays the action buttons for a FAQ item (edit, copy, go to page, etc.)
+
+  Parameters (passed via faq variable):
+  - faq.editOnGithubUrl: String
+  - faq.relatedIssues: Array of { url, number }
+  - faq.permalink: String
+#}
+
+<div class="faq-actions">
+  <div class="admin-links">
+    <a href="{{ faq.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit this FAQ on GitHub">
+      {% include "icons/edit.svg" %}
+      <span>Edit on GitHub</span>
+    </a>
+    {% set relatedIssues = faq.relatedIssues %}
+    {% include "components/related-issues.njk" %}
+  </div>
+
+  <div class="regular-actions">
+    <button class="action-button" data-permalink="{{ faq.permalink }}" title="Copy FAQ page link" aria-label="Copy FAQ page link">
+      {% include "icons/copy.svg" %}
+      <span>Copy link</span>
+    </button>
+    <a href="{{ faq.permalink }}" class="action-button" title="Go to FAQ page">
+      <span>Go to FAQ page</span>
+      {% include "icons/arrow-right.svg" %}
+    </a>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+{#
+  FAQ Warning Component
+
+  Displays warning or pending guidance messages related to a FAQ item.
+
+  Parameters (passed via faq variable):
+  - faq.status: String ("draft" or null)
+  - faq.relatedGuidanceRequest: Object with { guidanceText, permalink }
+#}
+
+{% if faq.status == "draft" or faq.relatedGuidanceRequest %}
+<aside class="warning">
+
+  {% if faq.status == "draft" %}
+  <p><strong>This FAQ is draft</strong> — It hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
+  {% endif %}
+
+  {% if faq.relatedGuidanceRequest %}
+    <p><strong>Pending Guidance</strong></p>
+    {% if faq.relatedGuidanceRequest.guidanceText %}
+      <p>This FAQ awaits commission guidance on:</p>
+      <blockquote>{{ faq.relatedGuidanceRequest.guidanceText }}</blockquote>
+      <p>
+        <a href="{{ faq.relatedGuidanceRequest.permalink }}">View full guidance request →</a>
+      </p>
+    {% else %}
+      <p>This FAQ awaits commission guidance.</p>
+    {% endif %}
+  {% endif %}
+
+</aside>
+{% endif %}
