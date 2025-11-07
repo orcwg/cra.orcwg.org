@@ -2,6 +2,8 @@
   FAQ Actions Component
 
   Displays the action buttons for a FAQ item (edit, copy, go to page, etc.)
+  
+  Doesn't display the "Go to FAQ page" link if you're already on the FAQ page.
 
   Parameters (passed via faq variable):
   - faq.editOnGithubUrl: String
@@ -24,9 +26,11 @@
       {% include "icons/copy.svg" %}
       <span>Copy link</span>
     </button>
-    <a href="{{ faq.permalink }}" class="action-button" title="Go to FAQ page">
-      <span>Go to FAQ page</span>
-      {% include "icons/arrow-right.svg" %}
-    </a>
+    {% if faq.permalink != page.url %}
+        <a href="{{ faq.permalink }}" class="action-button" title="Go to FAQ page">
+          <span>Go to FAQ page</span>
+          {% include "icons/arrow-right.svg" %}
+        </a>
+    {% endif %}
   </div>
 </div>
