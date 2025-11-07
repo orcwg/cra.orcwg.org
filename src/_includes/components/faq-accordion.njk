@@ -8,6 +8,7 @@
   - icon: Optional icon to display before title
 #}
 
+
   <h2>
     {% if componentData.icon %}{{ componentData.icon }} {% endif %}{{ componentData.title }}
   </h2>
@@ -25,45 +26,11 @@
         <div>
           {{ faq.answer | markdown(faq) | safe }}
 
-        {% if faq.status == "draft" or faq.relatedGuidanceRequest %}
-        <aside class="warning">
-          {% if faq.status == "draft" %}
-          <p><strong>This FAQ is a draft</strong> - It hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
-          {% endif %}
+          {% set faqItem = faq %}
 
-          {% if faq.relatedGuidanceRequest %}
-          <p><strong>Pending Guidance</strong></p>
-          {% if faq.relatedGuidanceRequest.guidanceText %}
-            <p>This FAQ awaits commission guidance on:</p>
-            <blockquote>{{ faq.relatedGuidanceRequest.guidanceText }}</blockquote>
-            <p><a href="{{ faq.relatedGuidanceRequest.permalink }}">View full guidance request →</a></p>
-          {% else %}
-            <p>This FAQ awaits commission guidance.</p>
-          {% endif %}
-          {% endif %}
-        </aside>
-        {% endif %}
+          {% include "components/faq-warning.njk" %}       
 
-          <div class="faq-actions">
-            <div class="admin-links">
-              <a href="{{ faq.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit this FAQ on GitHub">
-                {% include "icons/edit.svg" %}
-                <span>Edit on GitHub</span>
-              </a>
-              {% set relatedIssues = faq.relatedIssues %}
-              {% include "components/related-issues.njk" %}
-            </div>
-            <div class="regular-actions">
-              <button class="action-button" data-permalink="{{ faq.permalink }}" title="Copy FAQ page link" aria-label="Copy FAQ page link">
-                {% include "icons/copy.svg" %}
-                <span>Copy link</span>
-              </button>
-              <a href="{{ faq.permalink }}" class="action-button" title="Go to FAQ page">
-                <span>Go to FAQ page</span>
-                {% include "icons/arrow-right.svg" %}
-              </a>
-            </div>
-          </div>
+          {% include "components/faq-actions.njk" %}
         </div>
       </article>
     </details>
