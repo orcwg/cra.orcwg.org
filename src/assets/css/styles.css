@@ -770,6 +770,12 @@ pre code {
     border-color: color-mix(in srgb, var(--color) 40%, white);
 }
 
+.refactor {
+    --color: var(--color-danger);
+    background: color-mix(in srgb, var(--color) 10%, white);
+    border-color: color-mix(in srgb, var(--color) 40%, white);
+}
+
 .important {
     --color: var(--color-important);
     background: color-mix(in srgb, var(--color) 10%, white);
@@ -823,6 +829,10 @@ pre code {
 
 .badge.danger::before {
     content: '🛑 ';
+}
+
+.badge.refactor::before{
+    content: '🚧 ';
 }
 
 /* ===================================================================

@@ -30,6 +30,12 @@ function markdownToPlainText(markdownText) {
   return mdPlain.plainText.trim();
 }
 
+function checkRefactoringWarning(content)
+{
+  const warningRegex = />\s*\[!WARNING\]\s*\n>\s*.*needs\s+refactoring/im;
+  return warningRegex.test(content);
+}
+
 // ============================================================================
 // Utility Functions - Content Specific Extractions from Markdown Data
 // ============================================================================
@@ -175,7 +181,11 @@ function getProcessedFaq(faq) {
 
   // Normalize status
   const status = faq.data.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
-
+  
+  // Check if the faq contain a regular expression for refactoring
+  const needsRefactoring = checkRefactoringWarning(faq.content);
+  if (needsRefactoring === true)
+    console.log(faq.filename + " needs Refactoring : " + needsRefactoring);
   // Generate edit on github URL
   const editOnGithubUrl = new URL(`${faq.path}/${faq.filename}`, EDIT_ON_GITHUB_ROOT).href;
 
@@ -190,6 +200,7 @@ function getProcessedFaq(faq) {
     category: category,
     filename: filename,
     status: status,
+    needsRefactor : needsRefactoring,
     permalink: `/faq/${id}/`,
     editOnGithubUrl: editOnGithubUrl,
     relatedIssues: parseRelatedIssues(faq.data["Related issue"] || faq.data["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
