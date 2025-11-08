@@ -200,7 +200,7 @@ function getProcessedFaq(faq) {
     category: category,
     filename: filename,
     status: status,
-    needsRefactor : needsRefactoring,
+needsRefactoring,
     permalink: `/faq/${id}/`,
     editOnGithubUrl: editOnGithubUrl,
     relatedIssues: parseRelatedIssues(faq.data["Related issue"] || faq.data["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
