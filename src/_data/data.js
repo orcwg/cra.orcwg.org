@@ -30,12 +30,6 @@ function markdownToPlainText(markdownText) {
   return mdPlain.plainText.trim();
 }
 
-function checkRefactoringWarning(content)
-{
-  const warningRegex = />\s*\[!WARNING\]\s*\n>\s*.*needs\s+refactoring/im;
-  return warningRegex.test(content);
-}
-
 // ============================================================================
 // Utility Functions - Content Specific Extractions from Markdown Data
 // ============================================================================
