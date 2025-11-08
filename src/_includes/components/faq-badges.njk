@@ -4,6 +4,7 @@
   Expects 'faq' variable from parent scope with:
   - faq.status: FAQ status (pending-guidance, draft, approved)
   - faq.answerMissing: Boolean indicating if FAQ has no answer text
+  - faq.needsRefactoring: Boolean indicating if a FAQ should be refactored
   - faq.guidanceFileNotFound: Boolean flag when guidance-id references non-existent file
 #}
 {% if faq.status == 'pending-guidance' %}
@@ -16,6 +17,9 @@
 <data class="badge danger" value="unknown">Status not set</data>
 {% endif %}
 
+{% if faq.needsRefactoring %}
+<data class="badge danger refactor" value="refactor-needed">Needs Refactoring</data>
+{% endif %}
 {% if faq.answerMissing %}
 <data class="badge danger" value="missing-answer">Missing Answer</data>
 {% endif %}
