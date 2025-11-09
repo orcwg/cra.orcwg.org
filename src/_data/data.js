@@ -405,6 +405,36 @@ function createLists(faqDir) {
 // Authors Processing
 // ============================================================================
 
+// Fetch and return the authors of this repository
+async function getContributors(page = 1) 
+{
+  let request = fetch(`https://api.github.com/repos/orcwg/cra.orcwg.org/contributors?per_page=100&page=${page}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+
+  let contribList = await request.json();
+  return contribList;
+
+}
+
+// get all the contributors if there are more than one page
+async function getALLContributors() 
+{
+  let contributors = [];
+  let page = 1;
+  while (list.length > 0)
+  {
+    list = await getContributors(page);
+    contributors = contributors.concat(list);
+    page++;
+  }
+  return contributors;
+}
+
+
 // Read and return AUTHORS.md content
 function processAuthorsFile() {
   const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
@@ -416,6 +446,9 @@ function processAuthorsFile() {
   const rawContent = fs.readFileSync(authorsPath, "utf-8");
   const parsed = matter(rawContent);
   const content = parsed.content.trim();
+  const contributorsRepo = getALLContributors();
+  console.log("List of contributors : " + contributorsRepo);
+  
 
   if (!content) {
     throw new Error(`AUTHORS.md at ${authorsPath} is empty or has no content after frontmatter.`);
