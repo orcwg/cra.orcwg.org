@@ -15,10 +15,12 @@
             {% endfor %}
             {% if section.title == "Community Resources" %}
                 <li>
-                    <a class="admin-toggle" title="Toggle admin mode" aria-label="Toggle admin mode">
-                        <span class="toggle-text-off">Show admin info</span>
-                        <span class="toggle-text-on">Hide admin info</span>
-                    </a>
+                    <button class="admin-toggle" title="Toggle admin mode" aria-label="Toggle admin mode">
+                        Admin info
+                        <span class="toggle-switch">
+                            <span class="toggle-slider"></span>
+                        </span>
+                    </button>
                 </li>
             {% endif %}
             </ul>

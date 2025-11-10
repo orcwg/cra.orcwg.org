@@ -593,11 +593,13 @@ footer section li {
     color: var(--text-light);
 }
 
-footer section a {
+footer section a,
+footer section button {
     color: var(--text-light);
 }
 
-footer section a:hover {
+footer section a:hover,
+footer section button:hover {
     color: var(--primary-color);
 }
 
@@ -630,20 +632,45 @@ footer section a:hover {
 }
 
 /* Admin Mode Toggle */
-footer .admin-toggle {
+.admin-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 0;
     cursor: pointer;
 }
 
-footer .admin-toggle .toggle-text-on {
-    display: none;
+/* Toggle switch visual element */
+.toggle-switch {
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    background: var(--border-color);
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.2s ease;
 }
 
-.admin-mode footer .admin-toggle .toggle-text-off {
-    display: none;
+.toggle-slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.admin-mode footer .admin-toggle .toggle-text-on {
-    display: inline;
+.admin-mode .toggle-switch {
+    background: var(--primary-color);
+}
+
+.admin-mode .toggle-slider {
+    transform: translateX(14px);
 }
 
 /* Admin Content - Hidden by Default */
