@@ -4,8 +4,12 @@ module.exports = async function (eleventyConfig) {
 
   // Import ES modules dynamically
   const markdownIt = require("markdown-it");
+  
   const { default: markdownItGitHubAlerts } = await import("markdown-it-github-alerts");
-
+  
+  // Footnote plugin for markdown-it
+  const markdownItFootnote = require("markdown-it-footnote");
+  
   // Plugin to add internal links to markdown-it's reference system
   function markdownItInternalLinks(md) {
     // Preprocessing rule to convert [[Article X]] syntax to markdown links
@@ -129,7 +133,7 @@ module.exports = async function (eleventyConfig) {
     html: true,
     linkify: true,
     typographer: true
-  }).use(markdownItGitHubAlerts).use(markdownItInternalLinks);
+  }).use(markdownItGitHubAlerts).use(markdownItInternalLinks).use(markdownItFootnote);
 
   // Add markdown filter
   eleventyConfig.addFilter("markdown", function (content, context = null) {
