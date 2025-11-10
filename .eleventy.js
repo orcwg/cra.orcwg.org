@@ -10,14 +10,140 @@ module.exports = async function (eleventyConfig) {
   // Footnote plugin for markdown-it
   const markdownItFootnote = require("markdown-it-footnote");
   
+<<<<<<< HEAD
   // Configure markdown-it with GitHub alerts and footnotes
   // Note: Link resolution now happens in the data layer (src/_data/data.js)
   // before markdown rendering, so no custom link plugin is needed here
+=======
+  // Plugin to add internal links to markdown-it's reference system
+  function markdownItInternalLinks(md) {
+    // Preprocessing rule to convert [[Article X]] syntax to markdown links
+    md.core.ruler.before('normalize', 'convert_cra_autolinks', function(state) {
+      const craRefs = state.env?.craReferences || {};
+      const internalLinks = state.env?.internalLinks || {};
+      const baseUrl = 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202402847';
+      
+      function mdLink(text, url, title) {
+        title = title ? ` "${ title.replace(/"/g, '&quot;') }"` : "";
+        return `[${ text }](${ url }${ title })`;
+      }
+
+      const patterns = [
+        // Internal FAQ references [[category/filename]]
+        [/\[\[([a-z0-9-]+\/[a-z0-9-]+)\]\]/gi, (match, faqId) => {
+          const faq = internalLinks[faqId];
+          if (faq) {
+            return mdLink(faq.pageTitle, faq.permalink, `💬 FAQ: ${ faq.pageTitle }`);
+          }
+          return match; // Return unchanged if no match found
+        }],
+        // Category list references [[category]]
+        [/\[\[([a-z0-9-]+)\]\]/gi, (match, categoryName) => {
+          const listId = `lists/${ categoryName }`;
+          const list = internalLinks[listId];
+          if (list) {
+            const icon = list.icon ? `${ list.icon } ` : '';
+            const linkText = `${ icon }${ list.title } FAQ list`;
+            return mdLink(linkText, list.permalink, `${ linkText } - ${ list.description }`);
+          }
+          return match; // Return unchanged if no match found
+        }],
+        // CRA Article references [[Article 17(3)]]
+        [/\[\[(ARTICLE|ART\.)\s+(\d+)(\([^)]*\))?\]\]/gi, (match, type, num, subsection) => {
+          const displayText = `Article ${ num }${ subsection || '' }`;
+          const title = craRefs.articleTitles[num] || "Unknown article";
+          return mdLink(displayText, `${ baseUrl }#art_${ num }`, `⚖️ Article ${ num } - ${ title }`);
+        }],
+        // CRA Annex references [[Annex I]]
+        [/\[\[ANNEX\s+([IVX]+)\]\]/gi, (match, num) => {
+          num = num.toUpperCase();
+          const title = craRefs.annexTitles[num] || "Unknown annex";
+          return mdLink(`Annex ${ num }`, `${ baseUrl }#anx_${ num }`, `⚖️ Annex ${ num } - ${ title }`);
+        }],
+        // CRA Recital references [[Recital 42]]
+        [/\[\[(RECITAL|REC\.)\s+(\d+)\]\]/gi, (match, type, num) => {
+          return mdLink(`Recital ${ num }`, `${ baseUrl }#rct_${ num }`, `⚖️ Recital ${ num }`);
+        }]
+      ];
+
+      // Apply all patterns to the source text
+      patterns.forEach(([regex, replacer]) => {
+        state.src = state.src.replace(regex, replacer);
+      });
+    });
+
+    md.core.ruler.after('inline', 'convert_relative_md_links', function(state) {
+      const internalLinks = state.env?.internalLinks || {};
+      const currentContext = state.env?.currentContext;
+
+      if (!currentContext || !currentContext.category) return;
+
+      // Find and convert relative .md links in parsed tokens
+      function processTokens(tokens) {
+        tokens.forEach(token => {
+          if (token.type === 'link_open') {
+            const hrefIndex = token.attrIndex('href');
+            if (hrefIndex >= 0) {
+              const href = token.attrGet('href');
+
+              // Check for relative paths ending in .md or README.yml
+              if (href.match(/^\.\.?\/.*\.(md|yml)$/i)) {
+                // Normalize the path relative to current category
+                const path = require('path');
+                const currentPath = `faq/${ currentContext.category }`;
+                const resolvedPath = path.posix.resolve('/', currentPath, href);
+
+                // Extract category and filename from resolved path
+                const pathMatch = resolvedPath.match(/^\/faq\/([^/]+)\/(.+)\.(md|yml)$/);
+                if (pathMatch) {
+                  const [, targetCategory, filename, extension] = pathMatch;
+
+                  let targetId;
+                  if (extension === 'md') {
+                    targetId = `${ targetCategory }/${ filename }`;
+                  } else if (extension === 'yml' && filename === 'README') {
+                    targetId = `lists/${ targetCategory }`;
+                  }
+
+                  if (targetId) {
+                    const item = internalLinks[targetId];
+                    if (item) {
+                      token.attrSet('href', item.permalink);
+                      if (item.pageTitle) {
+                        // FAQ object
+                        token.attrSet('title', `💬 FAQ: ${ item.pageTitle }`);
+                      } else if (item.title) {
+                        // List object
+                        token.attrSet('title', `💬 FAQ list: ${ item.title }`);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          if (token.children) {
+            processTokens(token.children);
+          }
+        });
+      }
+
+      processTokens(state.tokens);
+    });
+  }
+
+  // Configure markdown-it with GitHub alerts plugin and internal links
+>>>>>>> 146e7fd (Add markdown-it-footnote dependency)
   const md = markdownIt({
     html: true,
     linkify: true,
     typographer: true
+<<<<<<< HEAD
   }).use(markdownItGitHubAlerts).use(markdownItFootnote);
+=======
+  }).use(markdownItGitHubAlerts).use(markdownItInternalLinks).use(markdownItFootnote);
+>>>>>>> 146e7fd (Add markdown-it-footnote dependency)
 
   // Add markdown filter
   // Note: Link resolution now happens in data layer, so content already has resolved links
