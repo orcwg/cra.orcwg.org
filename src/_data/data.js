@@ -9,6 +9,7 @@ const plainTextPlugin = require("markdown-it-plain-text");
 const yaml = require("js-yaml");
 const { resolveLinks } = require("./utils/link-resolver.js");
 const craReferences = require("./craReferences.json");
+const { execSync } = require("child_process");
 
 // ============================================================================
 // Constants
@@ -93,6 +94,56 @@ function splitMarkdownAtFirstH1(content) {
 
 
 // ============================================================================
+// Utility Functions - Git Operations
+// ============================================================================
+
+// Create timestamp getter function
+function fetchTimestamps() {
+  const timestampMap = getFileTimestamps();
+
+  return function getTimestampsForObj(fileObj) {
+    const relativePath = path.join(fileObj.path, fileObj.filename).replace(CACHE_DIR + path.sep, '');
+    return timestampMap.get(relativePath);
+  };
+}
+
+// Get git getTimestampsForObj for files (creation and last modification)
+// Returns a Map with relative file paths as keys and { createdOn, lastUpdatedOn } as values
+function getFileTimestamps() {
+  const timestampMap = new Map();
+
+  // Get all commits with their modified files
+  const logCommand = 'git log --format="%ad|%H" --date=iso --name-only';
+  const logOutput = execSync(logCommand, {
+    cwd: CACHE_DIR,
+    encoding: 'utf8'
+  });
+
+  const lines = logOutput.trim().split('\n');
+  let currentDate = null;
+
+  // Process in reverse order to get creation dates (oldest first)
+  for (const line of lines.reverse()) {
+    if (line.includes('|')) {
+      // This is a date line
+      currentDate = new Date(line.split('|')[0]);
+    } else if (line && currentDate) {
+      // This is a file path
+      const existing = timestampMap.get(line);
+      if (!existing) {
+        // First time seeing this file (creation)
+        timestampMap.set(line, { createdOn: currentDate, lastUpdatedOn: currentDate });
+      } else {
+        // Update last modified date
+        existing.lastUpdatedOn = currentDate;
+      }
+    }
+  }
+
+  return timestampMap;
+}
+
+// ============================================================================
 // Utility Functions - File Operations
 // ============================================================================
 
@@ -169,7 +220,7 @@ function getFaqFiles(dir) {
 }
 
 // Process a single FAQ
-function getProcessedFaq(faq) {
+function getProcessedFaq(faq, getTimestampsForObj) {
   // Extract category and filename
   const category = path.basename(faq.path);
   const filename = faq.filename.replace('.md', '');
@@ -187,6 +238,9 @@ function getProcessedFaq(faq) {
   // Set guidance ID
   const guidanceId = faq.data["guidance-id"] ? faq.data["guidance-id"].trim() : false;
 
+  // Get git timestamps for this file
+  const { createdOn, lastUpdatedOn } = getTimestampsForObj(faq);
+
   return {
     id,
     category,
@@ -201,17 +255,19 @@ function getProcessedFaq(faq) {
     answer,
     answerMissing: (answer.length == 0),
     guidanceId,
-    relatedLists: []
+    relatedLists: [],
+    createdOn,
+    lastUpdatedOn
   };
 }
 
 
 // Process all FAQ files into structured objects
-function createProcessedFaqs(faqDir) {
+function createProcessedFaqs(faqDir, getTimestampsForObj) {
   const faqFiles = getFaqFiles(faqDir);
   const rawFaqs = parseMarkdownFiles(faqFiles);
   const processedFaqs = rawFaqs.map(faq => {
-    return getProcessedFaq(faq);
+    return getProcessedFaq(faq, getTimestampsForObj);
   });
 
   return processedFaqs;
@@ -233,7 +289,7 @@ function getGuidanceFiles(dir) {
   return guidanceFiles;
 }
 
-function getProcessedGuidanceRequest(guidanceRequest) {
+function getProcessedGuidanceRequest(guidanceRequest, getTimestampsForObj) {
   // Set ID to basedir/filename-without-extension.
   const id = guidanceRequest.filename.replace('.md', '');
 
@@ -246,6 +302,9 @@ function getProcessedGuidanceRequest(guidanceRequest) {
   // Extract title and body
   const [title, body] = splitMarkdownAtFirstH1(guidanceRequest.content);
 
+  // Get git timestamps for this file
+  const { createdOn, lastUpdatedOn } = getTimestampsForObj(guidanceRequest);
+
   return {
     id,
     status,
@@ -256,15 +315,17 @@ function getProcessedGuidanceRequest(guidanceRequest) {
     title,
     body,
     guidanceText: extractGuidanceText(body),
+    createdOn,
+    lastUpdatedOn
   };
 };
 
 // Process all guidance request files into structured objects
-function createProcessedGuidanceRequests(guidanceDir) {
+function createProcessedGuidanceRequests(guidanceDir, getTimestampsForObj) {
   const guidanceFiles = getGuidanceFiles(guidanceDir);
   const guidanceRequests = parseMarkdownFiles(guidanceFiles);
   const processedGuidanceRequests = guidanceRequests.map(guidanceRequest => {
-    return getProcessedGuidanceRequest(guidanceRequest);
+    return getProcessedGuidanceRequest(guidanceRequest, getTimestampsForObj);
   });
 
   return processedGuidanceRequests;
@@ -288,7 +349,7 @@ function getCuratedListFiles(faqDir) {
 }
 
 // Parse a curated list
-function getProcessedCuratedList(curatedList) {
+function getProcessedCuratedList(curatedList, getTimestampsForObj) {
   const values = curatedList.data;
   const id = path.basename(curatedList.path);
 
@@ -301,21 +362,26 @@ function getProcessedCuratedList(curatedList) {
     }
   });
 
+  // Get git timestamps for this file
+  const { createdOn, lastUpdatedOn } = getTimestampsForObj(curatedList);
+
   return {
     id,
     title: values.title,
     icon: values.icon,
     faqs: normalizedFaqRefs,
     permalink: `/faq/${id}/`,
-    description: values.description
+    description: values.description,
+    createdOn,
+    lastUpdatedOn
   }
 }
 
 // Process list files and normalize FAQ references
-function createLists(faqDir) {
+function createLists(faqDir, getTimestampsForObj) {
   const rawListFiles = getCuratedListFiles(faqDir);
   const parsedLists = parseYamlFiles(rawListFiles);
-  const lists = parsedLists.map(getProcessedCuratedList);
+  const lists = parsedLists.map(list => getProcessedCuratedList(list, getTimestampsForObj));
 
   return lists;
 };
@@ -377,17 +443,20 @@ function crossReferenceListsAndFaqs(lists, faqs) {
 // Orchestrate the complete data processing pipeline
 function processAllContent() {
 
+  // 0. Get git getTimestampsForObj once for all content
+  const getTimestampsForObj = fetchTimestamps();
+
   // 1. Get and parse FAQs
-  const faqs = createProcessedFaqs(FAQ_DIR);
+  const faqs = createProcessedFaqs(FAQ_DIR, getTimestampsForObj);
 
   // 2. Get and parse Guidance Requests
-  const guidanceRequests = createProcessedGuidanceRequests(GUIDANCE_DIR);
+  const guidanceRequests = createProcessedGuidanceRequests(GUIDANCE_DIR, getTimestampsForObj);
 
   // 3. Enrich FAQs and Guidance Requests with their cross references
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
 
   // 4. Get lists
-  const lists = createLists(FAQ_DIR);
+  const lists = createLists(FAQ_DIR, getTimestampsForObj);
 
   // 5. Connect lists with FAQs
   crossReferenceListsAndFaqs(lists, faqs);
