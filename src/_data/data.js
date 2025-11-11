@@ -21,6 +21,10 @@ const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
 
 const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
 
+// Timestamp constants (in days)
+const NEW_CONTENT_THRESHOLD = 30;  // Content is "new" if created within 30 days
+const RECENTLY_UPDATED_THRESHOLD = 14;  // Content is "recently updated" if modified within 14 days
+
 const mdPlain = markdownIt().use(plainTextPlugin);
 
 // ============================================================================
@@ -92,6 +96,25 @@ function splitMarkdownAtFirstH1(content) {
   return [h1, body];
 }
 
+
+// ============================================================================
+// Utility Functions - Timestamp Helpers
+// ============================================================================
+
+// Check if content is new (created within threshold)
+function isNew(createdOn) {
+  const daysAgo = (Date.now() - createdOn.getTime()) / (1000 * 60 * 60 * 24);
+  return daysAgo <= NEW_CONTENT_THRESHOLD;
+}
+
+// Check if content was recently updated (modified within threshold, but not counting initial creation)
+function recentlyUpdated(createdOn, lastUpdatedOn) {
+  // If creation and update dates are the same, it hasn't been updated since creation
+  if (createdOn.getTime() === lastUpdatedOn.getTime()) return false;
+
+  const daysAgo = (Date.now() - lastUpdatedOn.getTime()) / (1000 * 60 * 60 * 24);
+  return daysAgo <= RECENTLY_UPDATED_THRESHOLD;
+}
 
 // ============================================================================
 // Utility Functions - Git Operations
@@ -257,7 +280,9 @@ function getProcessedFaq(faq, getTimestampsForObj) {
     guidanceId,
     relatedLists: [],
     createdOn,
-    lastUpdatedOn
+    lastUpdatedOn,
+    isNew: isNew(createdOn),
+    recentlyUpdated: recentlyUpdated(createdOn, lastUpdatedOn)
   };
 }
 
@@ -316,7 +341,9 @@ function getProcessedGuidanceRequest(guidanceRequest, getTimestampsForObj) {
     body,
     guidanceText: extractGuidanceText(body),
     createdOn,
-    lastUpdatedOn
+    lastUpdatedOn,
+    isNew: isNew(createdOn),
+    recentlyUpdated: recentlyUpdated(createdOn, lastUpdatedOn)
   };
 };
 
@@ -373,7 +400,9 @@ function getProcessedCuratedList(curatedList, getTimestampsForObj) {
     permalink: `/faq/${id}/`,
     description: values.description,
     createdOn,
-    lastUpdatedOn
+    lastUpdatedOn,
+    isNew: isNew(createdOn),
+    recentlyUpdated: recentlyUpdated(createdOn, lastUpdatedOn)
   }
 }
 
