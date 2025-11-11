@@ -102,17 +102,17 @@ function splitMarkdownAtFirstH1(content) {
 // ============================================================================
 
 // Check if content is new (created within threshold)
-function isNew(createdOn) {
-  const daysAgo = (Date.now() - createdOn.getTime()) / (1000 * 60 * 60 * 24);
+function isNew(createdAt) {
+  const daysAgo = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
   return daysAgo <= NEW_CONTENT_THRESHOLD;
 }
 
 // Check if content was recently updated (modified within threshold, but not counting initial creation)
-function recentlyUpdated(createdOn, lastUpdatedOn) {
+function recentlyUpdated(createdAt, lastUpdatedAt) {
   // If creation and update dates are the same, it hasn't been updated since creation
-  if (createdOn.getTime() === lastUpdatedOn.getTime()) return false;
+  if (createdAt.getTime() === lastUpdatedAt.getTime()) return false;
 
-  const daysAgo = (Date.now() - lastUpdatedOn.getTime()) / (1000 * 60 * 60 * 24);
+  const daysAgo = (Date.now() - lastUpdatedAt.getTime()) / (1000 * 60 * 60 * 24);
   return daysAgo <= RECENTLY_UPDATED_THRESHOLD;
 }
 
@@ -131,7 +131,7 @@ function fetchTimestamps() {
 }
 
 // Get git getTimestampsForObj for files (creation and last modification)
-// Returns a Map with relative file paths as keys and { createdOn, lastUpdatedOn } as values
+// Returns a Map with relative file paths as keys and { createdAt, lastUpdatedAt } as values
 function getFileTimestamps() {
   const timestampMap = new Map();
 
@@ -155,10 +155,10 @@ function getFileTimestamps() {
       const existing = timestampMap.get(line);
       if (!existing) {
         // First time seeing this file (creation)
-        timestampMap.set(line, { createdOn: currentDate, lastUpdatedOn: currentDate });
+        timestampMap.set(line, { createdAt: currentDate, lastUpdatedAt: currentDate });
       } else {
         // Update last modified date
-        existing.lastUpdatedOn = currentDate;
+        existing.lastUpdatedAt = currentDate;
       }
     }
   }
@@ -262,7 +262,7 @@ function getProcessedFaq(faq, getTimestampsForObj) {
   const guidanceId = faq.data["guidance-id"] ? faq.data["guidance-id"].trim() : false;
 
   // Get git timestamps for this file
-  const { createdOn, lastUpdatedOn } = getTimestampsForObj(faq);
+  const { createdAt, lastUpdatedAt } = getTimestampsForObj(faq);
 
   return {
     id,
@@ -279,10 +279,10 @@ function getProcessedFaq(faq, getTimestampsForObj) {
     answerMissing: (answer.length == 0),
     guidanceId,
     relatedLists: [],
-    createdOn,
-    lastUpdatedOn,
-    isNew: isNew(createdOn),
-    recentlyUpdated: recentlyUpdated(createdOn, lastUpdatedOn)
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
   };
 }
 
@@ -328,7 +328,7 @@ function getProcessedGuidanceRequest(guidanceRequest, getTimestampsForObj) {
   const [title, body] = splitMarkdownAtFirstH1(guidanceRequest.content);
 
   // Get git timestamps for this file
-  const { createdOn, lastUpdatedOn } = getTimestampsForObj(guidanceRequest);
+  const { createdAt, lastUpdatedAt } = getTimestampsForObj(guidanceRequest);
 
   return {
     id,
@@ -340,10 +340,10 @@ function getProcessedGuidanceRequest(guidanceRequest, getTimestampsForObj) {
     title,
     body,
     guidanceText: extractGuidanceText(body),
-    createdOn,
-    lastUpdatedOn,
-    isNew: isNew(createdOn),
-    recentlyUpdated: recentlyUpdated(createdOn, lastUpdatedOn)
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
   };
 };
 
@@ -390,7 +390,7 @@ function getProcessedCuratedList(curatedList, getTimestampsForObj) {
   });
 
   // Get git timestamps for this file
-  const { createdOn, lastUpdatedOn } = getTimestampsForObj(curatedList);
+  const { createdAt, lastUpdatedAt } = getTimestampsForObj(curatedList);
 
   return {
     id,
@@ -399,10 +399,10 @@ function getProcessedCuratedList(curatedList, getTimestampsForObj) {
     faqs: normalizedFaqRefs,
     permalink: `/faq/${id}/`,
     description: values.description,
-    createdOn,
-    lastUpdatedOn,
-    isNew: isNew(createdOn),
-    recentlyUpdated: recentlyUpdated(createdOn, lastUpdatedOn)
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
   }
 }
 
