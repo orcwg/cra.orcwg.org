@@ -7,3 +7,5 @@ Special thanks for all the people who had helped this project so far:
 * Cristian Senn
 * Sachin Manimekalai Balakrishnan
 * Raphael Gregori
+
+If you have contributed and aren't listed, please open an issue!
