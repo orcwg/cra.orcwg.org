@@ -25,7 +25,8 @@ Key steps:
 3. Deploy during maintenance window`,
       permalink: "#faq-1",
       filename: "security-updates.md",
-      status: "approved"
+      status: "approved",
+      editOnGithubUrl: "#"
     },
     {
       question: "What documentation is required for compliance?",
@@ -40,7 +41,8 @@ Key steps:
 > Keep all documentation version-controlled and easily accessible for audits.`,
       permalink: "#faq-2",
       filename: "documentation.md",
-      status: "approved"
+      status: "approved",
+      editOnGithubUrl: "#"
     },
     {
       question: "How should I handle vulnerability disclosure?",
@@ -52,7 +54,8 @@ Key steps:
 Create a security.txt file and publish contact information for security researchers.`,
       permalink: "#faq-3",
       filename: "vulnerability-disclosure.md",
-      status: "draft"
+      status: "draft",
+      editOnGithubUrl: "#"
     }
   ],
 

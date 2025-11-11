@@ -26,9 +26,7 @@
         <div>
           {{ faq.answer | markdown | safe }}
 
-          {% set faqItem = faq %}
-
-          {% include "components/faq-warning.njk" %}       
+          {% include "components/faq-warning.njk" %}
 
           {% include "components/faq-actions.njk" %}
         </div>

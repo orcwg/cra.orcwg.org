@@ -56,6 +56,11 @@ module.exports = async function (eleventyConfig) {
     dir: {
       input: "src",
       output: "_site"
+    },
+    // Enable strict mode for Nunjucks templates
+    // This makes templates fail when accessing undefined variables
+    nunjucksEnvironmentOptions: {
+      throwOnUndefined: true
     }
   };
 };
