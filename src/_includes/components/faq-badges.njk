@@ -23,6 +23,10 @@
 {% if faq.answerMissing %}
 <data class="badge danger" value="missing-answer">Missing Answer</data>
 {% endif %}
+{% if faq.relatedGuidanceRequest %}
+<data class="badge info guidance-request" value="guidance-request">Related Guidance Request</data>
+{% endif %}
 {% if faq.guidanceFileNotFound %}
 <data class="badge danger" value="guidance-not-found">Guidance File Not Found</data>
 {% endif %}
+

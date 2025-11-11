@@ -77,6 +77,13 @@ Create a security.txt file and publish contact information for security research
       guidanceFileNotFound: false
     },
     {
+      question: "FAQ with related guidance request example",
+      status: "draft",
+      answerMissing: false,
+      guidanceFileNotFound: false,
+      relatedGuidanceRequest: {}
+    },
+    {
       question: "FAQ with missing answer",
       status: "approved",
       answerMissing: true,
