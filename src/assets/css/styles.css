@@ -603,6 +603,16 @@ footer section button:hover {
     color: var(--primary-color);
 }
 
+.footnotes {
+  font-size: 0.7em;
+  color: var(--text-light);
+}
+
+hr.footnotes-sep {
+  border-width: 0;
+  border-top: 1px solid var(--border-color);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     body {
