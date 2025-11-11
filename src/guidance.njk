@@ -21,5 +21,12 @@ eleventyComputed:
     <li><a href="{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
     {% endfor %}
   </ul>
+
+  <div class="faq-actions guidance-actions">
+      <a href="{{ item.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit guidance on GitHub">
+      {% include "icons/edit.svg" %}
+      <span>Edit on GitHub</span>
+      </a>
+  </div>
   {% endif %}
 </article>
