@@ -17,6 +17,7 @@ const { execSync } = require("child_process");
 const CACHE_DIR = path.join(__dirname, "..", "..", "_cache");
 
 const FAQ_DIR = path.join(CACHE_DIR, "faq");
+const ROOT_DIR = path.join(__dirname, "..", "..");
 const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
 
 const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
@@ -426,6 +427,33 @@ function processAuthorsFile() {
   return content;
 }
 
+// Read, curate and return CONTRIBUTORS.md content
+function processContribFile()
+{
+  const contribPath = path.join(ROOT_DIR, "CONTRIBUTORS.md");
+  
+  if (!fs.existsSync(contribPath)) {
+    throw new Error(`AUTHORS.md not found at ${contribPath}. Ensure the cache is populated.`);
+  }
+  const rawContent = fs.readFileSync(contribPath, "utf-8");
+  const parsed = matter(rawContent);
+  const nameList = parsed.content.trim();
+  const [header, body] = splitMarkdownAtFirstH1(nameList)
+
+  // Add the g flag to take all the matches
+  nameMatches = body.match(/^\*\s+(.+)$/gm);
+
+  //Remove the * in the begining
+  const names = nameMatches.map(match => match.replace(/^\*\s+/, '').trim())
+  //console.log("body = " + names);
+
+  if (!nameList) {
+    throw new Error(`AUTHORS.md at ${contribPath} is empty or has no content after frontmatter.`);
+  }
+
+  return nameList;
+}
+
 // ============================================================================
 // Cross referencing functions
 // ============================================================================
@@ -491,6 +519,8 @@ function processAllContent() {
 
   // 8. Get and process AUTHORS.md
   const authorsContent = processAuthorsFile();
+  
+  const contribContent = processContribFile();
 
   return {
     faqs,
