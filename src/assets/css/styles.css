@@ -554,9 +554,6 @@ a.action-button {
     margin-bottom: 0;
 }
 
-.faq-actions.guidance-actions{
-    justify-content: flex-end;
-}
 /* Footer */
 footer {
     background: white;

@@ -22,11 +22,17 @@ eleventyComputed:
     {% endfor %}
   </ul>
 
-  <div class="faq-actions guidance-actions">
-      <a href="{{ item.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit guidance on GitHub">
+  {% endif %}
+ <div class="faq-actions">
+  <div class="admin-links">
+    {# Admin links will be added here eventually #}
+  </div>
+
+  <div class="regular-actions">
+    <a href="{{ guidance.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit this guidance on GitHub">
       {% include "icons/edit.svg" %}
       <span>Edit on GitHub</span>
-      </a>
+    </a>
   </div>
-  {% endif %}
+</div>
 </article>
