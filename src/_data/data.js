@@ -398,13 +398,11 @@ function processAllContent() {
   // 7. Resolve all custom link syntax in markdown content
   faqs.forEach(faq => {
     const context = { category: faq.category };
-    faq.question = resolveLinks(faq.question, context, internalLinkIndex, craReferences);
     faq.answer = resolveLinks(faq.answer, context, internalLinkIndex, craReferences);
   });
 
   guidanceRequests.forEach(guidance => {
     const context = { category: 'pending-guidance' };
-    guidance.title = resolveLinks(guidance.title, context, internalLinkIndex, craReferences);
     guidance.body = resolveLinks(guidance.body, context, internalLinkIndex, craReferences);
   });
 
