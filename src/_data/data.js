@@ -292,6 +292,8 @@ function getProcessedCuratedList(curatedList) {
   const values = curatedList.data;
   const id = path.basename(curatedList.path);
 
+  const editOnGithubUrl = new URL(`${curatedList.path}`, EDIT_ON_GITHUB_ROOT).href;
+
   // Normalize FAQ references so they match FAQ Ids. Allows for a curated list to reference FAQ in or out of its category
   const normalizedFaqRefs = values.faqs.map(faqRef => {
     if (faqRef.includes('/')) {
@@ -307,7 +309,8 @@ function getProcessedCuratedList(curatedList) {
     icon: values.icon,
     faqs: normalizedFaqRefs,
     permalink: `/faq/${id}/`,
-    description: values.description
+    description: values.description,
+    editOnGithubUrl
   }
 }
 
