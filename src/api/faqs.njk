@@ -1,0 +1,62 @@
+---
+permalink: /api/faqs.json
+eleventyExcludeFromCollections: true
+---
+{
+  "faqs": [
+    {%- for faq in data.faqItems %}
+    {
+      "id": "{{ faq.id }}",
+      "category": "{{ faq.category }}",
+      "filename": "{{ faq.filename }}",
+      "status": "{{ faq.status }}",
+      "url": "{{ faq.permalink }}",
+      "question": {{ faq.question | dump | safe }},
+      "answer": {{ faq.answer | dump | safe }},
+      "pageTitle": {{ faq.pageTitle | dump | safe }},
+      "hasAnswer": {{ not faq.answerMissing }},
+      "editUrl": "{{ faq.editOnGithubUrl }}",
+      {%- if faq.relatedIssues and faq.relatedIssues.length > 0 %}
+      "relatedIssues": [
+        {%- for issue in faq.relatedIssues %}
+        {
+          "url": "{{ issue.url }}",
+          "number": "{{ issue.number }}"
+        }{% if not loop.last %},{% endif %}
+        {%- endfor %}
+      ],
+      {%- else %}
+      "relatedIssues": [],
+      {%- endif %}
+      {%- if faq.relatedLists and faq.relatedLists.length > 0 %}
+      "relatedLists": [
+        {%- for list in faq.relatedLists %}
+        {
+          "id": "{{ list.id }}",
+          "title": {{ list.title | dump | safe }},
+          "icon": "{{ list.icon }}",
+          "url": "{{ list.permalink }}"
+        }{% if not loop.last %},{% endif %}
+        {%- endfor %}
+      ],
+      {%- else %}
+      "relatedLists": [],
+      {%- endif %}
+      {%- if faq.relatedGuidanceRequest %}
+      "relatedGuidance": {
+        "id": "{{ faq.relatedGuidanceRequest.id }}",
+        "title": {{ faq.relatedGuidanceRequest.pageTitle | dump | safe }},
+        "url": "{{ faq.relatedGuidanceRequest.permalink }}"
+      }
+      {%- else %}
+      "relatedGuidance": null
+      {%- endif %}
+    }{% if not loop.last %},{% endif %}
+    {%- endfor %}
+  ],
+  "meta": {
+    "totalFaqs": {{ data.faqItems.length }},
+    "generatedAt": "{{ build.iso }}",
+    "version": "1.0"
+  }
+}

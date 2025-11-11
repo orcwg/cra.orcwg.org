@@ -1,0 +1,28 @@
+---
+permalink: /api/lists.json
+eleventyExcludeFromCollections: true
+---
+{
+  "lists": [
+    {%- for list in data.lists %}
+    {
+      "id": "{{ list.id }}",
+      "title": {{ list.title | dump | safe }},
+      "description": {{ list.description | dump | safe }},
+      "icon": "{{ list.icon }}",
+      "url": "{{ list.permalink }}",
+      "faqCount": {{ list.faqs.length }},
+      "faqIds": [
+        {%- for faq in list.faqs %}
+        "{{ faq.id }}"{% if not loop.last %},{% endif %}
+        {%- endfor %}
+      ]
+    }{% if not loop.last %},{% endif %}
+    {%- endfor %}
+  ],
+  "meta": {
+    "totalLists": {{ data.lists.length }},
+    "generatedAt": "{{ build.iso }}",
+    "version": "1.0"
+  }
+}
