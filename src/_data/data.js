@@ -7,6 +7,8 @@ const matter = require("gray-matter");
 const markdownIt = require("markdown-it");
 const plainTextPlugin = require("markdown-it-plain-text");
 const yaml = require("js-yaml");
+const { resolveLinks } = require("./utils/link-resolver.js");
+const craReferences = require("./craReferences.json");
 
 // ============================================================================
 // Constants
@@ -186,19 +188,19 @@ function getProcessedFaq(faq) {
   const guidanceId = faq.data["guidance-id"] ? faq.data["guidance-id"].trim() : false;
 
   return {
-    id: id,
-    category: category,
-    filename: filename,
-    status: status,
+    id,
+    category,
+    filename,
+    status,
     needsRefactoring,
     permalink: `/faq/${id}/`,
-    editOnGithubUrl: editOnGithubUrl,
+    editOnGithubUrl,
     relatedIssues: parseRelatedIssues(faq.data["Related issue"] || faq.data["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
     pageTitle: markdownToPlainText(question),
-    question: question,
-    answer: answer,
+    question,
+    answer,
     answerMissing: (answer.length == 0),
-    guidanceId: guidanceId,
+    guidanceId,
     relatedLists: []
   };
 }
@@ -245,14 +247,14 @@ function getProcessedGuidanceRequest(guidanceRequest) {
   const [title, body] = splitMarkdownAtFirstH1(guidanceRequest.content);
 
   return {
-    id: id,
-    status: status,
+    id,
+    status,
     permalink: `/pending-guidance/${id}/`,
-    editOnGithubUrl: editOnGithubUrl,
+    editOnGithubUrl,
     relatedIssue: guidanceRequest.data["Related issue"],
     pageTitle: markdownToPlainText(title),
-    title: title,
-    body: body,
+    title,
+    body,
     guidanceText: extractGuidanceText(body),
   };
 };
@@ -300,7 +302,7 @@ function getProcessedCuratedList(curatedList) {
   });
 
   return {
-    id: id,
+    id,
     title: values.title,
     icon: values.icon,
     faqs: normalizedFaqRefs,
@@ -393,16 +395,25 @@ function processAllContent() {
   // 6. Create internal link index for all content types
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
 
-  // 7. Get and process AUTHORS.md
+  // 7. Resolve all custom link syntax in markdown content
+  faqs.forEach(faq => {
+    const context = { category: faq.category };
+    faq.answer = resolveLinks(faq.answer, context, internalLinkIndex, craReferences);
+  });
+
+  guidanceRequests.forEach(guidance => {
+    const context = { category: 'pending-guidance' };
+    guidance.body = resolveLinks(guidance.body, context, internalLinkIndex, craReferences);
+  });
+
+  // 8. Get and process AUTHORS.md
   const authorsContent = processAuthorsFile();
 
   return {
-    faqs: faqs,
+    faqs,
     guidance: guidanceRequests,
-    faqItems: faqs,
-    lists: lists,
-    authorsContent,
-    internalLinks: internalLinkIndex
+    lists,
+    authorsContent
   };
 }
 
