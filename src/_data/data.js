@@ -411,7 +411,7 @@ function createLists(faqDir) {
 function fetchAcknowledgementsFile(path) {
 
   if (!fs.existsSync(path)) {
-    throw new Error(`markdown file not found at ${path}. Ensure the cache is populated.`);
+    throw new Error(`File not found at ${path}.`);
   }
 
   const rawContent = fs.readFileSync(path, "utf-8");
