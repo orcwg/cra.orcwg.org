@@ -120,12 +120,11 @@ function recentlyUpdated(createdAt, lastUpdatedAt) {
 // Utility Functions - Git Operations
 // ============================================================================
 
-function fetchTimestamps() {
+const getTimestampsForObj = (function initTimestampsFetcher() {
   const timestampMap = new Map();
 
   // Get all commits with their modified files
-  const logCommand = 'git log --format="%ad|%H" --date=iso --name-only';
-  const logOutput = execSync(logCommand, {
+  const logOutput = execSync('git log --format="%ad|%H" --date=iso --name-only', {
     cwd: CACHE_DIR,
     encoding: 'utf8'
   });
@@ -155,7 +154,7 @@ function fetchTimestamps() {
     const relativePath = path.join(fileObj.path, fileObj.filename).replace(CACHE_DIR + path.sep, '');
     return timestampMap.get(relativePath);
   };
-}
+})()
 
 // ============================================================================
 // Utility Functions - File Operations
@@ -234,7 +233,7 @@ function getFaqFiles(dir) {
 }
 
 // Process a single FAQ
-function getProcessedFaq(faq, getTimestampsForObj) {
+function getProcessedFaq(faq) {
   // Extract category and filename
   const category = path.basename(faq.path);
   const filename = faq.filename.replace('.md', '');
@@ -279,12 +278,10 @@ function getProcessedFaq(faq, getTimestampsForObj) {
 
 
 // Process all FAQ files into structured objects
-function createProcessedFaqs(faqDir, getTimestampsForObj) {
+function createProcessedFaqs(faqDir) {
   const faqFiles = getFaqFiles(faqDir);
   const rawFaqs = parseMarkdownFiles(faqFiles);
-  const processedFaqs = rawFaqs.map(faq => {
-    return getProcessedFaq(faq, getTimestampsForObj);
-  });
+  const processedFaqs = rawFaqs.map(getProcessedFaq);
 
   return processedFaqs;
 };
@@ -305,7 +302,7 @@ function getGuidanceFiles(dir) {
   return guidanceFiles;
 }
 
-function getProcessedGuidanceRequest(guidanceRequest, getTimestampsForObj) {
+function getProcessedGuidanceRequest(guidanceRequest) {
   // Set ID to basedir/filename-without-extension.
   const id = guidanceRequest.filename.replace('.md', '');
 
@@ -339,12 +336,10 @@ function getProcessedGuidanceRequest(guidanceRequest, getTimestampsForObj) {
 };
 
 // Process all guidance request files into structured objects
-function createProcessedGuidanceRequests(guidanceDir, getTimestampsForObj) {
+function createProcessedGuidanceRequests(guidanceDir) {
   const guidanceFiles = getGuidanceFiles(guidanceDir);
   const guidanceRequests = parseMarkdownFiles(guidanceFiles);
-  const processedGuidanceRequests = guidanceRequests.map(guidanceRequest => {
-    return getProcessedGuidanceRequest(guidanceRequest, getTimestampsForObj);
-  });
+  const processedGuidanceRequests = guidanceRequests.map(getProcessedGuidanceRequest);
 
   return processedGuidanceRequests;
 };
@@ -367,7 +362,7 @@ function getCuratedListFiles(faqDir) {
 }
 
 // Parse a curated list
-function getProcessedCuratedList(curatedList, getTimestampsForObj) {
+function getProcessedCuratedList(curatedList) {
   const values = curatedList.data;
   const id = path.basename(curatedList.path);
 
@@ -401,7 +396,7 @@ function getProcessedCuratedList(curatedList, getTimestampsForObj) {
 function createLists(faqDir, getTimestampsForObj) {
   const rawListFiles = getCuratedListFiles(faqDir);
   const parsedLists = parseYamlFiles(rawListFiles);
-  const lists = parsedLists.map(list => getProcessedCuratedList(list, getTimestampsForObj));
+  const lists = parsedLists.map(getProcessedCuratedList);
 
   return lists;
 };
@@ -463,20 +458,17 @@ function crossReferenceListsAndFaqs(lists, faqs) {
 // Orchestrate the complete data processing pipeline
 function processAllContent() {
 
-  // 0. Get git getTimestampsForObj once for all content
-  const getTimestampsForObj = fetchTimestamps();
-
   // 1. Get and parse FAQs
-  const faqs = createProcessedFaqs(FAQ_DIR, getTimestampsForObj);
+  const faqs = createProcessedFaqs(FAQ_DIR);
 
   // 2. Get and parse Guidance Requests
-  const guidanceRequests = createProcessedGuidanceRequests(GUIDANCE_DIR, getTimestampsForObj);
+  const guidanceRequests = createProcessedGuidanceRequests(GUIDANCE_DIR);
 
   // 3. Enrich FAQs and Guidance Requests with their cross references
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
 
   // 4. Get lists
-  const lists = createLists(FAQ_DIR, getTimestampsForObj);
+  const lists = createLists(FAQ_DIR);
 
   // 5. Connect lists with FAQs
   crossReferenceListsAndFaqs(lists, faqs);
