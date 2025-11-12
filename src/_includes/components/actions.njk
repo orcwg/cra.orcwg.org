@@ -1,0 +1,43 @@
+{#
+  Generic Actions Component
+
+  Displays action buttons for any content item (FAQ, guidance, list, etc.)
+
+  Parameters (passed via `item` variable):
+  - item.editOnGithubUrl: String
+  - item.relatedIssues: Array of { url, number } (optional)
+  - item.permalink: String (optional)
+  - page.url: String (optional)
+#}
+
+<div class="actions">
+  <div class="admin-links">
+    {% if item.relatedIssues %}
+      {% set relatedIssues = item.relatedIssues %}
+      {% include "components/related-issues.njk" %}
+    {% endif %}
+  </div>
+
+  <div class="regular-actions">
+    {% if item.editOnGithubUrl %}
+      <a href="{{ item.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit on GitHub">
+        {% include "icons/edit.svg" %}
+        <span>Edit on GitHub</span>
+      </a>
+    {% endif %}
+
+    {% if item.permalink %}
+      <button class="action-button" data-permalink="{{ item.permalink }}" title="Copy page link" aria-label="Copy page link">
+        {% include "icons/copy.svg" %}
+        <span>Copy link</span>
+      </button>
+
+      {% if item.permalink != page.url %}
+        <a href="{{ item.permalink }}" class="action-button" title="Go to page">
+          <span>Go to page</span>
+          {% include "icons/arrow-right.svg" %}
+        </a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
