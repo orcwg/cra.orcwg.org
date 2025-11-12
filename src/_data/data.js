@@ -120,19 +120,7 @@ function recentlyUpdated(createdAt, lastUpdatedAt) {
 // Utility Functions - Git Operations
 // ============================================================================
 
-// Create timestamp getter function
 function fetchTimestamps() {
-  const timestampMap = getFileTimestamps();
-
-  return function getTimestampsForObj(fileObj) {
-    const relativePath = path.join(fileObj.path, fileObj.filename).replace(CACHE_DIR + path.sep, '');
-    return timestampMap.get(relativePath);
-  };
-}
-
-// Get git getTimestampsForObj for files (creation and last modification)
-// Returns a Map with relative file paths as keys and { createdAt, lastUpdatedAt } as values
-function getFileTimestamps() {
   const timestampMap = new Map();
 
   // Get all commits with their modified files
@@ -163,7 +151,10 @@ function getFileTimestamps() {
     }
   }
 
-  return timestampMap;
+  return function getTimestampsForObj(fileObj) {
+    const relativePath = path.join(fileObj.path, fileObj.filename).replace(CACHE_DIR + path.sep, '');
+    return timestampMap.get(relativePath);
+  };
 }
 
 // ============================================================================
