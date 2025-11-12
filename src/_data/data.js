@@ -407,9 +407,8 @@ function createLists(faqDir) {
 // ============================================================================
 
 
-// Read and return AUTHORS.md content
-function processAuthorsFile() {
-  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
+// Read and return AUTHORS.md/CONTRIBUTORS.md content
+function processAuthorsFile(authorsPath) {
 
   if (!fs.existsSync(authorsPath)) {
     throw new Error(`AUTHORS.md not found at ${authorsPath}. Ensure the cache is populated.`);
@@ -427,31 +426,45 @@ function processAuthorsFile() {
   return content;
 }
 
-// Read, curate and return CONTRIBUTORS.md content
-function processContribFile()
+// Read, curate and compose the data for the merge of the two files
+function CreateContributorsPage(authorsPath,contribPath)
 {
-  const contribPath = path.join(ROOT_DIR, "CONTRIBUTORS.md");
-  
-  if (!fs.existsSync(contribPath)) {
-    throw new Error(`AUTHORS.md not found at ${contribPath}. Ensure the cache is populated.`);
-  }
-  const rawContent = fs.readFileSync(contribPath, "utf-8");
-  const parsed = matter(rawContent);
-  const nameList = parsed.content.trim();
-  const [header, body] = splitMarkdownAtFirstH1(nameList)
+  const authorsContent = processAuthorsFile(authorsPath);
+  const contribContent = processAuthorsFile(contribPath);
 
+  // Strip off Headers from bodies
+  const [authorsHeader, authorsBody] = splitMarkdownAtFirstH1(authorsContent);
+  const [contribHeader, contribBody] = splitMarkdownAtFirstH1(contribContent);
+
+  // Extract the different names list in the bodies into arrays
+  const authorsNames = extractNames(authorsBody);
+  const contribNames = extractNames(contribBody);
+
+  // Merging and deduplicate the lists of names
+  const uniqueNamesArray = [...new Set([...authorsNames, ...contribNames])];
+
+  const uniqueNamesListMd = uniqueNamesArray.sort().map(name => `* ${name}`).join('\n');
+
+  // recreate the content of the page
+  const thankMessage = "The following people have contributed to this document either directly or indirectly (e.g. by raising questions):\n\n"
+  const issueMessage = "If you have contributed to this document and aren't properly acknowledged or if you want to edit or remove your name, please let us know by [opening an issue](https://github.com/orcwg/cra-hub/issues/new) and we will fix this right away."
+  return content = 
+    "# " +
+    authorsHeader + 
+    "\n\n"+
+    thankMessage +
+    uniqueNamesListMd +
+    "\n\n" +
+    issueMessage;
+}
+
+function extractNames(contribBody)
+{
   // Add the g flag to take all the matches
-  nameMatches = body.match(/^\*\s+(.+)$/gm);
+  nameMatches = contribBody.match(/^\*\s+(.+)$/gm);
 
   //Remove the * in the begining
-  const names = nameMatches.map(match => match.replace(/^\*\s+/, '').trim())
-  //console.log("body = " + names);
-
-  if (!nameList) {
-    throw new Error(`AUTHORS.md at ${contribPath} is empty or has no content after frontmatter.`);
-  }
-
-  return nameList;
+  return names = nameMatches.map(match => match.replace(/^\*\s+/, '').trim());
 }
 
 // ============================================================================
@@ -517,10 +530,10 @@ function processAllContent() {
     guidance.body = resolveLinks(guidance.body, context, internalLinkIndex, craReferences);
   });
 
-  // 8. Get and process AUTHORS.md
-  const authorsContent = processAuthorsFile();
-  
-  const contribContent = processContribFile();
+  // 8. Get and process AUTHORS.md AND CONTRIBUTORS.md
+  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
+  const contribPath = path.join(ROOT_DIR, "CONTRIBUTORS.md");
+  const authorsContent = CreateContributorsPage(authorsPath, contribPath);
 
   return {
     faqs,
