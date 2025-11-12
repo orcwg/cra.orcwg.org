@@ -427,8 +427,7 @@ function fetchAcknowledgementsFile(path) {
 }
 
 // Read, curate and compose the data for the merge of the two files
-function processAcknowledgements(authorsPath,contribPath)
-{
+function processAcknowledgements(authorsPath, contribPath) {
   // Extract the different names list in the bodies into arrays
   return {
       faqAuthors: extractNames(fetchAcknowledgementsFile(authorsPath)),
