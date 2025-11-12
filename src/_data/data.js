@@ -420,7 +420,7 @@ function fetchAcknowledgementsFile(path) {
   
 
   if (!content) {
-    throw new Error(`markdown file at ${path} is empty or has no content after frontmatter.`);
+    throw new Error(`File at ${path} is empty or has no content after frontmatter.`);
   }
 
   return content;
