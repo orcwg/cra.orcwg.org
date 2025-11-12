@@ -169,7 +169,7 @@ function parseMarkdownFiles(files) {
     return {
       filename: file.name,
       path: path.relative(CACHE_DIR, file.parentPath),
-      posixPath: path.posix.relative(CACHE_DIR, fullPath),
+      posixPath: path.relative(CACHE_DIR, fullPath).split(path.sep).join("/"),
       data: parsed.data,
       content: parsed.content.trim()
     };
@@ -188,7 +188,7 @@ function parseYamlFiles(files) {
     return {
       filename: file.name,
       path: path.relative(CACHE_DIR, file.parentPath),
-      posixPath: path.posix.relative(CACHE_DIR, fullPath),
+      posixPath: path.relative(CACHE_DIR, fullPath).split(path.sep).join("/"),
       data: parsedYaml
     }
   });
