@@ -49,6 +49,7 @@ module.exports = async function (eleventyConfig) {
     return {
       formatted: formatter.format(now),
       iso: now.toISOString(),
+      timestamp: now.getTime()
     };
   });
 

@@ -12,9 +12,8 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/android-chrome-512x512.png">
     
-    <link rel="stylesheet" href="/assets/fonts/roboto.css">
-    <link rel="stylesheet" href="/assets/css/styles.css">
-    <script src="/assets/js/mermaid.min.js"></script>
+    <link rel="stylesheet" href="/assets/css/styles.css?v={{ build.timestamp }}">
+    <script src="/assets/js/mermaid.min.js?v={{ build.timestamp }}"></script>
     <!-- Fathom analytics: https://usefathom.com/legal/compliance-->
     <script src="https://cdn.usefathom.com/script.js" data-site="FWABMJVU" defer></script>
     <!-- /Fathom -->
@@ -36,6 +35,6 @@
 
     {% include "footer.njk" %}
 
-    <script src="/assets/js/site.js"></script>
+    <script src="/assets/js/site.js?v={{ build.timestamp }}"></script>
 </body>
 </html>
