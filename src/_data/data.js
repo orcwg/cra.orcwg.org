@@ -367,7 +367,7 @@ function getCuratedListFiles(faqDir) {
 // Parse a curated list
 function getProcessedCuratedList(curatedList) {
   const values = curatedList.data;
-  const id = path.posix.basename(curatedList.path);
+  const id = path.basename(curatedList.path);
 
   // Normalize FAQ references so they match FAQ Ids. Allows for a curated list to reference FAQ in or out of its category
   const normalizedFaqRefs = values.faqs.map(faqRef => {
