@@ -151,8 +151,7 @@ const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
   }
 
   return function getTimestampsForObj(fileObj) {
-    const relativePath = path.join(fileObj.path, fileObj.filename).replace(cacheDir + path.sep, '');
-    return timestampMap.get(relativePath);
+    return timestampMap.get(fileObj.posixPath);
   };
 })(CACHE_DIR);
 
@@ -170,6 +169,7 @@ function parseMarkdownFiles(files) {
     return {
       filename: file.name,
       path: path.relative(CACHE_DIR, file.parentPath),
+      posixPath: path.posix.relative(CACHE_DIR, fullPath),
       data: parsed.data,
       content: parsed.content.trim()
     };
@@ -188,6 +188,7 @@ function parseYamlFiles(files) {
     return {
       filename: file.name,
       path: path.relative(CACHE_DIR, file.parentPath),
+      posixPath: path.posix.relative(CACHE_DIR, fullPath),
       data: parsedYaml
     }
   });
@@ -235,7 +236,7 @@ function getFaqFiles(dir) {
 // Process a single FAQ
 function getProcessedFaq(faq) {
   // Extract category and filename
-  const category = path.basename(faq.path);
+  const category = path.posix.basename(faq.path);
   const filename = faq.filename.replace('.md', '');
   const id = `${category}/${filename}`;
 
@@ -258,6 +259,7 @@ function getProcessedFaq(faq) {
     id,
     category,
     filename,
+    posixPath: faq.posixPath,
     status,
     needsRefactoring,
     permalink: `/faq/${id}/`,
@@ -320,6 +322,7 @@ function getProcessedGuidanceRequest(guidanceRequest) {
 
   return {
     id,
+    posixPath: guidanceRequest.posixPath,
     status,
     permalink: `/pending-guidance/${id}/`,
     editOnGithubUrl,
@@ -364,7 +367,7 @@ function getCuratedListFiles(faqDir) {
 // Parse a curated list
 function getProcessedCuratedList(curatedList) {
   const values = curatedList.data;
-  const id = path.basename(curatedList.path);
+  const id = path.posix.basename(curatedList.path);
 
   // Normalize FAQ references so they match FAQ Ids. Allows for a curated list to reference FAQ in or out of its category
   const normalizedFaqRefs = values.faqs.map(faqRef => {
@@ -380,6 +383,7 @@ function getProcessedCuratedList(curatedList) {
 
   return {
     id,
+    posixPath: curatedList.posixPath,
     title: values.title,
     icon: values.icon,
     faqs: normalizedFaqRefs,
