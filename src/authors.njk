@@ -6,23 +6,23 @@ permalink: /contributors/
 
 <article class="contributors-list section-card">
   <h1>Acknowledgements</h1>
-  <h2></h2>
-  <h1>FAQ</h1>
+  <h2>FAQ Authors</h2>
   <p>The following people have contributed to this document either directly or indirectly (e.g. by raising questions):</p>
-  {% for content in data.acknowledgementsContent.authorsNames %}
-    <li style="list-style-type: none;">
-      {{ content }}
+  <ul>
+  {% for name in data.acknowledgements.faqAuthors %}
+    <li>
+      {{ name }}
     </li>
   {% endfor %}
-  <h2></h2>
-  <h1>Website</h1>
+  </ul>
+  <h2>Website Contributors</h2>
   <p>Special thanks for all the people who had helped this project so far:</p>
-  {% for content in data.acknowledgementsContent.contribNames %}
-    <li style="list-style-type: none;">
-      {{ content }}
-    </li>
+  <ul>
+  {% for name in data.acknowledgements.websiteContributors %}
+    <li>{{ name }}</li>
   {% endfor %}
-  <h2></h2>
+  </ul>
+  <hr>
   <p>The CRA Hub is a community resource of the <a href = "https://orcwg.org">Open Regulatory Compliance (ORC) Working Group</a>. It is built by <a href="https://unlockopen.com">UnlockOpen</a> with direct funding from the <a href="https://eclipse.org">Eclipse Foundation.</a></p>
   <p>If you believe your name should be included or if you notice any errors, please
     <a href="https://github.com/orcwg/cra.orcwg.org/issues/new">open an issue on our GitHub repository</a>.

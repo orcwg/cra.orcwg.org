@@ -430,19 +430,17 @@ function fetchAcknowledgementsFile(path) {
 function processAcknowledgements(authorsPath,contribPath)
 {
   // Extract the different names list in the bodies into arrays
-  const authorsNames = extractNames(fetchAcknowledgementsFile(authorsPath));
-  const contribNames = extractNames(fetchAcknowledgementsFile(contribPath));
-
-  return {authorsNames, contribNames};
+  return {
+      faqAuthors: extractNames(fetchAcknowledgementsFile(authorsPath)),
+      websiteContributors:  extractNames(fetchAcknowledgementsFile(contribPath))
+  };
 }
 
-function extractNames(contribBody)
-{
-  // Add the g flag to take all the matches
-  nameMatches = contribBody.match(/^\*\s+(.+)$/gm);
+function extractNames(content) {
+  const names = content.match(/^\*\s+(.+)$/gm);
 
-  //Remove the * in the begining
-  return names = nameMatches.map(match => match.replace(/^\*\s+/, '').trim());
+  //Remove the * in the beginning
+  return names.map(name => name.replace(/^\*\s+/, '').trim());
 }
 
 // ============================================================================
@@ -511,14 +509,14 @@ function processAllContent() {
   // 8. Get and process AUTHORS.md AND CONTRIBUTORS.md
   const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
   const contribPath = path.join(ROOT_DIR, "CONTRIBUTORS.md");
-  const acknowledgementsContent = processAcknowledgements(authorsPath, contribPath);
+  const acknowledgements = processAcknowledgements(authorsPath, contribPath);
     
   return {
     faqs,
     guidance: guidanceRequests,
     faqItems: faqs,
     lists: lists,
-    acknowledgementsContent,
+    acknowledgements,
     internalLinks: internalLinkIndex
   };
 }
