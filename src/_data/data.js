@@ -236,7 +236,7 @@ function getFaqFiles(dir) {
 // Process a single FAQ
 function getProcessedFaq(faq) {
   // Extract category and filename
-  const category = path.posix.basename(faq.path);
+  const category = path.basename(faq.path).split(path.sep).join("/");
   const filename = faq.filename.replace('.md', '');
   const id = `${category}/${filename}`;
 
@@ -367,7 +367,7 @@ function getCuratedListFiles(faqDir) {
 // Parse a curated list
 function getProcessedCuratedList(curatedList) {
   const values = curatedList.data;
-  const id = path.basename(curatedList.path);
+  const id = path.basename(curatedList.path).split(path.sep).join("/");
 
   // Normalize FAQ references so they match FAQ Ids. Allows for a curated list to reference FAQ in or out of its category
   const normalizedFaqRefs = values.faqs.map(faqRef => {
