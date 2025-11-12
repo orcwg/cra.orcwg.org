@@ -96,6 +96,9 @@ function splitMarkdownAtFirstH1(content) {
   return [h1, body];
 }
 
+function toPosixPath(p) {
+  return p.split(path.sep).join("/");
+}
 
 // ============================================================================
 // Utility Functions - Timestamp Helpers
@@ -169,7 +172,7 @@ function parseMarkdownFiles(files) {
     return {
       filename: file.name,
       path: path.relative(CACHE_DIR, file.parentPath),
-      posixPath: path.relative(CACHE_DIR, fullPath).split(path.sep).join("/"),
+      posixPath: toPosixPath(path.relative(CACHE_DIR, fullPath)),
       data: parsed.data,
       content: parsed.content.trim()
     };
@@ -188,7 +191,7 @@ function parseYamlFiles(files) {
     return {
       filename: file.name,
       path: path.relative(CACHE_DIR, file.parentPath),
-      posixPath: path.relative(CACHE_DIR, fullPath).split(path.sep).join("/"),
+      posixPath: toPosixPath(path.relative(CACHE_DIR, fullPath)),
       data: parsedYaml
     }
   });
@@ -236,7 +239,7 @@ function getFaqFiles(dir) {
 // Process a single FAQ
 function getProcessedFaq(faq) {
   // Extract category and filename
-  const category = path.basename(faq.path).split(path.sep).join("/");
+  const category = toPosixPath(path.basename(faq.path));
   const filename = faq.filename.replace('.md', '');
   const id = `${category}/${filename}`;
 
@@ -367,7 +370,7 @@ function getCuratedListFiles(faqDir) {
 // Parse a curated list
 function getProcessedCuratedList(curatedList) {
   const values = curatedList.data;
-  const id = path.basename(curatedList.path).split(path.sep).join("/");
+  const id = toPosixPath(path.basename(curatedList.path));
 
   // Normalize FAQ references so they match FAQ Ids. Allows for a curated list to reference FAQ in or out of its category
   const normalizedFaqRefs = values.faqs.map(faqRef => {
