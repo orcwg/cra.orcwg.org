@@ -28,6 +28,17 @@ const RECENTLY_UPDATED_THRESHOLD = 14;  // Content is "recently updated" if modi
 
 const mdPlain = markdownIt().use(plainTextPlugin);
 
+
+// ============================================================================
+// Utility Functions - Path and URL
+// ============================================================================
+
+// Generate edit-on-GitHub URL for a file relative to CACHE_DIR
+function getEditOnGithubUrl(relativePath) {
+  return new URL(relativePath, EDIT_ON_GITHUB_ROOT).href;
+}
+
+
 // ============================================================================
 // Utility Functions - Text Processing
 // ============================================================================
@@ -169,13 +180,14 @@ function parseMarkdownFiles(files) {
     const fullPath = path.join(file.parentPath, file.name);
     const rawFile = fs.readFileSync(fullPath, "utf-8");
     const parsed = matter(rawFile);
-
+    const relativePath = path.relative(CACHE_DIR, fullPath);
     return {
       filename: file.name,
       path: path.relative(CACHE_DIR, file.parentPath),
       posixPath: toPosixPath(path.relative(CACHE_DIR, fullPath)),
       data: parsed.data,
-      content: parsed.content.trim()
+      content: parsed.content.trim(),
+      editOnGithubUrl: getEditOnGithubUrl(relativePath),
     };
   });
 
@@ -188,12 +200,14 @@ function parseYamlFiles(files) {
     const fullPath = path.join(file.parentPath, file.name);
     const rawFile = fs.readFileSync(fullPath, "utf-8");
     const parsedYaml = yaml.load(rawFile);
+    const relativePath = path.relative(CACHE_DIR, fullPath);
 
     return {
       filename: file.name,
       path: path.relative(CACHE_DIR, file.parentPath),
       posixPath: toPosixPath(path.relative(CACHE_DIR, fullPath)),
-      data: parsedYaml
+      data: parsedYaml,
+      editOnGithubUrl: getEditOnGithubUrl(relativePath),
     }
   });
 
@@ -247,8 +261,6 @@ function getProcessedFaq(faq) {
   // Normalize status
   const status = faq.data.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
   const needsRefactoring = (/>\s*\[!WARNING\]\s*\n>\s*.*needs\s+refactoring/).test(faq.content);
-  // Generate edit on github URL
-  const editOnGithubUrl = new URL(`${faq.path}/${faq.filename}`, EDIT_ON_GITHUB_ROOT).href;
 
   // Extract question and answer
   const [question, answer] = splitMarkdownAtFirstH1(faq.content);
@@ -266,8 +278,8 @@ function getProcessedFaq(faq) {
     posixPath: faq.posixPath,
     status,
     needsRefactoring,
+    editOnGithubUrl: faq.editOnGithubUrl,
     permalink: `/faq/${id}/`,
-    editOnGithubUrl,
     relatedIssues: parseRelatedIssues(faq.data["Related issue"] || faq.data["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
     pageTitle: markdownToPlainText(question),
     question,
@@ -315,9 +327,6 @@ function getProcessedGuidanceRequest(guidanceRequest) {
   // Normalize status
   const status = guidanceRequest.data.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
 
-  // Generate edit on github URL
-  const editOnGithubUrl = new URL(`${guidanceRequest.path}/${guidanceRequest.filename}`, EDIT_ON_GITHUB_ROOT).href;
-
   // Extract title and body
   const [title, body] = splitMarkdownAtFirstH1(guidanceRequest.content);
 
@@ -329,7 +338,7 @@ function getProcessedGuidanceRequest(guidanceRequest) {
     posixPath: guidanceRequest.posixPath,
     status,
     permalink: `/pending-guidance/${id}/`,
-    editOnGithubUrl,
+    editOnGithubUrl: guidanceRequest.editOnGithubUrl,
     relatedIssue: guidanceRequest.data["Related issue"],
     pageTitle: markdownToPlainText(title),
     title,
@@ -396,7 +405,8 @@ function getProcessedCuratedList(curatedList) {
     createdAt,
     lastUpdatedAt,
     isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+    editOnGithubUrl: curatedList.editOnGithubUrl,
   }
 }
 
@@ -424,7 +434,7 @@ function fetchAcknowledgementsFile(path) {
   const rawContent = fs.readFileSync(path, "utf-8");
   const parsed = matter(rawContent);
   const content = parsed.content.trim();
-  
+
 
   if (!content) {
     throw new Error(`File at ${path} is empty or has no content after frontmatter.`);
@@ -437,8 +447,8 @@ function fetchAcknowledgementsFile(path) {
 function processAcknowledgements(authorsPath, contribPath) {
   // Extract the different names list in the bodies into arrays
   return {
-      faqAuthors: extractNames(fetchAcknowledgementsFile(authorsPath)),
-      websiteContributors:  extractNames(fetchAcknowledgementsFile(contribPath))
+    faqAuthors: extractNames(fetchAcknowledgementsFile(authorsPath)),
+    websiteContributors: extractNames(fetchAcknowledgementsFile(contribPath))
   };
 }
 
@@ -516,7 +526,7 @@ function processAllContent() {
   const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
   const contribPath = path.join(ROOT_DIR, "CONTRIBUTORS.md");
   const acknowledgements = processAcknowledgements(authorsPath, contribPath);
-    
+
   return {
     faqs,
     guidance: guidanceRequests,
