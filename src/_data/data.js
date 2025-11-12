@@ -290,9 +290,7 @@ function getProcessedFaq(faq) {
     createdAt,
     lastUpdatedAt,
     isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-
-
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
   };
 }
 
