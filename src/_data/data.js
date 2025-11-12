@@ -365,24 +365,24 @@ function createProcessedGuidanceRequests(guidanceDir) {
 // ============================================================================
 
 // Get README.yml files from FAQ subdirectories
-function getCuratedListFiles(faqDir) {
+function getListFiles(faqDir) {
   const files = fs.readdirSync(faqDir, { withFileTypes: true, recursive: true });
 
-  const curatedListFiles = files.filter(entry => {
+  const listFiles = files.filter(entry => {
     return entry.isFile() &&                    // Only files
       entry.name === 'README.yml' &&            // Must be named README.yml
       entry.parentPath !== faqDir;              // Not at the root of FAQ directory
   });
 
-  return curatedListFiles;
+  return listFiles;
 }
 
-// Parse a curated list
-function getProcessedCuratedList(curatedList) {
-  const values = curatedList.data;
-  const id = toPosixPath(path.basename(curatedList.path));
+// Parse list
+function getProcessedList(list) {
+  const values = list.data;
+  const id = toPosixPath(path.basename(list.path));
 
-  // Normalize FAQ references so they match FAQ Ids. Allows for a curated list to reference FAQ in or out of its category
+  // Normalize FAQ references so they match FAQ Ids. Allows for a list to reference FAQ in or out of its category
   const normalizedFaqRefs = values.faqs.map(faqRef => {
     if (faqRef.includes('/')) {
       return faqRef;
@@ -392,11 +392,11 @@ function getProcessedCuratedList(curatedList) {
   });
 
   // Get git timestamps for this file
-  const { createdAt, lastUpdatedAt } = getTimestampsForObj(curatedList);
+  const { createdAt, lastUpdatedAt } = getTimestampsForObj(list);
 
   return {
     id,
-    posixPath: curatedList.posixPath,
+    posixPath: list.posixPath,
     title: values.title,
     icon: values.icon,
     faqs: normalizedFaqRefs,
@@ -406,15 +406,15 @@ function getProcessedCuratedList(curatedList) {
     lastUpdatedAt,
     isNew: isNew(createdAt),
     recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-    editOnGithubUrl: curatedList.editOnGithubUrl,
+    editOnGithubUrl: list.editOnGithubUrl,
   }
 }
 
 // Process list files and normalize FAQ references
 function createLists(faqDir) {
-  const rawListFiles = getCuratedListFiles(faqDir);
+  const rawListFiles = getListFiles(faqDir);
   const parsedLists = parseYamlFiles(rawListFiles);
-  const lists = parsedLists.map(getProcessedCuratedList);
+  const lists = parsedLists.map(getProcessedList);
 
   return lists;
 };
