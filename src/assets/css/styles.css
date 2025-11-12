@@ -862,12 +862,8 @@ pre code {
     content: '🛑 ';
 }
 
-.badge.refactor::before{
-    content: '🚧 ';
-}
-
-.badge.guidance-request::before{
-    content: '🇪🇺 ';
+.badge[data-emoji]::before {
+  content: attr(data-emoji) " ";
 }
 
 /* ===================================================================

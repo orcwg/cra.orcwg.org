@@ -9,6 +9,7 @@ const plainTextPlugin = require("markdown-it-plain-text");
 const yaml = require("js-yaml");
 const { resolveLinks } = require("./utils/link-resolver.js");
 const craReferences = require("./craReferences.json");
+const { execSync } = require("child_process");
 
 // ============================================================================
 // Constants
@@ -19,6 +20,10 @@ const FAQ_DIR = path.join(CACHE_DIR, "faq");
 const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
 
 const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
+
+// Timestamp constants (in days)
+const NEW_CONTENT_THRESHOLD = 30;  // Content is "new" if created within 30 days
+const RECENTLY_UPDATED_THRESHOLD = 14;  // Content is "recently updated" if modified within 14 days
 
 const mdPlain = markdownIt().use(plainTextPlugin);
 
@@ -91,6 +96,65 @@ function splitMarkdownAtFirstH1(content) {
   return [h1, body];
 }
 
+
+// ============================================================================
+// Utility Functions - Timestamp Helpers
+// ============================================================================
+
+// Check if content is new (created within threshold)
+function isNew(createdAt) {
+  const daysAgo = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+  return daysAgo <= NEW_CONTENT_THRESHOLD;
+}
+
+// Check if content was recently updated (modified within threshold, but not counting initial creation)
+function recentlyUpdated(createdAt, lastUpdatedAt) {
+  // If creation and update dates are the same, it hasn't been updated since creation
+  if (createdAt.getTime() === lastUpdatedAt.getTime()) return false;
+
+  const daysAgo = (Date.now() - lastUpdatedAt.getTime()) / (1000 * 60 * 60 * 24);
+  return daysAgo <= RECENTLY_UPDATED_THRESHOLD;
+}
+
+// ============================================================================
+// Utility Functions - Git Operations
+// ============================================================================
+
+const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
+  const timestampMap = new Map();
+
+  // Get all commits with their modified files
+  const logOutput = execSync('git log --format="%ad|%H" --date=iso --name-only', {
+    cwd: cacheDir,
+    encoding: 'utf8'
+  });
+
+  const lines = logOutput.trim().split('\n');
+  let currentDate = null;
+
+  // Process in reverse order to get creation dates (oldest first)
+  for (const line of lines.reverse()) {
+    if (line.includes('|')) {
+      // This is a date line
+      currentDate = new Date(line.split('|')[0]);
+    } else if (line && currentDate) {
+      // This is a file path
+      const existing = timestampMap.get(line);
+      if (!existing) {
+        // First time seeing this file (creation)
+        timestampMap.set(line, { createdAt: currentDate, lastUpdatedAt: currentDate });
+      } else {
+        // Update last modified date
+        existing.lastUpdatedAt = currentDate;
+      }
+    }
+  }
+
+  return function getTimestampsForObj(fileObj) {
+    const relativePath = path.join(fileObj.path, fileObj.filename).replace(cacheDir + path.sep, '');
+    return timestampMap.get(relativePath);
+  };
+})(CACHE_DIR);
 
 // ============================================================================
 // Utility Functions - File Operations
@@ -187,6 +251,9 @@ function getProcessedFaq(faq) {
   // Set guidance ID
   const guidanceId = faq.data["guidance-id"] ? faq.data["guidance-id"].trim() : false;
 
+  // Get git timestamps for this file
+  const { createdAt, lastUpdatedAt } = getTimestampsForObj(faq);
+
   return {
     id,
     category,
@@ -201,7 +268,11 @@ function getProcessedFaq(faq) {
     answer,
     answerMissing: (answer.length == 0),
     guidanceId,
-    relatedLists: []
+    relatedLists: [],
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
   };
 }
 
@@ -210,9 +281,7 @@ function getProcessedFaq(faq) {
 function createProcessedFaqs(faqDir) {
   const faqFiles = getFaqFiles(faqDir);
   const rawFaqs = parseMarkdownFiles(faqFiles);
-  const processedFaqs = rawFaqs.map(faq => {
-    return getProcessedFaq(faq);
-  });
+  const processedFaqs = rawFaqs.map(getProcessedFaq);
 
   return processedFaqs;
 };
@@ -246,6 +315,9 @@ function getProcessedGuidanceRequest(guidanceRequest) {
   // Extract title and body
   const [title, body] = splitMarkdownAtFirstH1(guidanceRequest.content);
 
+  // Get git timestamps for this file
+  const { createdAt, lastUpdatedAt } = getTimestampsForObj(guidanceRequest);
+
   return {
     id,
     status,
@@ -256,6 +328,10 @@ function getProcessedGuidanceRequest(guidanceRequest) {
     title,
     body,
     guidanceText: extractGuidanceText(body),
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
   };
 };
 
@@ -263,9 +339,7 @@ function getProcessedGuidanceRequest(guidanceRequest) {
 function createProcessedGuidanceRequests(guidanceDir) {
   const guidanceFiles = getGuidanceFiles(guidanceDir);
   const guidanceRequests = parseMarkdownFiles(guidanceFiles);
-  const processedGuidanceRequests = guidanceRequests.map(guidanceRequest => {
-    return getProcessedGuidanceRequest(guidanceRequest);
-  });
+  const processedGuidanceRequests = guidanceRequests.map(getProcessedGuidanceRequest);
 
   return processedGuidanceRequests;
 };
@@ -301,13 +375,20 @@ function getProcessedCuratedList(curatedList) {
     }
   });
 
+  // Get git timestamps for this file
+  const { createdAt, lastUpdatedAt } = getTimestampsForObj(curatedList);
+
   return {
     id,
     title: values.title,
     icon: values.icon,
     faqs: normalizedFaqRefs,
     permalink: `/faq/${id}/`,
-    description: values.description
+    description: values.description,
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
   }
 }
 

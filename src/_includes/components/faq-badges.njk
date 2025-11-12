@@ -18,15 +18,22 @@
 {% endif %}
 
 {% if faq.needsRefactoring %}
-<data class="badge danger refactor" value="refactor-needed">Needs Refactoring</data>
+<data class="badge warning" data-emoji="🚧" value="refactor-needed">Needs Refactoring</data>
 {% endif %}
 {% if faq.answerMissing %}
-<data class="badge danger" value="missing-answer">Missing Answer</data>
+<data class="badge danger" data-emoji="❌" value="missing-answer">Missing Answer</data>
 {% endif %}
 {% if faq.relatedGuidanceRequest %}
-<data class="badge info guidance-request" value="guidance-request">Related Guidance Request</data>
+<data class="badge info" data-emoji="🇪🇺" value="guidance-request">Related Guidance Request</data>
 {% endif %}
 {% if faq.guidanceFileNotFound %}
-<data class="badge danger" value="guidance-not-found">Guidance File Not Found</data>
+<data class="badge danger" data-emoji="❌" value="guidance-not-found">Guidance File Not Found</data>
+{% endif %}
+
+{% if faq.isNew %}
+<data class="badge important" data-emoji="🌟" value="new">New</data>
+{% endif %}
+{% if faq.recentlyUpdated %}
+<data class="badge important" data-emoji="🔄" value="recently-updated">Recently Updated</data>
 {% endif %}
 
