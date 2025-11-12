@@ -120,12 +120,12 @@ function recentlyUpdated(createdAt, lastUpdatedAt) {
 // Utility Functions - Git Operations
 // ============================================================================
 
-const getTimestampsForObj = (function initTimestampsFetcher() {
+const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
   const timestampMap = new Map();
 
   // Get all commits with their modified files
   const logOutput = execSync('git log --format="%ad|%H" --date=iso --name-only', {
-    cwd: CACHE_DIR,
+    cwd: cacheDir,
     encoding: 'utf8'
   });
 
@@ -151,10 +151,10 @@ const getTimestampsForObj = (function initTimestampsFetcher() {
   }
 
   return function getTimestampsForObj(fileObj) {
-    const relativePath = path.join(fileObj.path, fileObj.filename).replace(CACHE_DIR + path.sep, '');
+    const relativePath = path.join(fileObj.path, fileObj.filename).replace(cacheDir + path.sep, '');
     return timestampMap.get(relativePath);
   };
-})()
+})(CACHE_DIR);
 
 // ============================================================================
 // Utility Functions - File Operations
@@ -393,7 +393,7 @@ function getProcessedCuratedList(curatedList) {
 }
 
 // Process list files and normalize FAQ references
-function createLists(faqDir, getTimestampsForObj) {
+function createLists(faqDir) {
   const rawListFiles = getCuratedListFiles(faqDir);
   const parsedLists = parseYamlFiles(rawListFiles);
   const lists = parsedLists.map(getProcessedCuratedList);
