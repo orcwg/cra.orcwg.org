@@ -17,6 +17,7 @@ const { execSync } = require("child_process");
 const CACHE_DIR = path.join(__dirname, "..", "..", "_cache");
 
 const FAQ_DIR = path.join(CACHE_DIR, "faq");
+const ROOT_DIR = path.join(__dirname, "..", "..");
 const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
 
 const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
@@ -412,23 +413,40 @@ function createLists(faqDir) {
 // Authors Processing
 // ============================================================================
 
-// Read and return AUTHORS.md content
-function processAuthorsFile() {
-  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
 
-  if (!fs.existsSync(authorsPath)) {
-    throw new Error(`AUTHORS.md not found at ${authorsPath}. Ensure the cache is populated.`);
+// Read and return AUTHORS.md/CONTRIBUTORS.md content
+function fetchAcknowledgementsFile(path) {
+
+  if (!fs.existsSync(path)) {
+    throw new Error(`File not found at ${path}.`);
   }
 
-  const rawContent = fs.readFileSync(authorsPath, "utf-8");
+  const rawContent = fs.readFileSync(path, "utf-8");
   const parsed = matter(rawContent);
   const content = parsed.content.trim();
+  
 
   if (!content) {
-    throw new Error(`AUTHORS.md at ${authorsPath} is empty or has no content after frontmatter.`);
+    throw new Error(`File at ${path} is empty or has no content after frontmatter.`);
   }
 
   return content;
+}
+
+// Read, curate and compose the data for the merge of the two files
+function processAcknowledgements(authorsPath, contribPath) {
+  // Extract the different names list in the bodies into arrays
+  return {
+      faqAuthors: extractNames(fetchAcknowledgementsFile(authorsPath)),
+      websiteContributors:  extractNames(fetchAcknowledgementsFile(contribPath))
+  };
+}
+
+function extractNames(content) {
+  const names = content.match(/^\*\s+(.+)$/gm);
+
+  //Remove the * in the beginning
+  return names.map(name => name.replace(/^\*\s+/, '').trim());
 }
 
 // ============================================================================
@@ -494,14 +512,18 @@ function processAllContent() {
     guidance.body = resolveLinks(guidance.body, context, internalLinkIndex, craReferences);
   });
 
-  // 8. Get and process AUTHORS.md
-  const authorsContent = processAuthorsFile();
-
+  // 8. Get and process AUTHORS.md AND CONTRIBUTORS.md
+  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
+  const contribPath = path.join(ROOT_DIR, "CONTRIBUTORS.md");
+  const acknowledgements = processAcknowledgements(authorsPath, contribPath);
+    
   return {
     faqs,
     guidance: guidanceRequests,
-    lists,
-    authorsContent
+    faqItems: faqs,
+    lists: lists,
+    acknowledgements,
+    internalLinks: internalLinkIndex
   };
 }
 
