@@ -1,22 +1,20 @@
 ---
 layout: layout.njk
-title: Contributors
+title: Acknowledgements
 permalink: /contributors/
 ---
 
 <article class="contributors-list section-card">
-  <h1>Acknowledgements</h1>
+  <h1>{{ page.title }}</h1>
   <h2>FAQ Authors</h2>
-  <p>The following people have contributed to this document either directly or indirectly (e.g. by raising questions):</p>
+  <p>The following people have contributed to the CRA FAQ either directly or indirectly (e.g. by raising questions):</p>
   <ul>
   {% for name in data.acknowledgements.faqAuthors %}
-    <li>
-      {{ name }}
-    </li>
+    <li>{{ name }}</li>
   {% endfor %}
   </ul>
   <h2>Website Contributors</h2>
-  <p>Special thanks for all the people who had helped this project so far:</p>
+  <p>The following people have contributed to this website:</p>
   <ul>
   {% for name in data.acknowledgements.websiteContributors %}
     <li>{{ name }}</li>
