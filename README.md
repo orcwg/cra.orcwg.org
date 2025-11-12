@@ -72,7 +72,7 @@ The site uses a **hybrid approach** combining semantic HTML selectors with light
    - **File Operations**: Parsing markdown files with frontmatter
    - **FAQ Processing**: Extract questions, answers, and metadata from FAQ markdown files
    - **Guidance Request Processing**: Parse pending guidance request documents
-   - **Curated List Processing**: Load and normalize README.yml files from FAQ subdirectories
+   - **FAQ List Processing**: Load and normalize README.yml files from FAQ subdirectories
    - **Authors Processing**: Load AUTHORS.md content
    - **Cross-referencing**: Cross-reference FAQs with guidance requests and lists
    - **Permalink Generation**: URLs computed once in data layer, not reconstructed in templates
@@ -95,17 +95,17 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
 2. **Content Processors**
    - **FAQs**: Extract questions from `#` headings, answers from subsequent content, status badges, and GitHub edit links
    - **Guidance Requests**: Parse pending guidance documents, extract titles and "Guidance Needed" sections
-   - **Curated Lists**: Load README.yml files from FAQ subdirectories, normalize FAQ references
+   - **FAQ Lists**: Load README.yml files from FAQ subdirectories, normalize FAQ references
    - **Authors**: Load AUTHORS.md content from the FAQ repository
 
 3. **Relationship Building**
    - Link FAQs to their related guidance requests via `guidance-id` frontmatter field
-   - Bidirectionally connect curated lists with their referenced FAQs
+   - Bidirectionally connect lists with their referenced FAQs
    - Each FAQ knows which lists include it; each list knows its FAQs
 
-### Curated Lists
+### FAQ Lists
 
-- README.yml files in FAQ subdirectories define curated FAQ collections
+- README.yml files in FAQ subdirectories define FAQ collections
 - Each README.yml file creates a new list page at `/lists/{category}/`
 - Lists reference FAQs by filename (short form) or category/filename (long form)
 - FAQ references are automatically normalized to category/filename format
@@ -126,7 +126,7 @@ The site uses two reusable FAQ components with minimal markup:
   - Exclusive accordion behavior via `name="faq-accordion"` attribute
   - Smooth open/close animations using CSS grid template rows
   - No JavaScript required for accordion functionality
-  - Used in curated lists for inline FAQ browsing
+  - Used in lists for inline FAQ browsing
 
 ### Component Structure
 

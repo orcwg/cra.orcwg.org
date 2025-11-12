@@ -5,7 +5,7 @@
  * This module handles:
  * - [[Article 17]] → CRA legislation links
  * - [[category/filename]] → Internal FAQ links
- * - [[category]] → Curated list links
+ * - [[category]] → List links
  * - ../relative/path.md → Relative markdown links
  */
 
