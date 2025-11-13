@@ -73,7 +73,7 @@ The site uses a **hybrid approach** combining semantic HTML selectors with light
    - **FAQ Processing**: Extract questions, answers, and metadata from FAQ markdown files
    - **Guidance Request Processing**: Parse pending guidance request documents
    - **FAQ List Processing**: Load and normalize README.yml files from FAQ subdirectories
-   - **Authors Processing**: Load AUTHORS.md content
+   - **Authors Processing**: Load and merge AUTHORS.md from FAQ repository and CONTRIBUTORS.md from website repository
    - **Cross-referencing**: Cross-reference FAQs with guidance requests and lists
    - **Permalink Generation**: URLs computed once in data layer, not reconstructed in templates
 4. **Template Rendering** - Nunjucks templates consume processed data using semantic HTML components
@@ -96,7 +96,7 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
    - **FAQs**: Extract questions from `#` headings, answers from subsequent content, status badges, and GitHub edit links
    - **Guidance Requests**: Parse pending guidance documents, extract titles and "Guidance Needed" sections
    - **FAQ Lists**: Load README.yml files from FAQ subdirectories, normalize FAQ references
-   - **Authors**: Load AUTHORS.md content from the FAQ repository
+   - **Authors**: Load and process AUTHORS.md from FAQ repository and CONTRIBUTORS.md from website repository, extract name lists for acknowledgements
 
 3. **Relationship Building**
    - Link FAQs to their related guidance requests via `guidance-id` frontmatter field
