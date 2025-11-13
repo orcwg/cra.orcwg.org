@@ -1,0 +1,14 @@
+{#
+  FAQ Link Component - Single FAQ link item with badges
+
+  Parameters (set via faq variable):
+  - question: The FAQ question text
+  - permalink: Link URL
+  - status: FAQ status for badge display
+#}
+<li>
+  <a href="{{ faq.permalink }}">
+    <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+    <span class="badges" hidden>{% include "components/faq-badges.njk" %}</span>
+  </a>
+</li>
