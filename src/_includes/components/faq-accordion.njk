@@ -3,7 +3,7 @@
 
   Parameters (set via componentData variable):
   - title: Section title to display
-  - faqs: Array of FAQ item objects
+  - items: Array of mixed items (FAQs and sublists)
   - description: Optional description text
   - icon: Optional icon to display before title
 #}
@@ -16,20 +16,30 @@
     <p>{{ componentData.description }}</p>
   {% endif %}
 
-  {% for faq in componentData.faqs %}
-    <details class="faq-accordion-item" name="faq-accordion">
-      <summary>
-        <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
-      </summary>
+  {% for item in componentData.items %}
+    {% if item.type == 'list' %}
+      {# Nested list item - render as card #}
+      <div class="list-card-wrapper">
+        {% set listData = item.data %}
+        {% include "components/list-card.njk" %}
+      </div>
+    {% else %}
+      {# FAQ item #}
+      {% set faq = item.data %}
+      <details class="faq-accordion-item" name="faq-accordion">
+        <summary>
+          <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+        </summary>
 
-      <article>
-        <div>
-          {{ faq.answer | markdown | safe }}
+        <article>
+          <div>
+            {{ faq.answer | markdown | safe }}
 
-          {% include "components/faq-warning.njk" %}
-          {% set item = faq %}
-          {% include "components/actions.njk" %}
-        </div>
-      </article>
-    </details>
+            {% include "components/faq-warning.njk" %}
+            {% set item = faq %}
+            {% include "components/actions.njk" %}
+          </div>
+        </article>
+      </details>
+    {% endif %}
   {% endfor %}

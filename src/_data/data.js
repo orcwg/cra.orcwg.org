@@ -253,8 +253,12 @@ function getFaqFiles(dir) {
 
 // Process a single FAQ
 function getProcessedFaq(faq) {
-  // Extract category and filename
-  const category = toPosixPath(path.basename(faq.path));
+  // Extract category and filename from path
+  // faq.path is the parent directory relative to CACHE_DIR (e.g., "faq/cra-itself")
+  // faq.filename includes the extension (e.g., "scope.md")
+  // Remove "faq/" prefix and normalize to POSIX paths for cross-platform compatibility
+  const pathWithoutFaqPrefix = faq.path.replace(/^faq[\\/]/, '');
+  const category = toPosixPath(pathWithoutFaqPrefix);
   const filename = faq.filename.replace('.md', '');
   const id = `${category}/${filename}`;
 
@@ -363,34 +367,33 @@ function createProcessedGuidanceRequests(guidanceDir) {
 };
 
 // ============================================================================
-// Curated List Processing
+// List Processing
 // ============================================================================
 
-// Get README.yml files from FAQ subdirectories
+// Get README.yml files from all FAQ directories (including root)
 function getListFiles(faqDir) {
   const files = fs.readdirSync(faqDir, { withFileTypes: true, recursive: true });
 
   const listFiles = files.filter(entry => {
     return entry.isFile() &&                    // Only files
-      entry.name === 'README.yml' &&            // Must be named README.yml
-      entry.parentPath !== faqDir;              // Not at the root of FAQ directory
+      entry.name === 'README.yml';              // Must be named README.yml
   });
 
   return listFiles;
 }
 
-// Parse list
+// Parse a list
 function getProcessedList(list) {
   const values = list.data;
-  const id = toPosixPath(path.basename(list.path));
 
-  // Normalize FAQ references so they match FAQ Ids. Allows for a list to reference FAQ in or out of its category
-  const normalizedFaqRefs = values.faqs.map(faqRef => {
-    if (faqRef.includes('/')) {
-      return faqRef;
-    } else {
-      return `${id}/${faqRef}`;
-    }
+  // Calculate list ID from directory path
+  const pathWithoutFaqPrefix = list.path.replace(/^faq[\\/]?/, '');
+  const id = pathWithoutFaqPrefix ? toPosixPath(pathWithoutFaqPrefix) : 'faqRoot';
+
+  // Normalize short-form item references (FAQs/sublists) to full paths
+  const normalizedItemRefs = (values.faqs || []).map(itemRef => {
+    if (itemRef.includes('/')) return itemRef; // Already fully qualified
+    return id === 'faqRoot' ? itemRef : `${id}/${itemRef}`; // Root list refs are category names, others need prefix
   });
 
   // Get git timestamps for this file
@@ -402,14 +405,18 @@ function getProcessedList(list) {
     posixPath: list.posixPath,
     title: values.title,
     icon: values.icon,
-    faqs: normalizedFaqRefs,
-    permalink: `/faq/${id}/`,
+    itemRefs: normalizedItemRefs, // References to FAQs and sublists (will be resolved later)
+    permalink: id === 'faqRoot' ? '/faq/' : `/faq/${id}/`,
     description: values.description,
+    isRoot: id === 'faqRoot',  // Mark root list
+    parentLists: [], // Lists that include this list (filled during cross-referencing)
     createdAt,
     lastUpdatedAt,
     isNew: isNew(createdAt),
     recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
     editOnGithubUrl: list.editOnGithubUrl,
+    faqCount: 0,
+    listCount: 0
   }
 }
 
@@ -417,9 +424,7 @@ function getProcessedList(list) {
 function createLists(faqDir) {
   const rawListFiles = getListFiles(faqDir);
   const parsedLists = parseYamlFiles(rawListFiles);
-  const lists = parsedLists.map(getProcessedList);
-
-  return lists;
+  return parsedLists.map(getProcessedList);
 };
 
 // ============================================================================
@@ -478,14 +483,36 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
   });
 };
 
-// Link lists with their FAQs (bidirectional)
+// Link lists with their FAQs and sublists (bidirectional)
 function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
-    list.faqs = list.faqs.map(faqId => {
-      const faqObject = faqs.find(faq => faq.id === faqId);
-      faqObject.relatedLists.push(list);
-      return faqObject;
-    });
+    list.items = list.itemRefs.map(itemRef => {
+      // First check if it's a list reference
+      const sublist = lists.find(l => l.id === itemRef);
+      if (sublist) {
+        sublist.parentLists.push(list); // Track parent list
+        return {
+          type: 'list',
+          data: sublist
+        };
+      }
+
+      // Otherwise treat as FAQ reference
+      const faqObject = faqs.find(faq => faq.id === itemRef);
+      if (faqObject) {
+        faqObject.relatedLists.push(list); // Track parent list
+        return {
+          type: 'faq',
+          data: faqObject
+        };
+      }
+
+      return null;
+    }).filter(item => item !== null);
+
+    // Calculate counts for display
+    list.faqCount = list.items.filter(item => item.type === 'faq').length;
+    list.listCount = list.items.filter(item => item.type === 'list').length;
   });
 }
 
@@ -530,11 +557,14 @@ function processAllContent() {
   const contribPath = path.join(ROOT_DIR, "CONTRIBUTORS.md");
   const acknowledgements = processAcknowledgements(authorsPath, contribPath);
 
+  // 9. Extract root list for easy access
+  const rootList = lists.find(list => list.isRoot);
+
   return {
     faqs,
     guidance: guidanceRequests,
-    faqItems: faqs,
-    lists: lists,
+    lists,
+    rootList,
     acknowledgements,
     internalLinks: internalLinkIndex
   };

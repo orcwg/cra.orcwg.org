@@ -187,8 +187,9 @@ main {
     content: '→';
     position: absolute;
     top: 50%;
-    right: 25px;
+    right: 20px;
     transform: translateY(-50%) translateX(-10px);
+    font-size: 1.5em;
     font-weight: bold;
     color: var(--primary-color);
     opacity: 0;
@@ -200,15 +201,33 @@ main {
     transform: translateY(-50%) translateX(0);
 }
 
-.card h2 {
+a.card > h2 {
     margin: 0 0 10px 0;
     color: var(--primary-dark);
+    padding-bottom: 0;
+    border-bottom: none;
+    border-image: none;
 }
 
 .card p {
     margin: 0;
     color: var(--text-light);
     font-size: 0.9em;
+}
+
+.card .card-meta {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 0.75em;
+    color: var(--primary-color);
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.card:hover .card-meta {
+    opacity: 1;
 }
 
 /* Half-width card arrow positioning */
@@ -255,7 +274,7 @@ main {
     line-height: 1.3;
 }
 
-.section-card>h2 {
+.section-card h2 {
     font-size: 1.4em;
     margin: 0 0 15px 0;
     padding-bottom: 8px;
@@ -284,10 +303,16 @@ main {
 
 .link-list li {
     margin-bottom: 8px;
+}
+
+/* Only apply flex to list items that contain links */
+.link-list li:has(> a) {
     display: flex;
     align-items: center;
     gap: 8px;
 }
+
+
 
 .link-list li a {
     display: flex;
@@ -353,22 +378,72 @@ main {
 }
 
 /* Details/Summary (Accordions) */
+/* List card wrapper - for nested list cards within accordions */
+.list-card-wrapper {
+    margin: 12px 0;
+}
+
+.list-card-wrapper .card {
+    margin: 0;
+}
+
+/* Nested lists - styled based on DOM structure */
+
+/* First-level category headers - inherit from .section-card h2 */
+.section-card > .link-list > li:has(> h2) {
+    list-style: none;
+    margin: 30px 0;
+}
+
+/* Second-level nested sublists (lists within categories) */
+/* Target: .section-card > .link-list (rootList) > li > .link-list (category items) > li (sublist container) */
+.section-card > .link-list > li > .link-list > li:has(> h2) {
+    list-style: none;
+    margin: 20px 0;
+    padding: 20px;
+    background: color-mix(in srgb, var(--primary-color) 5%, white);
+    border-left: 4px solid var(--primary-color);
+    border-radius: 6px;
+}
+
+.section-card > .link-list > li > .link-list > li > h2 {
+    font-size: 1.15em;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin: 0 0 8px 0;
+}
+
+.section-card > .link-list > li > .link-list > li > h2 + p {
+    margin: 0 0 15px 0;
+    color: var(--text-light);
+    font-size: 0.9em;
+}
+
+.section-card > .link-list > li > .link-list > li > .link-list {
+    margin-top: 0;
+}
+
+.section-card > .link-list > li > .link-list > li > .link-list li {
+    background: white;
+}
+
 .faq-accordion-item {
     background: white;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
 }
 
 .faq-accordion-item:hover {
     border-color: var(--primary-color);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .faq-accordion-item[open] {
     border-color: var(--primary-color);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .faq-accordion-item summary {

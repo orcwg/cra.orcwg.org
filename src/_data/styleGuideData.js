@@ -2,20 +2,13 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = {
-  // Sample FAQs for the simple list component
-  sampleListFaqs: [
-    { question: "What is the Cyber Resilience Act (CRA)?", permalink: "#" },
-    { question: "Who needs to comply with the CRA?", permalink: "#" },
-    { question: "When does the CRA take effect?", permalink: "#" },
-    { question: "What are the main requirements?", permalink: "#" }
-  ],
-
-  // Sample FAQs for the accordion component
-  sampleAccordionFaqs: [
+  // Sample items for accordion (includes FAQs and nested list)
+  sampleAccordionItems: [
     {
       type: "faq",
-      question: "How do I implement security updates?",
-      answer: `Security updates should be implemented promptly following your organization's change management process. Always test in a staging environment first.
+      data: {
+        question: "How do I implement security updates?",
+        answer: `Security updates should be implemented promptly following your organization's change management process. Always test in a staging environment first.
 
 > [!WARNING]
 > Never deploy updates directly to production without testing.
@@ -24,15 +17,29 @@ Key steps:
 1. Review the security advisory
 2. Test in staging
 3. Deploy during maintenance window`,
-      permalink: "#faq-1",
-      filename: "security-updates.md",
-      status: "approved",
-      editOnGithubUrl: "#"
+        permalink: "#faq-1",
+        filename: "security-updates.md",
+        status: "approved",
+        editOnGithubUrl: "#"
+      }
+    },
+    {
+      type: "list",
+      data: {
+        id: "advanced-topics",
+        title: "Advanced Security Topics",
+        icon: "🔐",
+        description: "Deep dive into advanced security practices",
+        permalink: "#advanced",
+        faqCount: 2,
+        listCount: 0
+      }
     },
     {
       type: "faq",
-      question: "What documentation is required for compliance?",
-      answer: `You need to maintain comprehensive documentation including:
+      data: {
+        question: "What documentation is required for compliance?",
+        answer: `You need to maintain comprehensive documentation including:
 
 - Risk assessments
 - Security measures implemented
@@ -41,26 +48,102 @@ Key steps:
 
 > [!TIP]
 > Keep all documentation version-controlled and easily accessible for audits.`,
-      permalink: "#faq-2",
-      filename: "documentation.md",
-      status: "approved",
-      editOnGithubUrl: "#"
-    },
-    {
-      type: "faq",
-      question: "How should I handle vulnerability disclosure?",
-      answer: `Establish a clear vulnerability disclosure policy that includes:
-
-> [!IMPORTANT]
-> Your disclosure timeline should align with the severity of the vulnerability.
-
-Create a security.txt file and publish contact information for security researchers.`,
-      permalink: "#faq-3",
-      filename: "vulnerability-disclosure.md",
-      status: "draft",
-      editOnGithubUrl: "#"
+        permalink: "#faq-2",
+        filename: "documentation.md",
+        status: "approved",
+        editOnGithubUrl: "#"
+      }
     }
   ],
+
+  // Sample data for recursive list component
+  sampleRecursiveList: {
+    title: "Getting Started with CRA",
+    icon: "🚀",
+    description: "Essential questions about CRA compliance organized by topic",
+    items: [
+      {
+        type: "faq",
+        data: {
+          question: "What is the Cyber Resilience Act?",
+          permalink: "#what-is-cra",
+          status: "approved",
+          editOnGithubUrl: "#"
+        }
+      },
+      {
+        type: "list",
+        data: {
+          title: "For Developers",
+          icon: "💻",
+          description: "Questions specific to software developers",
+          permalink: "#for-developers",
+          faqCount: 2,
+          listCount: 1,
+          items: [
+            {
+              type: "faq",
+              data: {
+                question: "Do I need to comply if I maintain open source?",
+                permalink: "#oss-compliance",
+                status: "approved",
+                editOnGithubUrl: "#"
+              }
+            },
+            {
+              type: "list",
+              data: {
+                title: "Security Best Practices",
+                icon: "🔒",
+                description: "Detailed security guidelines and requirements",
+                permalink: "#security-best-practices",
+                faqCount: 2,
+                listCount: 0,
+                items: [
+                  {
+                    type: "faq",
+                    data: {
+                      question: "What security measures are required?",
+                      permalink: "#security-measures",
+                      status: "draft",
+                      editOnGithubUrl: "#"
+                    }
+                  },
+                  {
+                    type: "faq",
+                    data: {
+                      question: "How do I implement vulnerability disclosure?",
+                      permalink: "#vulnerability-disclosure",
+                      status: "approved",
+                      editOnGithubUrl: "#"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              type: "faq",
+              data: {
+                question: "What about testing requirements?",
+                permalink: "#testing",
+                status: "approved",
+                editOnGithubUrl: "#"
+              }
+            }
+          ]
+        }
+      },
+      {
+        type: "faq",
+        data: {
+          question: "When does the CRA take effect?",
+          permalink: "#timeline",
+          status: "approved",
+          editOnGithubUrl: "#"
+        }
+      }
+    ]
+  },
 
   // Sample FAQs with different statuses for badge demonstration
   sampleBadgeFaqs: [
