@@ -252,10 +252,9 @@ When changes are pushed to the `main` branch of this repository (template update
 For manual deployments or testing, the build process:
 
 1. Runs `update-cache.sh` to clone/update `cra-hub` into `_cache/`
-2. Extracts repository contributors from git history
-3. Processes FAQ data from cloned repository via `src/_data/data.js`
-4. Generates static HTML pages using Eleventy
-5. Outputs complete site to `_site/` directory
+2. Processes FAQ data from cloned repository via `src/_data/data.js`
+3. Generates static HTML pages using Eleventy
+4. Outputs complete site to `_site/` directory
 
 ### Local Development
 
@@ -272,11 +271,7 @@ npm run build
 npm run update-cache
 ```
 
-The `update-cache.sh` script:
-
-1. Clones or pulls the latest `cra-hub` content into `_cache/`
-2. Extracts unique contributors from git commit history
-3. Saves contributor data to `src/_data/repoContributors.json`
+The `update-cache.sh` script clones or pulls the latest `cra-hub` content into `_cache/`
 
 ## License
 
