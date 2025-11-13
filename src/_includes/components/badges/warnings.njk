@@ -1,0 +1,15 @@
+{% if faq.needsRefactoring %}
+  <data class="badge warning" data-emoji="🚧" value="refactor-needed">Needs Refactoring</data>
+{% endif %}
+
+{% if faq.answerMissing %}
+  <data class="badge danger" data-emoji="❌" value="missing-answer">Missing Answer</data>
+{% endif %}
+
+{% if faq.relatedGuidanceRequest %}
+  <data class="badge info" data-emoji="🇪🇺" value="guidance-request">Related Guidance Request</data>
+{% endif %}
+
+{% if faq.guidanceFileNotFound %}
+  <data class="badge danger" data-emoji="❌" value="guidance-not-found">Guidance File Not Found</data>
+{% endif %}

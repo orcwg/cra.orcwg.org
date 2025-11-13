@@ -1,39 +1,4 @@
-{#
-  FAQ Status and Danger Badges Component -  Minimal Markup
-
-  Expects 'faq' variable from parent scope with:
-  - faq.status: FAQ status (pending-guidance, draft, approved)
-  - faq.answerMissing: Boolean indicating if FAQ has no answer text
-  - faq.needsRefactoring: Boolean indicating if a FAQ should be refactored
-  - faq.guidanceFileNotFound: Boolean flag when guidance-id references non-existent file
-#}
-{% if faq.status == 'pending-guidance' %}
-<data class="badge danger" value="pending-guidance">Pending Guidance</data>
-{% elif faq.status == 'draft' %}
-<data class="badge warning" value="draft">Draft</data>
-{% elif faq.status == "approved" %}
-<data class="badge success" value="approved">Approved</data>
-{% else %}
-<data class="badge danger" value="unknown">Status not set</data>
-{% endif %}
-
-{% if faq.needsRefactoring %}
-<data class="badge warning" data-emoji="🚧" value="refactor-needed">Needs Refactoring</data>
-{% endif %}
-{% if faq.answerMissing %}
-<data class="badge danger" data-emoji="❌" value="missing-answer">Missing Answer</data>
-{% endif %}
-{% if faq.relatedGuidanceRequest %}
-<data class="badge info" data-emoji="🇪🇺" value="guidance-request">Related Guidance Request</data>
-{% endif %}
-{% if faq.guidanceFileNotFound %}
-<data class="badge danger" data-emoji="❌" value="guidance-not-found">Guidance File Not Found</data>
-{% endif %}
-
-{% if faq.isNew %}
-<data class="badge important" data-emoji="🌟" value="new">New</data>
-{% endif %}
-{% if faq.recentlyUpdated %}
-<data class="badge important" data-emoji="🔄" value="recently-updated">Recently Updated</data>
-{% endif %}
+{% include "components/badges/status.njk" %}
+{% include "components/badges/warnings.njk" %}
+{% include "components/badges/freshness.njk" %}
 

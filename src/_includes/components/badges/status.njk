@@ -1,0 +1,9 @@
+{% if faq.status == 'pending-guidance' %}
+  <data class="badge danger" value="pending-guidance">Pending Guidance</data>
+{% elif faq.status == 'draft' %}
+  <data class="badge warning" value="draft">Draft</data>
+{% elif faq.status == "approved" %}
+  <data class="badge success" value="approved">Approved</data>
+{% else %}
+  <data class="badge danger" value="unknown">Status not set</data>
+{% endif %}
