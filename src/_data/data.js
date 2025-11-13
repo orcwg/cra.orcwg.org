@@ -272,6 +272,7 @@ function getProcessedFaq(faq) {
   const { createdAt, lastUpdatedAt } = getTimestampsForObj(faq);
 
   return {
+    type: "faq",
     id,
     category,
     filename,
@@ -334,6 +335,7 @@ function getProcessedGuidanceRequest(guidanceRequest) {
   const { createdAt, lastUpdatedAt } = getTimestampsForObj(guidanceRequest);
 
   return {
+    type: "guidance-request",
     id,
     posixPath: guidanceRequest.posixPath,
     status,
@@ -395,6 +397,7 @@ function getProcessedList(list) {
   const { createdAt, lastUpdatedAt } = getTimestampsForObj(list);
 
   return {
+    type: "list",
     id,
     posixPath: list.posixPath,
     title: values.title,

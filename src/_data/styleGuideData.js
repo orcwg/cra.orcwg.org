@@ -13,6 +13,7 @@ module.exports = {
   // Sample FAQs for the accordion component
   sampleAccordionFaqs: [
     {
+      type: "faq",
       question: "How do I implement security updates?",
       answer: `Security updates should be implemented promptly following your organization's change management process. Always test in a staging environment first.
 
@@ -29,6 +30,7 @@ Key steps:
       editOnGithubUrl: "#"
     },
     {
+      type: "faq",
       question: "What documentation is required for compliance?",
       answer: `You need to maintain comprehensive documentation including:
 
@@ -45,6 +47,7 @@ Key steps:
       editOnGithubUrl: "#"
     },
     {
+      type: "faq",
       question: "How should I handle vulnerability disclosure?",
       answer: `Establish a clear vulnerability disclosure policy that includes:
 
