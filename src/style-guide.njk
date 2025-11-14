@@ -16,31 +16,39 @@ eleventyExcludeFromCollections: true
   {{ styleGuideData.markdownContent | markdown | safe }}
 </article>
 
-<h2>FAQ List Component (Simple Links)</h2>
-<p>Component: <code>components/faq-list-simple.njk</code> | Data: <code>styleGuideData.sampleListFaqs</code></p>
-<article class="section-card">
+<h2>FAQ List with Nesting (from All FAQs page)</h2>
+<p>The "All FAQs" page (<code>faq-all.njk</code>) renders nested list structures using the recursive component</p>
+<p>Component: <code>components/faq-list-recursive.njk</code> - Recursively renders FAQs with nested sublists</p>
+<p>Data: <code>styleGuideData.sampleRecursiveList</code> - Shows FAQs with nested subcategory</p>
 
-{% set componentData = {
-  title: "Getting Started Questions",
-  description: "Basic questions about the Cyber Resilience Act",
-  icon: "🚀",
-  faqs: styleGuideData.sampleListFaqs
-} %}
-{% include "components/faq-list-simple.njk" %}
-</article>
+<section class="section-card">
+  {% set listData = styleGuideData.sampleRecursiveList %}
+  {% include "components/faq-list-recursive.njk" %}
+</section>
 
 <h2>FAQ Accordion Component</h2>
-<p>Component: <code>components/faq-accordion.njk</code> | Data: <code>styleGuideData.sampleAccordionFaqs</code></p>
+<p>Component: <code>components/faq-accordion.njk</code> - Used on individual list pages with support for nested list cards</p>
+<p>Data: <code>styleGuideData.sampleRecursiveList</code> - Same data as above, rendered as accordion</p>
 
 <article class="section-card">
-  {% set componentData = {
-    title: "Technical Questions",
-    description: "Detailed technical questions with expandable answers",
-    icon: "🔧",
-    faqs: styleGuideData.sampleAccordionFaqs
-  } %}
+  {% set componentData = styleGuideData.sampleRecursiveList %}
   {% include "components/faq-accordion.njk" %}
 </article>
+
+<h2>List Card Component</h2>
+<p>Component: <code>components/list-card.njk</code> - Displays nested lists as clickable cards with FAQ/category counts</p>
+
+<div class="list-card-wrapper">
+  {% set listData = {
+    title: "Advanced Topics",
+    icon: "🎓",
+    description: "Deep dive into advanced CRA compliance topics",
+    permalink: "#advanced",
+    faqCount: 7,
+    listCount: 2
+  } %}
+  {% include "components/list-card.njk" %}
+</div>
 
 <h2>Status Badges</h2>
 <p>Component: <code>components/faq-badges.njk</code> | Data: <code>styleGuideData.sampleBadgeFaqs</code></p>

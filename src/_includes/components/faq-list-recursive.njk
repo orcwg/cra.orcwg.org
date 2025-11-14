@@ -1,0 +1,34 @@
+{#
+  Recursive FAQ List Component - Renders nested list structures
+
+  Parameters:
+  - listData: List object with title, icon, description, items
+  - hideHeader: (optional) If true, don't render the h2 title
+
+  Uses consistent markup at all depths - CSS handles visual differences.
+#}
+{% if not hideHeader %}
+  <h2>
+    {% if listData.icon %}{{ listData.icon }} {% endif %}{{ listData.title }}
+  </h2>
+  {% if listData.description %}
+    <p>{{ listData.description }}</p>
+  {% endif %}
+{% endif %}
+
+<ul class="link-list">
+  {% for item in listData.items %}
+    {% if item.type == 'list' %}
+      {# Nested list - recursively render #}
+      <li>
+        {% set listData = item.data %}
+        {% set hideHeader = false %}
+        {% include "components/faq-list-recursive.njk" %}
+      </li>
+    {% else %}
+      {# FAQ item #}
+      {% set faq = item.data %}
+      {% include "components/faq-link.njk" %}
+    {% endif %}
+  {% endfor %}
+</ul>
