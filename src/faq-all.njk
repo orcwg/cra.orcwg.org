@@ -23,4 +23,13 @@ permalink: "/faq/all/"
       {% endif %}
     {% endfor %}
   {% endfor %}
+  {% if data.unlistedFaqs.length > 0 %}
+    {% set componentData = {
+      title: "Unlisted FAQs",
+      descritption: "Files not included in any category list",
+      faqs: data.unlistedFaqs,
+      icon: "📋"
+    } %}
+    {% include "components/faq-list-simple.njk" %}
+  {% endif %}
 </section>
