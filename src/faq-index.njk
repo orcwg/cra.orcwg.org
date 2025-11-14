@@ -19,4 +19,10 @@ permalink: "/faq/"
       {% endif %}
     {% endfor %}
   {% endfor %}
+  {% if data.unlistedFaqs.length > 0 %}
+    <a href="/faq/unlisted/" class="card">
+      <h2>📋 Unlisted FAQs</h2>
+      <p>{{data.unlistedFaqs.length}} FAQ{{ 's' if data.unlistedFaqs.length != 1}} not in any list.</p>
+    </a>
+  {% endif %}
 </nav>
