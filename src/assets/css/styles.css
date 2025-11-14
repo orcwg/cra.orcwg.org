@@ -770,6 +770,69 @@ pre code {
 }
 
 /* ===================================================================
+   Tables Styling - For Markdown-Generated Content
+   =================================================================== */
+
+/* Base table styling (Outer Borders) */
+table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse:separate;
+    border-spacing: 0;
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    overflow:hidden;
+    word-wrap: break-word;
+    table-layout: auto;
+    overflow-x: auto;
+}
+
+thead th,tbody td {
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    padding: 12px 16px;
+    vertical-align: top;
+    background: var(--background-light);
+    text-align: left;
+    font-weight: 600;
+}
+thead th:last-child,tbody td:last-child {
+    border-right: none;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+thead th:first-child, tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--background-light);
+}
+
+
+tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--background-light) 15%, white);
+}
+
+tbody tr:hover td{
+    background: color-mix(in srgb, var(--background-light) 50%, white);
+}
+
+@media (max-width: 750px) {
+    table {
+        font-size: 0.9em;
+    }
+
+    thead th, tbody td {
+        padding: 8px 12px;
+    }
+}
+
+/* ===================================================================
    UTILITY CLASSES
    =================================================================== */
 
