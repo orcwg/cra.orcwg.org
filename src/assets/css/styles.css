@@ -786,7 +786,6 @@ table {
     overflow:hidden;
     word-wrap: break-word;
     table-layout: auto;
-    display: block;
     overflow-x: auto;
 }
 
