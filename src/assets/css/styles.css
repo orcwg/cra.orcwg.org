@@ -776,10 +776,11 @@ pre code {
 table {
     width: 100%;
     margin: 20px 0;
-    border-collapse: collapse;
-    background: white;
+    border-collapse: separate;
+    border-spacing: 0;
     border-radius: 8px;
     overflow: hidden;
+    border: 1px solid var(--border-color);
     box-shadow: var(--card-shadow);
     font-size: 0.9em;
 }
