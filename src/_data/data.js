@@ -511,6 +511,9 @@ function processAllContent() {
   // 5. Connect lists with FAQs
   crossReferenceListsAndFaqs(lists, faqs);
 
+  //5.5 Create list of Unlisted FAQs
+  const unlistedFaqs = faqs.filter( unlistedFaq => unlistedFaq.relatedLists.length === 0);
+
   // 6. Create internal link index for all content types
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
 
@@ -535,6 +538,7 @@ function processAllContent() {
     guidance: guidanceRequests,
     faqItems: faqs,
     lists: lists,
+    unlistedFaqs,
     acknowledgements,
     internalLinks: internalLinkIndex
   };
