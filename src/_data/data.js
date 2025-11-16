@@ -312,25 +312,31 @@ function createGuidanceRequest(file) {
 // List Processing
 // ============================================================================
 
+function normalizeReferenceIds(relativeIds = [], listId) {
+  return relativeIds.map(id => {
+    if (!listId || id.includes('/')) {
+      return id;
+    }
+    return `${ listId }/${ id }`;
+  });
+}
+
 function isList(file) {
   return file.isFile() && file.name === LIST_FILENAME;
 }
 
 function createList(file) {  
-  // Normalize short-form item references (FAQs/sublists) to full paths
-  const normalizedItemRefs = (file.data.faqs || []).map(itemRef => {
-    if (itemRef.includes('/')) return itemRef; // Already fully qualified
-    return file.id === ROOT_LIST_ID ? itemRef : `${file.id}/${itemRef}`; // Root list refs are category names, others need prefix
-  });
+  const isRoot = file.id === ROOT_LIST_ID;
+  const itemRefs = normalizeReferenceIds(file.data.faqs, isRoot ? null : file.id);
 
   return {
     ...file,
     type: "list",
     title: file.data.title,
     icon: file.data.icon,
-    itemRefs: normalizedItemRefs, // References to FAQs and sublists (will be resolved later)
+    itemRefs,
     description: file.data.description,
-    isRoot: file.id === ROOT_LIST_ID,
+    isRoot,
     parentLists: [], // Lists that include this list (filled during cross-referencing)
     faqCount: 0,
     listCount: 0
