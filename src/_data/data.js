@@ -201,7 +201,7 @@ function getFile(file) {
 function getMarkdownFile(entry) {
   const file = getFile(entry);
   const parsed = matter(file.rawContent);
-  file.data = parsed.data;
+  file.frontmatter = parsed.data;
   file.content = parsed.content.trim();
   
   const posixPathWithoutExt = file.posixPath.replace(/\.md$/, "");
@@ -213,7 +213,7 @@ function getMarkdownFile(entry) {
 
 function getREADME(entry) { // cra-hub uses README.yml files to define FAQ lists
   const file = getFile(entry);
-  file.data = yaml.load(file.rawContent);
+  file.yaml = yaml.load(file.rawContent);
   
   const posixDirPath = file.posixPath.replace(/\/README\.yml$/, "");
   file.permalink = "/" + posixDirPath + "/"; // backslash to make eleventy happy
@@ -254,21 +254,21 @@ function isFaq(file) {
 function createFaq(file) {
 
   // Normalize status
-  const status = file.data.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
+  const status = file.frontmatter.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
   const needsRefactoring = (/>\s*\[!WARNING\]\s*\n>\s*.*needs\s+refactoring/).test(file.content);
 
   // Extract question and answer
   const [question, answer] = splitMarkdownAtFirstH1(file.content);
 
   // Set guidance ID
-  const guidanceId = file.data["guidance-id"] ? "pending-guidance/" + file.data["guidance-id"].trim() : false;
+  const guidanceId = file.frontmatter["guidance-id"] ? "pending-guidance/" + file.frontmatter["guidance-id"].trim() : false;
 
   return {
     ...file,
     type: "faq",
     status,
     needsRefactoring,
-    relatedIssues: parseRelatedIssues(file.data["Related issue"] || file.data["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
+    relatedIssues: parseRelatedIssues(file.frontmatter["Related issue"] || file.frontmatter["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
     pageTitle: markdownToPlainText(question),
     question,
     answer,
@@ -290,7 +290,7 @@ function isGuidance(file) {
 
 function createGuidanceRequest(file) {
   // Normalize status
-  const status = file.data.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
+  const status = file.frontmatter.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
 
   // Extract title and body
   const [title, body] = splitMarkdownAtFirstH1(file.content);
@@ -300,7 +300,6 @@ function createGuidanceRequest(file) {
     permalink: file.permalink.replace(/^\/faq/, ""), // Move guidance permalinks out of faq dir
     type: "guidance-request",
     status,
-    relatedIssue: file.data["Related issue"],
     pageTitle: markdownToPlainText(title),
     title,
     body,
@@ -327,15 +326,16 @@ function isList(file) {
 
 function createList(file) {  
   const isRoot = file.id === ROOT_LIST_ID;
-  const itemRefs = normalizeReferenceIds(file.data.faqs, isRoot ? null : file.id);
+  const itemRefs = normalizeReferenceIds(file.yaml.faqs, isRoot ? null : file.id);
 
   return {
     ...file,
     type: "list",
-    title: file.data.title,
-    icon: file.data.icon,
+    pageTitle: markdownToPlainText(file.yaml.title),
+    title: file.yaml.title,
+    icon: file.yaml.icon,
     itemRefs,
-    description: file.data.description,
+    description: file.yaml.description,
     isRoot,
     parentLists: [], // Lists that include this list (filled during cross-referencing)
     faqCount: 0,
