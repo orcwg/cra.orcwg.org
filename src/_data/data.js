@@ -409,7 +409,6 @@ function getProcessedList(list) {
     lastUpdatedAt,
     isNew: isNew(createdAt),
     recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-    isSystemGenerated: false, // flag for showing Github edit buttons
     editOnGithubUrl: list.editOnGithubUrl,
   }
 }
