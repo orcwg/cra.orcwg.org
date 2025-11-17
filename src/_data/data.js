@@ -493,9 +493,15 @@ function crossReferenceListsAndFaqs(lists, faqs) {
 function createUnlistedCategory(faqs, lists) {
   const unlistedFaqs = faqs.filter( unlistedFaq => unlistedFaq.relatedLists.length === 0 );
 
-  // For system-generated categories, use placeholder values
-  // Use epoch date (Jan 1, 1970) to indicate system-generated content
-  const systemDate = new Date(0);
+  // For system-generated categories, derive dates from the related FAQs
+  // Use the most recent createdAt and lastUpdatedAt from the unlisted FAQs
+  let categoryCreatedAt = new Date(0);
+  let categoryLastUpdatedAt = new Date(0);
+
+  if (unlistedFaqs.length > 0) {
+    categoryCreatedAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.createdAt.getTime())));
+    categoryLastUpdatedAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.lastUpdatedAt.getTime())));
+  }
 
   const unlistedCategory = {
     type: 'list',
@@ -506,11 +512,10 @@ function createUnlistedCategory(faqs, lists) {
     faqs: unlistedFaqs,
     permalink: '/faq/unlisted/',
     isSystemGenerated: true,
-    editOnGithubUrl: '',
-    createdAt: systemDate,
-    lastUpdatedAt: systemDate,
-    isNew: false,
-    recentlyUpdated: false,
+    createdAt: categoryCreatedAt,
+    lastUpdatedAt: categoryLastUpdatedAt,
+    isNew: isNew(categoryCreatedAt),
+    recentlyUpdated: recentlyUpdated(categoryCreatedAt, categoryLastUpdatedAt),
   };
 
   lists.push(unlistedCategory);
