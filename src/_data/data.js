@@ -270,7 +270,6 @@ function getProcessedFaq(faq) {
 
   // Get git timestamps for this file
   const { createdAt, lastUpdatedAt } = getTimestampsForObj(faq);
-  
   return {
     type: "faq",
     id,
