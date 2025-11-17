@@ -11,16 +11,26 @@ eleventyComputed:
 ---
 
 <section class="section-intro">
-  <p>{{ list.description }}</p>
+  {% if list.faqs.length === 0 %}
+    {% if list.id === 'unlisted'%}
+    <p>Great news! All FAQs are properly categorized. There are currently no unlisted FAQs.</p>
+    {% else %}
+      <p>No FAQs in this category yet</p>
+    {% endif %}
+  {% else %}
+      <p>{{ list.description }}</p>
+  {% endif %}
 </section>
 
-<article class="section-card">
-{% set componentData = {
-  title: list.title,
-  icon: list.icon,
-  faqs: list.faqs
-} %}
-{% include "components/faq-accordion.njk" %}
-{% set item = list %}
-{% include "components/actions.njk" %}
-</article>
+{% if list.faqs.length > 0 %}
+  <article class="section-card">
+    {% set componentData = {
+      title: list.title,
+      icon: list.icon,
+      faqs: list.faqs
+    } %}
+    {% include "components/faq-accordion.njk" %}
+    {% set item = list %}
+    {% include "components/actions.njk" %}
+  </article>
+{% endif %}

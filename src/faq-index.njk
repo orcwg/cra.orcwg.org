@@ -12,17 +12,13 @@ permalink: "/faq/"
   {% for listId in site.listOrder %}
     {% for list in data.lists %}
       {% if list.id == listId %}
-        <a href="{{ list.permalink }}" class="card">
-          <h2>{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</h2>
-          <p>{{ list.description }}</p>
-        </a>
+        {% if list.faqs.length > 0 %}
+          <a href="{{ list.permalink }}" class="card">
+            <h2>{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</h2>
+            <p>{{ list.description }}</p>
+          </a>
+        {% endif %}
       {% endif %}
     {% endfor %}
   {% endfor %}
-  {% if data.unlistedFaqs.length > 0 %}
-    <a href="/faq/unlisted/" class="card">
-      <h2>📋 Unlisted FAQs</h2>
-      <p>{{data.unlistedFaqs.length}} FAQ{{ 's' if data.unlistedFaqs.length != 1}} not in any list.</p>
-    </a>
-  {% endif %}
 </nav>
