@@ -27,25 +27,29 @@
   </div>
 
   <div class="regular-actions">
-    <a href="{{ item.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit this {{ type }} on GitHub">
-      {% include "icons/edit.svg" %}
-      <span>Edit on GitHub</span>
-    </a>
-
-    <button class="action-button" data-permalink="{{ item.permalink }}" title="Copy the link to this {{ type }}" aria-label="Copy link to {{ type }}">
-      {% include "icons/copy.svg" %}
-      {% if item.type == "list" %}
-        <span>Copy link to list</span>
-      {% else %}
-        <span>Copy link</span>
-      {% endif %}
-    </button>
-
-    {% if item.permalink != page.url %}
-      <a href="{{ item.permalink }}" class="action-button" title="Go to {{ type }} page">
-        <span>Go to page</span>
-        {% include "icons/arrow-right.svg" %}
+    {% if item.editOnGithubUrl %}
+      <a href="{{ item.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit this {{ type }} on GitHub">
+        {% include "icons/edit.svg" %}
+        <span>Edit on GitHub</span>
       </a>
+    {% endif %}
+
+    {% if item.permalink %}
+      <button class="action-button" data-permalink="{{ item.permalink }}" title="Copy the link to this {{ type }}" aria-label="Copy link to {{ type }}">
+        {% include "icons/copy.svg" %}
+        {% if item.type == "list" %}
+          <span>Copy link to list</span>
+        {% else %}
+          <span>Copy link</span>
+        {% endif %}
+      </button>
+
+      {% if item.permalink != page.url %}
+        <a href="{{ item.permalink }}" class="action-button" title="Go to {{ type }} page">
+          <span>Go to page</span>
+          {% include "icons/arrow-right.svg" %}
+        </a>
+      {% endif %}
     {% endif %}
   </div>
 </div>

@@ -25,12 +25,12 @@ function mdLink(text, url, title) {
  * Resolve all custom link syntax in markdown content
  *
  * @param {string} markdown - Raw markdown content with custom syntax
- * @param {Object} context - Context object with category info
+ * @param {string} category - Category for resolving relative links
  * @param {Object} internalLinks - Index of internal FAQ/list links
  * @param {Object} craReferences - CRA article/annex/recital titles
  * @returns {string} Markdown with resolved standard links
  */
-function resolveLinks(markdown, context, internalLinks, craReferences) {
+function resolveLinks(markdown, category, internalLinks, craReferences) {
   if (!markdown) return markdown;
 
   let result = markdown;
@@ -76,9 +76,9 @@ function resolveLinks(markdown, context, internalLinks, craReferences) {
   });
 
   // 6. Convert relative .md links
-  if (context && context.category) {
+  if (category) {
     result = result.replace(/\[([^\]]+)\]\((\.\.?\/[^)]+\.(md|yml))\)/gi, (match, linkText, href) => {
-      const currentPath = `faq/${context.category}`;
+      const currentPath = `faq/${category}`;
       const resolvedPath = path.posix.resolve('/', currentPath, href);
 
       const pathMatch = resolvedPath.match(/^\/faq\/([^/]+)\/(.+)\.(md|yml)$/);

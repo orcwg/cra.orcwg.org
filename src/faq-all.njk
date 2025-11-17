@@ -9,8 +9,7 @@ permalink: "/faq/all/"
   <p><strong>Note:</strong> This list includes all FAQs regardless of completion status. Some entries may be drafts, have missing content, or require additional guidance.</p>
 </section>
 
-<section class="section-card">
+<section class="section-card nested-faq-list">
   {% set listData = data.rootList %}
-  {% set hideHeader = true %}
   {% include "components/faq-list-recursive.njk" %}
 </section>

@@ -14,11 +14,13 @@ const { execSync } = require("child_process");
 // ============================================================================
 // Constants
 // ============================================================================
-const CACHE_DIR = path.join(__dirname, "..", "..", "_cache");
 
+const CACHE_DIR = path.join(__dirname, "..", "..", "_cache");
 const FAQ_DIR = path.join(CACHE_DIR, "faq");
 const ROOT_DIR = path.join(__dirname, "..", "..");
 const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
+const AUTHORS_PATH = path.join(FAQ_DIR, "AUTHORS.md");
+const CONTRIBUTORS_PATH = path.join(ROOT_DIR, "CONTRIBUTORS.md");
 
 const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
 
@@ -28,9 +30,7 @@ const RECENTLY_UPDATED_THRESHOLD = 14;  // Content is "recently updated" if modi
 const ROOT_LIST_ID = "faq";
 const LIST_FILENAME = 'README.yml';
 
-
 const mdPlain = markdownIt().use(plainTextPlugin);
-
 
 // ============================================================================
 // Utility Functions - Path and URL
@@ -183,7 +183,7 @@ function getFile(file) {
   const relativePath = path.relative(CACHE_DIR, fullPath);
   const posixPath = toPosixPath(relativePath);
   const { createdAt, lastUpdatedAt } = getTimestampsForObj(posixPath);
-  
+
   return {
     filename: file.name,
     path: path.relative(CACHE_DIR, file.parentPath),
@@ -203,7 +203,7 @@ function getMarkdownFile(entry) {
   const parsed = matter(file.rawContent);
   file.frontmatter = parsed.data;
   file.content = parsed.content.trim();
-  
+
   const posixPathWithoutExt = file.posixPath.replace(/\.md$/, "");
   file.permalink = "/" + posixPathWithoutExt + "/"; // backslash to make eleventy happy
   file.id = posixPathWithoutExt.replace(/^faq\//, "");
@@ -214,7 +214,7 @@ function getMarkdownFile(entry) {
 function getREADME(entry) { // cra-hub uses README.yml files to define FAQ lists
   const file = getFile(entry);
   file.yaml = yaml.load(file.rawContent);
-  
+
   const posixDirPath = file.posixPath.replace(/\/README\.yml$/, "");
   file.permalink = "/" + posixDirPath + "/"; // backslash to make eleventy happy
   file.id = posixDirPath.replace(/^faq\//, ""); // => root dir id equals "faq" as root dir has no trailing slash
@@ -316,7 +316,7 @@ function normalizeReferenceIds(relativeIds = [], listId) {
     if (!listId || id.includes('/')) {
       return id;
     }
-    return `${ listId }/${ id }`;
+    return `${listId}/${id}`;
   });
 }
 
@@ -324,7 +324,7 @@ function isList(file) {
   return file.isFile() && file.name === LIST_FILENAME;
 }
 
-function createList(file) {  
+function createList(file) {
   const isRoot = file.id === ROOT_LIST_ID;
   const itemRefs = normalizeReferenceIds(file.yaml.faqs, isRoot ? null : file.id);
 
@@ -407,28 +407,65 @@ function crossReferenceListsAndFaqs(lists, faqs) {
       const sublist = lists.find(l => l.id === itemRef);
       if (sublist) {
         sublist.parentLists.push(list); // Track parent list
-        return {
-          type: 'list',
-          data: sublist
-        };
+        return sublist;
       }
 
       // Otherwise treat as FAQ reference
       const faqObject = faqs.find(faq => faq.id === itemRef);
       if (faqObject) {
         faqObject.relatedLists.push(list); // Track parent list
-        return {
-          type: 'faq',
-          data: faqObject
-        };
+        return faqObject;
       }
 
       return null;
     }).filter(item => item !== null);
+  });
+}
 
-    // Calculate counts for display
-    list.faqCount = list.items.filter(item => item.type === 'faq').length;
-    list.listCount = list.items.filter(item => item.type === 'list').length;
+// Recursively count all descendants (FAQs and lists) at all nesting levels
+function countListChildElementsRecursively(list) {
+  let faqCount = 0;
+  let listCount = 0;
+
+  list.items.forEach(item => {
+    if (item.type === 'faq') {
+      faqCount++;
+    } else if (item.type === 'list') {
+      listCount++;
+      // Recursively count descendants of nested lists
+      const nestedCounts = countListChildElementsRecursively(item);
+      faqCount += nestedCounts.faqCount;
+      listCount += nestedCounts.listCount;
+    }
+  });
+
+  return { faqCount, listCount };
+}
+
+// Format count text for display
+function createCountText(faqCount, listCount) {
+  const faqText = `${faqCount} faq${faqCount !== 1 ? 's' : ''}`;
+  if (listCount > 0) {
+    const listText = `${listCount} list${listCount !== 1 ? 's' : ''}`;
+    return `${faqText} organised in ${listText}`;
+  }
+  return faqText;
+}
+
+// Calculate counts for all lists
+function calculateListCounts(lists) {
+  lists.forEach(list => {
+    const counts = countListChildElementsRecursively(list);
+    list.faqCount = counts.faqCount;
+    list.listCount = counts.listCount;
+    list.countText = createCountText(counts.faqCount, counts.listCount);
+  });
+}
+
+// Resolve custom link syntax in content fields
+function resolveLinksInContent(items, fieldName, internalLinkIndex) {
+  items.forEach(item => {
+    item[fieldName] = resolveLinks(item[fieldName], item.category, internalLinkIndex, craReferences);
   });
 }
 
@@ -439,31 +476,21 @@ function crossReferenceListsAndFaqs(lists, faqs) {
 // Orchestrate the complete data processing pipeline
 function processAllContent() {
   const entries = fs.readdirSync(FAQ_DIR, { withFileTypes: true, recursive: true });
-  
+
   const faqs = entries.filter(isFaq).map(getMarkdownFile).map(createFaq);
   const guidanceRequests = entries.filter(isGuidance).map(getMarkdownFile).map(createGuidanceRequest);
   const lists = entries.filter(isList).map(getREADME).map(createList);
 
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
   crossReferenceListsAndFaqs(lists, faqs);
-  
+  calculateListCounts(lists);
+
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
 
-  // 7. Resolve all custom link syntax in markdown content
-  faqs.forEach(faq => {
-    const context = { category: faq.category };
-    faq.answer = resolveLinks(faq.answer, context, internalLinkIndex, craReferences);
-  });
+  resolveLinksInContent(faqs, 'answer', internalLinkIndex);
+  resolveLinksInContent(guidanceRequests, 'body', internalLinkIndex);
 
-  guidanceRequests.forEach(guidance => {
-    const context = { category: 'pending-guidance' };
-    guidance.body = resolveLinks(guidance.body, context, internalLinkIndex, craReferences);
-  });
-
-  // 8. Get and process AUTHORS.md AND CONTRIBUTORS.md
-  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
-  const contribPath = path.join(ROOT_DIR, "CONTRIBUTORS.md");
-  const acknowledgements = processAcknowledgements(authorsPath, contribPath);
+  const acknowledgements = processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
 
   // Extract root list for easy access
   const rootList = lists.find(list => list.id === ROOT_LIST_ID);
@@ -473,8 +500,7 @@ function processAllContent() {
     guidance: guidanceRequests,
     lists,
     rootList,
-    acknowledgements,
-    internalLinks: internalLinkIndex
+    acknowledgements
   };
 }
 

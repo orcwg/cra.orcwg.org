@@ -3,32 +3,40 @@
 
   Parameters:
   - listData: List object with title, icon, description, items
-  - hideHeader: (optional) If true, don't render the h2 title
+  - depth: (optional) Current nesting depth, defaults to 0
 
   Uses consistent markup at all depths - CSS handles visual differences.
 #}
-{% if not hideHeader %}
+{% set currentDepth = depth | default(0) %}
+
+{% if currentDepth > 0 %}
   <h2>
-    {% if listData.icon %}{{ listData.icon }} {% endif %}{{ listData.title }}
+    <a href="{{ listData.permalink }}">{% if listData.icon %}{{ listData.icon }} {% endif %}{{ listData.title }}</a>
   </h2>
   {% if listData.description %}
     <p>{{ listData.description }}</p>
   {% endif %}
+
 {% endif %}
 
-<ul class="link-list">
+<ul class="link-list depth-{{ 'odd' if currentDepth % 2 else 'even' }}">
   {% for item in listData.items %}
     {% if item.type == 'list' %}
       {# Nested list - recursively render #}
       <li>
-        {% set listData = item.data %}
-        {% set hideHeader = false %}
+        {% set listData = item %}
+        {% set depth = currentDepth + 1 %}
         {% include "components/faq-list-recursive.njk" %}
       </li>
     {% else %}
       {# FAQ item #}
-      {% set faq = item.data %}
-      {% include "components/faq-link.njk" %}
+      {% set faq = item %}
+      <li>
+        <a href="{{ faq.permalink }}">
+          <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+          <span class="badges" hidden>{% include "components/faq-badges.njk" %}</span>
+        </a>
+      </li>
     {% endif %}
   {% endfor %}
 </ul>

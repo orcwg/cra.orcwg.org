@@ -22,8 +22,13 @@
     --text-color: #333;
     --text-light: #666;
 
+    /* Link Colors */
+    --link-color: var(--primary-dark);
+    --link-hover-color: var(--primary-color);
+
     /* Backgrounds & Borders */
     --background-light: #f8f9fa;
+    --background-hover: #e8f7fb;
     --border-color: #e9ecef;
     --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
@@ -76,13 +81,13 @@ h4 {
 }
 
 a {
-    color: var(--primary-dark);
+    color: var(--link-color);
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 a:hover {
-    color: var(--primary-color);
+    color: var(--link-hover-color);
 }
 
 /* Header Layout */
@@ -101,11 +106,10 @@ a:hover {
 
 .site-header>a h1 {
     margin: 0;
-    transition: color 0.2s ease;
 }
 
 .site-header>a:hover h1 {
-    color: var(--primary-color);
+    color: var(--link-hover-color);
 }
 
 .site-nav {
@@ -177,7 +181,9 @@ main {
     position: relative;
 }
 
+/* Card hover: white background with border highlight and lift effect */
 .card:hover {
+    background: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     border-color: var(--primary-color);
@@ -201,7 +207,7 @@ main {
     transform: translateY(-50%) translateX(0);
 }
 
-a.card > h2 {
+a.card>h2 {
     margin: 0 0 10px 0;
     color: var(--primary-dark);
     padding-bottom: 0;
@@ -282,6 +288,19 @@ a.card > h2 {
     border-image: linear-gradient(90deg, var(--primary-dark), var(--primary-color)) 1;
 }
 
+/* List title links - styled as headings with color-only hover */
+.section-card h2 a,
+.link-list li h2 a {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.section-card h2 a:hover,
+.link-list li h2 a:hover {
+    color: var(--link-hover-color) !important;
+}
+
 .section-card h2+.link-list {
     margin-top: 15px;
 }
@@ -298,26 +317,24 @@ a.card > h2 {
 .link-list {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0 0 20px 0;
 }
 
 .link-list li {
     margin-bottom: 8px;
 }
 
-/* Only apply flex to list items that contain links */
-.link-list li:has(> a) {
+/* Only apply flex to list items that contain links (but not list headers) */
+.link-list li:has(> a):not(:has(> h2)) {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-
-
-.link-list li a {
+/* FAQ link styles - exclude links inside h2 */
+.link-list li>a:not(h2 a) {
     display: flex;
-    padding: 15px 20px;
-    background: var(--background-light);
+    padding: 20px 30px;
     border-radius: 6px;
     color: var(--text-color);
     transition: all 0.2s ease;
@@ -333,30 +350,31 @@ a.card > h2 {
     flex: 1;
 }
 
-.link-list li a:has(.badges:not([hidden])) {
+.link-list li>a:not(h2 a):has(.badges:not([hidden])) {
     gap: 8px;
 }
 
-.link-list li a .question-text {
+.link-list li>a:not(h2 a) .question-text {
     width: 100%;
     text-align: left;
 }
 
-.link-list li a .badges {
+.link-list li>a:not(h2 a) .badges {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
 }
 
-.link-list li a .badges[hidden] {
+.link-list li>a:not(h2 a) .badges[hidden] {
     display: none;
 }
 
-.link-list li a::after {
+/* FAQ link arrow indicator */
+.link-list li>a:not(h2 a)::after {
     content: '→';
     position: absolute;
     top: 50%;
-    right: 20px;
+    right: 30px;
     transform: translateY(-50%) translateX(-10px);
     font-weight: bold;
     color: var(--primary-color);
@@ -364,15 +382,16 @@ a.card > h2 {
     transition: all 0.2s ease;
 }
 
-.link-list li a:hover {
-    background: white;
-    border-color: var(--primary-color);
+/* FAQ link hover: white background with border highlight and lift effect */
+.link-list li>a:hover {
+    background: white !important;
+    border-color: var(--primary-color) !important;
     box-shadow: 0 4px 15px rgba(28, 177, 209, 0.1);
     transform: translateY(-1px);
     color: var(--primary-color);
 }
 
-.link-list li a:hover::after {
+.link-list li>a:hover::after {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
 }
@@ -387,61 +406,56 @@ a.card > h2 {
     margin: 0;
 }
 
-/* Nested lists - styled based on DOM structure */
+/* Nested FAQ Lists - Alternating Backgrounds */
 
-/* First-level category headers - inherit from .section-card h2 */
-.section-card > .link-list > li:has(> h2) {
+/* Nested list containers */
+.nested-faq-list .link-list li:has(> h2) {
     list-style: none;
-    margin: 30px 0;
+    margin-bottom: 8px;
 }
 
-/* Second-level nested sublists (lists within categories) */
-/* Target: .section-card > .link-list (rootList) > li > .link-list (category items) > li (sublist container) */
-.section-card > .link-list > li > .link-list > li:has(> h2) {
-    list-style: none;
-    margin: 20px 0;
-    padding: 20px;
-    background: color-mix(in srgb, var(--primary-color) 5%, white);
-    border-left: 4px solid var(--primary-color);
-    border-radius: 6px;
-}
-
-.section-card > .link-list > li > .link-list > li > h2 {
-    font-size: 1.15em;
-    font-weight: 600;
-    color: var(--primary-dark);
+/* Root level (depth 0) - no padding or borders */
+.nested-faq-list>.link-list>li:has(> h2) {
+    padding: 0;
     margin: 0 0 8px 0;
 }
 
-.section-card > .link-list > li > .link-list > li > h2 + p {
-    margin: 0 0 15px 0;
-    color: var(--text-light);
-    font-size: 0.9em;
+.nested-faq-list>.link-list>li>a,
+.nested-faq-list>.link-list>li:has(> h2) {
+    background: white;
 }
 
-.section-card > .link-list > li > .link-list > li > .link-list {
-    margin-top: 0;
+/* Nested levels (depth 1+) - padding, borders, and rounded corners */
+.nested-faq-list .link-list .link-list li:has(> h2) {
+    padding: 20px 30px;
+    border-radius: 8px;
 }
 
-.section-card > .link-list > li > .link-list > li > .link-list li {
+/* Odd depth (1, 3, 5...) - light grey background */
+.nested-faq-list .link-list.depth-odd>li>a,
+.nested-faq-list .link-list.depth-odd>li:has(> h2) {
+    background: var(--background-light);
+}
+
+/* Even depth white background */
+.nested-faq-list .link-list.depth-even:not(.nested-faq-list > .link-list)>li>a,
+.nested-faq-list .link-list.depth-even:not(.nested-faq-list > .link-list)>li:has(> h2) {
     background: white;
 }
 
 .faq-accordion-item {
     background: white;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     margin-bottom: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
 }
 
-.faq-accordion-item:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
+/* Accordion hover and open state: white background with border highlight */
+.faq-accordion-item:hover,
 .faq-accordion-item[open] {
+    background: white;
     border-color: var(--primary-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
@@ -511,10 +525,11 @@ a.card > h2 {
     flex-shrink: 0;
 }
 
+/* Action button/label hover: standard background */
 .action-button:hover,
 .action-label:hover {
-    background: var(--background-light);
-    color: var(--primary-color);
+    background: var(--background-hover);
+    color: var(--link-hover-color);
 }
 
 /* Action label specific: wider gap for pills container */
@@ -559,6 +574,7 @@ a.action-button {
     transition: all 0.15s ease;
 }
 
+/* Issue pill hover: special treatment with primary color fill */
 .issue-pill:hover {
     background: var(--primary-color);
     color: white;
@@ -596,13 +612,20 @@ a.action-button {
     gap: 10px;
 }
 
+/* Accordion summary hover: white background with border highlight */
 .faq-accordion-item summary:hover {
-    background: rgba(28, 177, 209, 0.03);
+    background: white;
+    border-radius: 11px 11px 0 0;
 }
 
+/* Accordion summary hover when closed: rounded bottom corners */
+.faq-accordion-item:not([open]) summary:hover {
+    border-radius: 11px;
+}
+
+/* Accordion summary when open: lighter tint */
 .faq-accordion-item[open] summary {
     background: rgba(28, 177, 209, 0.05);
-    border-bottom: 1px solid var(--border-color);
 }
 
 .faq-accordion-item article {
@@ -614,7 +637,6 @@ a.action-button {
 .faq-accordion-item[open] article {
     grid-template-rows: 1fr;
     padding: 20px;
-    border-bottom: 1px solid var(--border-color);
 }
 
 .faq-accordion-item article>div {
@@ -673,19 +695,20 @@ footer section button {
     color: var(--text-light);
 }
 
+/* Footer link hover: color change only */
 footer section a:hover,
 footer section button:hover {
-    color: var(--primary-color);
+    color: var(--link-hover-color);
 }
 
 .footnotes {
-  font-size: 0.7em;
-  color: var(--text-light);
+    font-size: 0.7em;
+    color: var(--text-light);
 }
 
 hr.footnotes-sep {
-  border-width: 0;
-  border-top: 1px solid var(--border-color);
+    border-width: 0;
+    border-top: 1px solid var(--border-color);
 }
 
 /* Responsive */
@@ -807,8 +830,9 @@ hr.footnotes-sep {
     transition: all 0.1s ease;
 }
 
+/* Contributors list hover: color and scale effect */
 .contributors-list li:hover {
-    color: var(--primary-color);
+    color: var(--link-hover-color);
     transform: scale(1.1);
 }
 
@@ -857,10 +881,18 @@ table {
     overflow: hidden;
     border: 1px solid var(--border-color);
     box-shadow: var(--card-shadow);
-    font-size: 0.9em;
+    overflow: hidden;
+    word-wrap: break-word;
+    table-layout: auto;
+    overflow-x: auto;
 }
 
-thead th {
+thead th,
+tbody td {
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    padding: 12px 16px;
+    vertical-align: top;
     background: var(--background-light);
     padding: 12px 16px;
     text-align: left;
@@ -869,22 +901,39 @@ thead th {
     border-bottom: 1px solid var(--border-color);
 }
 
-tbody td {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-color);
-    vertical-align: middle;
+thead th:last-child,
+tbody td:last-child {
+    border-right: none;
 }
 
 tbody tr:last-child td {
     border-bottom: none;
 }
 
-tbody tr:hover {
-    background: var(--background-light);
+thead th:first-child,
+tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+
+tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--background-light) 15%, white);
+}
+
+/* Table row hover: gray background (not standard blue) */
+tbody tr:hover td {
+    background: color-mix(in srgb, var(--background-light) 50%, white);
 }
 
 @media (max-width: 750px) {
-    thead th, tbody td {
+    table {
+        font-size: 0.9em;
+    }
+
+    thead th,
+    tbody td {
         padding: 8px 12px;
     }
 }
@@ -983,7 +1032,7 @@ tbody tr:hover {
 }
 
 .badge[data-emoji]::before {
-  content: attr(data-emoji) " ";
+    content: attr(data-emoji) " ";
 }
 
 /* ===================================================================
@@ -993,7 +1042,8 @@ tbody tr:hover {
 /* Regular blockquote */
 blockquote {
     margin: 16px 0;
-    padding: 0 31px 0 33px; /* Align with 3px left borders elsewhere */
+    padding: 0 31px 0 33px;
+    /* Align with 3px left borders elsewhere */
     font-style: italic;
     color: var(--text-light);
 }

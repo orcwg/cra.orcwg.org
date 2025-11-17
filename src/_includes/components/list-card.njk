@@ -9,6 +9,6 @@
   <h2>{% if listData.icon %}{{ listData.icon }} {% endif %}{{ listData.title }}</h2>
   <p>{{ listData.description }}</p>
   <span class="card-meta">
-    {{ listData.faqCount }} FAQ{{ 's' if listData.faqCount != 1 }}{%- if listData.listCount > 0 %} • {{ listData.listCount }} categor{{ 'y' if listData.listCount == 1 else 'ies' }}{% endif %}
+    {{ listData.countText }}
   </span>
 </a>

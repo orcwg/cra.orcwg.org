@@ -14,13 +14,5 @@ eleventyComputed:
   <p>{{ list.description }}</p>
 </section>
 
-<article class="section-card">
-{% set componentData = {
-  title: list.title,
-  icon: list.icon,
-  items: list.items
-} %}
+{% set componentData = list %}
 {% include "components/faq-accordion.njk" %}
-{% set item = list %}
-{% include "components/actions.njk" %}
-</article>
