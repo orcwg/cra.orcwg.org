@@ -10,8 +10,6 @@ const yaml = require("js-yaml");
 const { resolveLinks } = require("./utils/link-resolver.js");
 const craReferences = require("./craReferences.json");
 const { execSync } = require("child_process");
-const { type } = require( "os" );
-const { title } = require( "process" );
 
 // ============================================================================
 // Constants
