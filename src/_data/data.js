@@ -269,8 +269,12 @@ function getProcessedFaq(faq) {
   const guidanceId = faq.data["guidance-id"] ? faq.data["guidance-id"].trim() : false;
 
   // Get git timestamps for this file
-  const { createdAt, lastUpdatedAt } = getTimestampsForObj(faq);
-
+  // Get git timestamps for this file (with fallback for uncommitted files)
+  const timestamps = getTimestampsForObj(faq);
+  const now = new Date();
+  const createdAt = timestamps?.createdAt || now;
+  const lastUpdatedAt = timestamps?.lastUpdatedAt || now;
+  
   return {
     type: "faq",
     id,
