@@ -10,6 +10,8 @@ const yaml = require("js-yaml");
 const { resolveLinks } = require("./utils/link-resolver.js");
 const craReferences = require("./craReferences.json");
 const { execSync } = require("child_process");
+const { type } = require( "os" );
+const { title } = require( "process" );
 
 // ============================================================================
 // Constants
@@ -409,6 +411,7 @@ function getProcessedList(list) {
     lastUpdatedAt,
     isNew: isNew(createdAt),
     recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+    isSystemGenerated: false, // flag for showing Github edit buttons
     editOnGithubUrl: list.editOnGithubUrl,
   }
 }
@@ -489,6 +492,33 @@ function crossReferenceListsAndFaqs(lists, faqs) {
   });
 }
 
+function createUnlistedCategory(faqs, lists) {
+  const unlistedFaqs = faqs.filter( unlistedFaq => unlistedFaq.relatedLists.length === 0 );
+
+  // For system-generated categories, use placeholder values
+  // Use epoch date (Jan 1, 1970) to indicate system-generated content
+  const systemDate = new Date(0);
+
+  const unlistedCategory = {
+    type: 'list',
+    id: 'unlisted',
+    title: 'Unlisted FAQs',
+    icon: '📋',
+    description: 'FAQs not yet assigned to any category',
+    faqs: unlistedFaqs,
+    permalink: '/faq/unlisted/',
+    isSystemGenerated: true,
+    editOnGithubUrl: '',
+    createdAt: systemDate,
+    lastUpdatedAt: systemDate,
+    isNew: false,
+    recentlyUpdated: false,
+  };
+
+  lists.push(unlistedCategory);
+}
+
+
 // ============================================================================
 // Main Pipeline
 // ============================================================================
@@ -512,7 +542,7 @@ function processAllContent() {
   crossReferenceListsAndFaqs(lists, faqs);
 
   //5.5 Create list of Unlisted FAQs
-  const unlistedFaqs = faqs.filter( unlistedFaq => unlistedFaq.relatedLists.length === 0);
+  createUnlistedCategory(faqs, lists);
 
   // 6. Create internal link index for all content types
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
@@ -538,7 +568,6 @@ function processAllContent() {
     guidance: guidanceRequests,
     faqItems: faqs,
     lists: lists,
-    unlistedFaqs,
     acknowledgements,
     internalLinks: internalLinkIndex
   };
