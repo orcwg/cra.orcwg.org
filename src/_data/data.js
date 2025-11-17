@@ -444,7 +444,7 @@ function countListChildElementsRecursively(list) {
 
 // Format count text for display
 function createCountText(faqCount, listCount) {
-  const faqText = `${faqCount} faq${faqCount !== 1 ? 's' : ''}`;
+  const faqText = `${faqCount} FAQ${faqCount !== 1 ? 's' : ''}`;
   if (listCount > 0) {
     const listText = `${listCount} list${listCount !== 1 ? 's' : ''}`;
     return `${faqText} organised in ${listText}`;
