@@ -138,6 +138,17 @@ function recentlyUpdated(createdAt, lastUpdatedAt) {
   return daysAgo <= RECENTLY_UPDATED_THRESHOLD;
 }
 
+function generateTimestamps(faqs) {
+  let createdAt = new Date(0);
+  let lastUpdatedAt = new Date(0);
+
+  if ( faqs.length > 0 ) {
+    createdAt = new Date(Math.max(...faqs.map( faq => faq.createdAt.getTime())));
+    lastUpdatedAt = new Date(Math.max(...faqs.map( faq => faq.lastUpdatedAt.getTime())));
+  }
+  return { createdAt, lastUpdatedAt };
+}
+
 // ============================================================================
 // Utility Functions - Git Operations
 // ============================================================================
@@ -475,15 +486,7 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
 function generateUnlistedFAQList(faqs, root) {
   const unlistedFaqs = faqs.filter(unlistedFaq => unlistedFaq.parents.length === 0);
 
-  // For system-generated categories, derive dates from the related FAQs
-  // Use the most recent createdAt and lastUpdatedAt from the unlisted FAQs
-  let createdAt = new Date(0);
-  let lastUpdatedAt = new Date(0);
-
-  if (unlistedFaqs.length > 0) {
-    createdAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.createdAt.getTime())));
-    lastUpdatedAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.lastUpdatedAt.getTime())));
-  }
+  const {createdAt, lastUpdatedAt} = generateTimestamps(unlistedFaqs);
   const title = "Unlisted FAQs";
 
   const generatedList = {
@@ -510,6 +513,39 @@ function generateUnlistedFAQList(faqs, root) {
   return generatedList;
 }
 
+function generateNewFAQsList (faqs, root) {
+  // Sort all new FAQs from the newest to oldest
+  // The newest-first logic is to provide the latest FAQs at first sight
+  const newFAQs = faqs.filter(newFAQ => newFAQ.isNew).sort((a, b) => b.createdAt - a.createdAt);
+
+  const { createdAt, lastUpdatedAt } = generateTimestamps( newFAQs );
+
+  const title = "New FAQs";
+
+  const generatedList = {
+    type: LIST,
+    id: "new",
+    pageTitle: title,
+    title,
+    icon: "🌟",
+    description: `FAQs added within the last ${ NEW_CONTENT_THRESHOLD } days`,
+    emptyMsg: "It seems there aren't any newly created FAQs",
+    hideFromIndex: true,
+    children: newFAQs,
+    permalink: "/faq/new/",
+    parents: [],
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+    faqCount: 0,
+    listCount: 0
+  };
+  
+  generatedList.parents.push(root);
+  root.children.push(generatedList);
+  return generatedList;
+}
 
 // ============================================================================
 // Main Pipeline
@@ -528,6 +564,7 @@ function processAllContent() {
   crossReferenceListsAndFaqs(lists, faqs);
   
   lists.push(generateUnlistedFAQList(faqs, rootList));
+  lists.push(generateNewFAQsList(faqs, rootList));
   
   calculateListCounts(lists);
 
