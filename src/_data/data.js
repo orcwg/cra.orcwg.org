@@ -528,12 +528,12 @@ function generateNewFAQsList (faqs, root) {
 
   const generatedList = {
     type: LIST,
-    id: "News",
+    id: "new",
     pageTitle: title,
     title,
     icon: "🆕",
-    description: "Most Recent FAQs from the CRA Hub",
-    emptyMsg: "it seems there isn't any recently created FAQs at all",
+    description: `FAQs added within the last ${ NEW_CONTENT_THRESHOLD } days`,
+    emptyMsg: "It seems there aren't any newly created FAQs",
     hideFromIndex: true,
     children: newFAQs,
     permalink: "/faq/new/",
