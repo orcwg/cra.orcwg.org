@@ -534,7 +534,7 @@ function generateNewFAQsList (faqs, root) {
     icon: "🆕",
     description: "Most Recent FAQs from the CRA Hub",
     emptyMsg: "it seems there isn't any recently created FAQs at all",
-    hideFromIndex: newFAQs.length == 0,
+    hideFromIndex: true,
     children: newFAQs,
     permalink: "/faq/new/",
     parents: [],
