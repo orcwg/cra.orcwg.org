@@ -3,17 +3,15 @@ layout: layout.njk
 pagination:
   data: data.faqs
   size: 1
-  alias: item
-permalink: "{{ item.permalink }}"
+  alias: faq
+permalink: "{{ faq.permalink }}"
 eleventyComputed:
-  title: "{{ item.pageTitle }}"
+  title: "{{ faq.pageTitle }}"
 ---
 
 <article class="section-card">
-  <h1 class="section-header">{{ item.question | markdownInline | safe }}</h1>
-  {{ item.answer | markdown | safe }}
-
-  {% set faq = item %}
+  <h1 class="section-header">{{ faq.question | markdownInline | safe }}</h1>
+  {{ faq.answer | markdown | safe }}
 
   {% include "components/faq-warning.njk" %}
   

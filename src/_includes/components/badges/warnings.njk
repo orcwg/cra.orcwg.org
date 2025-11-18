@@ -13,3 +13,7 @@
 {% if faq.guidanceFileNotFound %}
   <data class="badge danger" data-emoji="❌" value="guidance-not-found">Guidance File Not Found</data>
 {% endif %}
+
+{% if faq.parents.length == 0 %}
+  <data class="badge warning" data-emoji="📋" value="unlisted">Unlisted</data>
+{% endif %}

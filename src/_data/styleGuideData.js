@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = {
-  // Sample items for accordion (includes FAQs and nested list)
+  // Sample children for accordion (includes FAQs and nested list)
   sampleAccordionItems: [
     {
       type: "faq",
@@ -62,7 +62,7 @@ Key steps:
     faqCount: 5,
     listCount: 2,
     countText: "5 faqs organised in 2 lists",
-    items: [
+    children: [
       {
         type: "faq",
         question: "What is the Cyber Resilience Act?",
@@ -81,7 +81,7 @@ Key steps:
         faqCount: 3,
         listCount: 1,
         countText: "3 faqs organised in 1 list",
-        items: [
+        children: [
           {
             type: "faq",
             question: "Do I need to comply if I maintain open source?",
@@ -100,7 +100,7 @@ Key steps:
             faqCount: 2,
             listCount: 0,
             countText: "2 faqs",
-            items: [
+            children: [
               {
                 type: "faq",
                 question: "What security measures are required?",
