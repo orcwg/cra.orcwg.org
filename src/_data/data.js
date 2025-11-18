@@ -488,8 +488,6 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
 function generateUnlistedFAQList(faqs, root) {
   const unlistedFaqs = faqs.filter(unlistedFaq => unlistedFaq.parents.length === 0);
 
-  // For system-generated categories, derive dates from the related FAQs
-  // Use the most recent createdAt and lastUpdatedAt from the unlisted FAQs
   const {createdAt, lastUpdatedAt} = generateTimestamps(unlistedFaqs);
   const title = "Unlisted FAQs";
 
@@ -518,13 +516,10 @@ function generateUnlistedFAQList(faqs, root) {
 }
 
 function generateNewFAQsList (faqs, root) {
-  // Filter all the FAQs by the flag "isNew" 
-  // Sort them from the newest to oldest
+  // Sort all new FAQs from the newest to oldest
   // The newest-first logic is to provide the latest FAQs at first sight
   const newFAQs = faqs.filter(newFAQ => newFAQ.isNew).sort((a, b) => b.createdAt - a.createdAt);
 
-  // For system-generated categories, derive dates from the related FAQs
-  // Use the most recent createdAt and lastUpdatedAt from the unlisted FAQs
   const { createdAt, lastUpdatedAt } = generateTimestamps( newFAQs );
 
   const title = "New FAQs";
