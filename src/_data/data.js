@@ -510,6 +510,46 @@ function generateUnlistedFAQList(faqs, root) {
   return generatedList;
 }
 
+function generateNewFAQsList (faqs, root) {
+
+  const newFAQs = faqs.filter(newFAQ => newFAQ.isNew).sort((a, b) => b.createdAt - a.createdAt);
+
+  // For system-generated categories, derive dates from the related FAQs
+  // Use the most recent createdAt and lastUpdatedAt from the unlisted FAQs
+  let createdAt = new Date(0);
+  let lastUpdatedAt = new Date(0);
+
+  if (faqs.length > 0) {
+    createdAt = new Date(Math.max(...faqs.map(faq => faq.createdAt.getTime())));
+    lastUpdatedAt = new Date(Math.max(...faqs.map(faq => faq.lastUpdatedAt.getTime())));
+  }
+
+  const title = "New FAQs";
+
+  const generatedList = {
+    type: LIST,
+    id: "News",
+    pageTitle: title,
+    title,
+    icon: "",
+    description: "Most Recent FAQs from the CRA Hub",
+    emptyMsg: "it seems there isn't any recently created FAQs at all",
+    hideFromIndex: newFAQs.length == 0,
+    children: newFAQs,
+    permalink: "/faq/new/",
+    parents: [],
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+    faqCount: newFAQs.length,
+    listCount: 1
+  };
+  
+  generatedList.parents.push(root);
+  root.children.push(generatedList);
+  return generatedList;
+}
 
 // ============================================================================
 // Main Pipeline
@@ -528,6 +568,7 @@ function processAllContent() {
   crossReferenceListsAndFaqs(lists, faqs);
   
   lists.push(generateUnlistedFAQList(faqs, rootList));
+  lists.push(generateNewFAQsList(faqs, rootList));
   
   calculateListCounts(lists);
 
