@@ -21,14 +21,15 @@
 
 <ul class="link-list depth-{{ 'odd' if currentDepth % 2 else 'even' }}">
   {% for item in listData.children %}
-    {% if item.type == 'list' and not item.hideFromIndex %}
-      {# Nested list - recursively render #}
-      <li>
-        {% set listData = item %}
-        {% set depth = currentDepth + 1 %}
-        {% include "components/faq-list-recursive.njk" %}
-      </li>
-      {% elif item.type == 'list' and item.hideFromIndex %}
+    {% if item.type == 'list'%}
+      {%if not item.hideFromIndex %}
+        {# Nested list - recursively render #}
+        <li>
+          {% set listData = item %}
+          {% set depth = currentDepth + 1 %}
+          {% include "components/faq-list-recursive.njk" %}
+        </li>
+      {%endif%}
     {% else %}
       {# FAQ item #}
       {% set faq = item %}
