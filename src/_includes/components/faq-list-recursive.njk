@@ -28,6 +28,7 @@
         {% set depth = currentDepth + 1 %}
         {% include "components/faq-list-recursive.njk" %}
       </li>
+      {% elif item.type == 'list' and item.hideFromIndex %}
     {% else %}
       {# FAQ item #}
       {% set faq = item %}
