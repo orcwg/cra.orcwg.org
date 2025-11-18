@@ -138,6 +138,17 @@ function recentlyUpdated(createdAt, lastUpdatedAt) {
   return daysAgo <= RECENTLY_UPDATED_THRESHOLD;
 }
 
+function generateTimestamps(faqs) {
+  let createdAt = new Date(0);
+  let lastUpdatedAt = new Date(0);
+
+  if ( faqs.length > 0 ) {
+    createdAt = new Date(Math.max(...faqs.map( faq => faq.createdAt.getTime())));
+    lastUpdatedAt = new Date(Math.max(...faqs.map( faq => faq.lastUpdatedAt.getTime())));
+  }
+  return { createdAt, lastUpdatedAt };
+}
+
 // ============================================================================
 // Utility Functions - Git Operations
 // ============================================================================
@@ -224,6 +235,8 @@ function getREADME(entry) { // cra-hub uses README.yml files to define FAQ lists
   file.id = posixDirPath.replace(/^faq\//, ""); // => root dir id equals "faq" as root dir has no trailing slash
   return file;
 }
+
+
 
 // ============================================================================
 // FAQ Processing
@@ -503,16 +516,7 @@ function generateUnlistedFAQList(faqs, root) {
   root.children.push(generatedList);
   return generatedList;
 }
-function generateTimestamps(faqs) {
-  let createdAt = new Date(0);
-  let lastUpdatedAt = new Date(0);
 
-  if ( faqs.length > 0 ) {
-    createdAt = new Date(Math.max(...faqs.map( faq => faq.createdAt.getTime())));
-    lastUpdatedAt = new Date(Math.max(...faqs.map( faq => faq.lastUpdatedAt.getTime())));
-  }
-  return { createdAt, lastUpdatedAt };
-}
 function generateNewFAQsList (faqs, root) {
   // Filter all the FAQs by the flag "isNew" 
   // Sort them from the newest to oldest
