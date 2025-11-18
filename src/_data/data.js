@@ -236,8 +236,6 @@ function getREADME(entry) { // cra-hub uses README.yml files to define FAQ lists
   return file;
 }
 
-
-
 // ============================================================================
 // FAQ Processing
 // ============================================================================
