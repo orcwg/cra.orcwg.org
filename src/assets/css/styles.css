@@ -731,6 +731,54 @@ hr.footnotes-sep {
         grid-template-columns: repeat(2, 1fr);
         gap: 30px;
     }
+
+    /* Remove section boxing on mobile to save space */
+    .section-card {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        margin-bottom: 30px;
+    }
+
+    .section-card > .section-header {
+        background: var(--background-light);
+        padding: 15px;
+        margin: 0 -15px 20px -15px;
+        border-radius: 0;
+    }
+
+    /* Also simplify intro sections */
+    .section-intro {
+        padding: 15px;
+        margin: 0 -15px 20px -15px;
+        border-radius: 0;
+    }
+
+    /* Card grids should be single column on mobile */
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Stack action buttons vertically on mobile */
+    .actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .actions .regular-actions,
+    .actions .admin-links {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .actions a,
+    .actions button {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 480px) {

@@ -10,9 +10,5 @@ eleventyComputed:
   title: "{{ list.title }}"
 ---
 
-<section class="section-intro">
-  <p>{{ list.description }}</p>
-</section>
-
 {% set componentData = list %}
 {% include "components/faq-accordion.njk" %}
