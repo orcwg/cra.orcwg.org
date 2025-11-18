@@ -530,7 +530,7 @@ function generateNewFAQsList (faqs, root) {
     id: "new",
     pageTitle: title,
     title,
-    icon: "🆕",
+    icon: "🌟",
     description: `FAQs added within the last ${ NEW_CONTENT_THRESHOLD } days`,
     emptyMsg: "It seems there aren't any newly created FAQs",
     hideFromIndex: true,
