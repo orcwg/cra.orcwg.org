@@ -511,7 +511,9 @@ function generateUnlistedFAQList(faqs, root) {
 }
 
 function generateNewFAQsList (faqs, root) {
-
+  // Filter all the FAQs by the flag "isNew" 
+  // Sort them from the newest to oldest
+  // The newest-first logic is to provide the latest FAQs at first sight
   const newFAQs = faqs.filter(newFAQ => newFAQ.isNew).sort((a, b) => b.createdAt - a.createdAt);
 
   // For system-generated categories, derive dates from the related FAQs
