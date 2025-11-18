@@ -509,7 +509,7 @@ function generateUnlistedFAQList(faqs, root) {
     listCount: 0
   };
   generatedList.parents.push(root);
-  root.children.push(generatedList);
+  root.children.unshift(generatedList);
   return generatedList;
 }
 
