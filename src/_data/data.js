@@ -477,13 +477,7 @@ function generateUnlistedFAQList(faqs, root) {
 
   // For system-generated categories, derive dates from the related FAQs
   // Use the most recent createdAt and lastUpdatedAt from the unlisted FAQs
-  let createdAt = new Date(0);
-  let lastUpdatedAt = new Date(0);
-
-  if (unlistedFaqs.length > 0) {
-    createdAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.createdAt.getTime())));
-    lastUpdatedAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.lastUpdatedAt.getTime())));
-  }
+  const {createdAt, lastUpdatedAt} = generateTimestamps(unlistedFaqs);
   const title = "Unlisted FAQs";
 
   const generatedList = {
@@ -509,7 +503,16 @@ function generateUnlistedFAQList(faqs, root) {
   root.children.push(generatedList);
   return generatedList;
 }
+function generateTimestamps(faqs) {
+  let createdAt = new Date(0);
+  let lastUpdatedAt = new Date(0);
 
+  if ( faqs.length > 0 ) {
+    createdAt = new Date(Math.max(...faqs.map( faq => faq.createdAt.getTime())));
+    lastUpdatedAt = new Date(Math.max(...faqs.map( faq => faq.lastUpdatedAt.getTime())));
+  }
+  return { createdAt, lastUpdatedAt };
+}
 function generateNewFAQsList (faqs, root) {
   // Filter all the FAQs by the flag "isNew" 
   // Sort them from the newest to oldest
@@ -518,13 +521,7 @@ function generateNewFAQsList (faqs, root) {
 
   // For system-generated categories, derive dates from the related FAQs
   // Use the most recent createdAt and lastUpdatedAt from the unlisted FAQs
-  let createdAt = new Date(0);
-  let lastUpdatedAt = new Date(0);
-
-  if (faqs.length > 0) {
-    createdAt = new Date(Math.max(...faqs.map(faq => faq.createdAt.getTime())));
-    lastUpdatedAt = new Date(Math.max(...faqs.map(faq => faq.lastUpdatedAt.getTime())));
-  }
+  const { createdAt, lastUpdatedAt } = generateTimestamps( newFAQs );
 
   const title = "New FAQs";
 
