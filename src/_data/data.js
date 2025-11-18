@@ -513,7 +513,7 @@ function generateUnlistedFAQList(faqs, root) {
   return generatedList;
 }
 
-function generateNewFAQsList (faqs, root) {
+function generateNewFAQList (faqs, root) {
   // Sort all new FAQs from the newest to oldest
   // The newest-first logic is to provide the latest FAQs at first sight
   const newFAQs = faqs.filter(newFAQ => newFAQ.isNew).sort((a, b) => b.createdAt - a.createdAt);
@@ -564,7 +564,7 @@ function processAllContent() {
   crossReferenceListsAndFaqs(lists, faqs);
   
   lists.push(generateUnlistedFAQList(faqs, rootList));
-  lists.push(generateNewFAQsList(faqs, rootList));
+  lists.unshift(generateNewFAQList(faqs, rootList));
   
   calculateListCounts(lists);
 
