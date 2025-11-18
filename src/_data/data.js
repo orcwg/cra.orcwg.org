@@ -330,7 +330,6 @@ function isList(file) {
 
 function createList(file) {
   const isRoot = file.id === ROOT_LIST_ID;
-  const childRefs = normalizeReferenceIds(file.yaml.faqs, isRoot ? null : file.id);
 
   return {
     ...file,
@@ -338,7 +337,6 @@ function createList(file) {
     pageTitle: markdownToPlainText(file.yaml.title),
     title: file.yaml.title,
     icon: file.yaml.icon,
-    childRefs,
     description: file.yaml.description,
     isRoot,
     parents: [], // Lists that include this list (filled during cross-referencing)
@@ -406,7 +404,8 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
 // Link lists with their FAQs and sublists (bidirectional)
 function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
-    list.children = list.childRefs.map(itemRef => {
+    const childRefs = normalizeReferenceIds(list.yaml.faqs, list.isRoot ? null : list.id);
+    list.children = childRefs.map(itemRef => {
       // First check if it's a list reference
       const sublist = lists.find(l => l.id === itemRef);
       if (sublist) {
@@ -495,8 +494,7 @@ function generateUnlistedFAQList(faqs, root) {
     icon: "❌",
     description: "FAQs not yet assigned to any category",
     emptyMsg: "Great news! All FAQs are properly categorized. There are currently no unlisted FAQs.",
-    childRefs: unlistedFaqs.map(faq => faq.id),
-    faqs: unlistedFaqs,
+    hideFromIndex: unlistedFaqs.length == 0,
     children: unlistedFaqs,
     permalink: "/faq/unlisted/",
     parents: [],
