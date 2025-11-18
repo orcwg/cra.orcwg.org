@@ -541,7 +541,7 @@ function generateNewFAQsList (faqs, root) {
     isNew: isNew(createdAt),
     recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
     faqCount: 0,
-    listCount: 1
+    listCount: 0
   };
   
   generatedList.parents.push(root);
