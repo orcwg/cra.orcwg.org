@@ -2,7 +2,7 @@
   Recursive FAQ List Component - Renders nested list structures
 
   Parameters:
-  - listData: List object with title, icon, description, items
+  - listData: List object with title, icon, description, children
   - depth: (optional) Current nesting depth, defaults to 0
 
   Uses consistent markup at all depths - CSS handles visual differences.
@@ -20,7 +20,7 @@
 {% endif %}
 
 <ul class="link-list depth-{{ 'odd' if currentDepth % 2 else 'even' }}">
-  {% for item in listData.items %}
+  {% for item in listData.children %}
     {% if item.type == 'list' %}
       {# Nested list - recursively render #}
       <li>

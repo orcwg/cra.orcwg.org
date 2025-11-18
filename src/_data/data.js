@@ -30,6 +30,10 @@ const RECENTLY_UPDATED_THRESHOLD = 14;  // Content is "recently updated" if modi
 const ROOT_LIST_ID = "faq";
 const LIST_FILENAME = 'README.yml';
 
+const FAQ = "faq";
+const GUIDANCE_REQUEST = "guidance-request";
+const LIST = "list";
+
 const mdPlain = markdownIt().use(plainTextPlugin);
 
 // ============================================================================
@@ -265,7 +269,7 @@ function createFaq(file) {
 
   return {
     ...file,
-    type: "faq",
+    type: FAQ,
     status,
     needsRefactoring,
     relatedIssues: parseRelatedIssues(file.frontmatter["Related issue"] || file.frontmatter["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
@@ -274,7 +278,7 @@ function createFaq(file) {
     answer,
     answerMissing: (answer.length == 0),
     guidanceId,
-    relatedLists: []
+    parents: []
   };
 }
 
@@ -298,7 +302,7 @@ function createGuidanceRequest(file) {
   return {
     ...file,
     permalink: file.permalink.replace(/^\/faq/, ""), // Move guidance permalinks out of faq dir
-    type: "guidance-request",
+    type: GUIDANCE_REQUEST,
     status,
     pageTitle: markdownToPlainText(title),
     title,
@@ -326,18 +330,18 @@ function isList(file) {
 
 function createList(file) {
   const isRoot = file.id === ROOT_LIST_ID;
-  const itemRefs = normalizeReferenceIds(file.yaml.faqs, isRoot ? null : file.id);
+  const childRefs = normalizeReferenceIds(file.yaml.faqs, isRoot ? null : file.id);
 
   return {
     ...file,
-    type: "list",
+    type: LIST,
     pageTitle: markdownToPlainText(file.yaml.title),
     title: file.yaml.title,
     icon: file.yaml.icon,
-    itemRefs,
+    childRefs,
     description: file.yaml.description,
     isRoot,
-    parentLists: [], // Lists that include this list (filled during cross-referencing)
+    parents: [], // Lists that include this list (filled during cross-referencing)
     faqCount: 0,
     listCount: 0
   }
@@ -402,18 +406,18 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
 // Link lists with their FAQs and sublists (bidirectional)
 function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
-    list.items = list.itemRefs.map(itemRef => {
+    list.children = list.childRefs.map(itemRef => {
       // First check if it's a list reference
       const sublist = lists.find(l => l.id === itemRef);
       if (sublist) {
-        sublist.parentLists.push(list); // Track parent list
+        sublist.parents.push(list); // Track parent list
         return sublist;
       }
 
       // Otherwise treat as FAQ reference
       const faqObject = faqs.find(faq => faq.id === itemRef);
       if (faqObject) {
-        faqObject.relatedLists.push(list); // Track parent list
+        faqObject.parents.push(list); // Track parent list
         return faqObject;
       }
 
@@ -427,7 +431,7 @@ function countListChildElementsRecursively(list) {
   let faqCount = 0;
   let listCount = 0;
 
-  list.items.forEach(item => {
+  list.children.forEach(item => {
     if (item.type === 'faq') {
       faqCount++;
     } else if (item.type === 'list') {
@@ -469,35 +473,43 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
   });
 }
 
-function createUnlistedCategory(faqs, lists) {
-  const unlistedFaqs = faqs.filter( unlistedFaq => unlistedFaq.relatedLists.length === 0 );
+function generateUnlistedFAQList(faqs, root) {
+  const unlistedFaqs = faqs.filter(unlistedFaq => unlistedFaq.parents.length === 0);
 
   // For system-generated categories, derive dates from the related FAQs
   // Use the most recent createdAt and lastUpdatedAt from the unlisted FAQs
-  let categoryCreatedAt = new Date(0);
-  let categoryLastUpdatedAt = new Date(0);
+  let createdAt = new Date(0);
+  let lastUpdatedAt = new Date(0);
 
   if (unlistedFaqs.length > 0) {
-    categoryCreatedAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.createdAt.getTime())));
-    categoryLastUpdatedAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.lastUpdatedAt.getTime())));
+    createdAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.createdAt.getTime())));
+    lastUpdatedAt = new Date(Math.max(...unlistedFaqs.map(faq => faq.lastUpdatedAt.getTime())));
   }
+  const title = "Unlisted FAQs";
 
-  const unlistedCategory = {
-    type: 'list',
-    id: 'unlisted',
-    title: 'Unlisted FAQs',
-    icon: '📋',
-    description: 'FAQs not yet assigned to any category',
+  const generatedList = {
+    type: LIST,
+    id: "unlisted",
+    pageTitle: title,
+    title,
+    icon: "❌",
+    description: "FAQs not yet assigned to any category",
+    emptyMsg: "Great news! All FAQs are properly categorized. There are currently no unlisted FAQs.",
+    childRefs: unlistedFaqs.map(faq => faq.id),
     faqs: unlistedFaqs,
-    permalink: '/faq/unlisted/',
-    isSystemGenerated: true,
-    createdAt: categoryCreatedAt,
-    lastUpdatedAt: categoryLastUpdatedAt,
-    isNew: isNew(categoryCreatedAt),
-    recentlyUpdated: recentlyUpdated(categoryCreatedAt, categoryLastUpdatedAt),
+    children: unlistedFaqs,
+    permalink: "/faq/unlisted/",
+    parents: [],
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+    faqCount: 0,
+    listCount: 0
   };
-
-  lists.push(unlistedCategory);
+  generatedList.parents.push(root);
+  root.children.push(generatedList);
+  return generatedList;
 }
 
 
@@ -512,10 +524,13 @@ function processAllContent() {
   const faqs = entries.filter(isFaq).map(getMarkdownFile).map(createFaq);
   const guidanceRequests = entries.filter(isGuidance).map(getMarkdownFile).map(createGuidanceRequest);
   const lists = entries.filter(isList).map(getREADME).map(createList);
-
+  const rootList = lists.find(list => list.id === ROOT_LIST_ID);
+    
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
   crossReferenceListsAndFaqs(lists, faqs);
-  createUnlistedCategory(faqs, lists);
+  
+  lists.push(generateUnlistedFAQList(faqs, rootList));
+  
   calculateListCounts(lists);
 
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
@@ -526,7 +541,6 @@ function processAllContent() {
   const acknowledgements = processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
 
   // Extract root list for easy access
-  const rootList = lists.find(list => list.id === ROOT_LIST_ID);
 
   return {
     faqs,

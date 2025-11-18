@@ -10,17 +10,5 @@ eleventyComputed:
   title: "{{ list.title }}"
 ---
 
-<section class="section-intro">
-  {% if list.faqs.length === 0 %}
-    {% if list.id === 'unlisted'%}
-      <p>Great news! All FAQs are properly categorized. There are currently no unlisted FAQs.</p>
-    {% else %}
-      <p>No FAQs in this category yet</p>
-    {% endif %}
-  {% else %}
-      <p>{{ list.description }}</p>
-  {% endif %}
-</section>
-
 {% set componentData = list %}
 {% include "components/faq-accordion.njk" %}

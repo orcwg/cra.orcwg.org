@@ -3,7 +3,7 @@
 
   Parameters (set via componentData variable):
   - title: Section title to display
-  - items: Array of mixed items (FAQs and sublists)
+  - children: Array of FAQs and sublists
   - description: Optional description text
   - icon: Optional icon to display before title
 #}
@@ -19,7 +19,7 @@
   {% endif %}
 {% endif %}
 
-{% for item in componentData.items %}
+{% for item in componentData.children %}
   {% if item.type == 'list' %}
     {# Nested list item - render as card #}
     <div class="list-card-wrapper">
@@ -45,8 +45,14 @@
       </article>
     </details>
   {% endif %}
+{% else %}
+  {% if list.emptyMsg %}
+    {{ list.emptyMsg | markdown | safe }}
+  {% else %}
+    <p>No FAQs in this category yet.</p>
+  {% endif %}
 {% endfor %}
-      {% set item = componentData %}
+    {% set item = componentData %}
     {% include "components/actions.njk" %}
 
 {% if not componentData.isRoot %}
