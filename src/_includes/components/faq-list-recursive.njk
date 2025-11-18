@@ -1,0 +1,42 @@
+{#
+  Recursive FAQ List Component - Renders nested list structures
+
+  Parameters:
+  - listData: List object with title, icon, description, items
+  - depth: (optional) Current nesting depth, defaults to 0
+
+  Uses consistent markup at all depths - CSS handles visual differences.
+#}
+{% set currentDepth = depth | default(0) %}
+
+{% if currentDepth > 0 %}
+  <h2>
+    <a href="{{ listData.permalink }}">{% if listData.icon %}{{ listData.icon }} {% endif %}{{ listData.title }}</a>
+  </h2>
+  {% if listData.description %}
+    <p>{{ listData.description }}</p>
+  {% endif %}
+
+{% endif %}
+
+<ul class="link-list depth-{{ 'odd' if currentDepth % 2 else 'even' }}">
+  {% for item in listData.items %}
+    {% if item.type == 'list' %}
+      {# Nested list - recursively render #}
+      <li>
+        {% set listData = item %}
+        {% set depth = currentDepth + 1 %}
+        {% include "components/faq-list-recursive.njk" %}
+      </li>
+    {% else %}
+      {# FAQ item #}
+      {% set faq = item %}
+      <li>
+        <a href="{{ faq.permalink }}">
+          <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+          <span class="badges" hidden>{% include "components/faq-badges.njk" %}</span>
+        </a>
+      </li>
+    {% endif %}
+  {% endfor %}
+</ul>

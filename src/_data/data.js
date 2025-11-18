@@ -14,20 +14,23 @@ const { execSync } = require("child_process");
 // ============================================================================
 // Constants
 // ============================================================================
-const CACHE_DIR = path.join(__dirname, "..", "..", "_cache");
 
+const CACHE_DIR = path.join(__dirname, "..", "..", "_cache");
 const FAQ_DIR = path.join(CACHE_DIR, "faq");
 const ROOT_DIR = path.join(__dirname, "..", "..");
 const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
+const AUTHORS_PATH = path.join(FAQ_DIR, "AUTHORS.md");
+const CONTRIBUTORS_PATH = path.join(ROOT_DIR, "CONTRIBUTORS.md");
 
 const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
 
 // Timestamp constants (in days)
 const NEW_CONTENT_THRESHOLD = 30;  // Content is "new" if created within 30 days
 const RECENTLY_UPDATED_THRESHOLD = 14;  // Content is "recently updated" if modified within 14 days
+const ROOT_LIST_ID = "faq";
+const LIST_FILENAME = 'README.yml';
 
 const mdPlain = markdownIt().use(plainTextPlugin);
-
 
 // ============================================================================
 // Utility Functions - Path and URL
@@ -165,8 +168,8 @@ const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
     }
   }
 
-  return function getTimestampsForObj(fileObj) {
-    return timestampMap.get(fileObj.posixPath);
+  return function getTimestampsForObj(posixPath) {
+    return timestampMap.get(posixPath);
   };
 })(CACHE_DIR);
 
@@ -174,44 +177,48 @@ const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
 // Utility Functions - File Operations
 // ============================================================================
 
-// Read and parse multiple markdown files
-function parseMarkdownFiles(files) {
-  const parsedMarkdownFiles = files.map(file => {
-    const fullPath = path.join(file.parentPath, file.name);
-    const rawFile = fs.readFileSync(fullPath, "utf-8");
-    const parsed = matter(rawFile);
-    const relativePath = path.relative(CACHE_DIR, fullPath);
-    return {
-      filename: file.name,
-      path: path.relative(CACHE_DIR, file.parentPath),
-      posixPath: toPosixPath(path.relative(CACHE_DIR, fullPath)),
-      data: parsed.data,
-      content: parsed.content.trim(),
-      editOnGithubUrl: getEditOnGithubUrl(relativePath),
-    };
-  });
+function getFile(file) {
+  const fullPath = path.join(file.parentPath, file.name);
+  const rawContent = fs.readFileSync(fullPath, "utf-8");
+  const relativePath = path.relative(CACHE_DIR, fullPath);
+  const posixPath = toPosixPath(relativePath);
+  const { createdAt, lastUpdatedAt } = getTimestampsForObj(posixPath);
 
-  return parsedMarkdownFiles;
+  return {
+    filename: file.name,
+    path: path.relative(CACHE_DIR, file.parentPath),
+    fullPath,
+    posixPath,
+    editOnGithubUrl: getEditOnGithubUrl(relativePath),
+    rawContent,
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+  };
 }
 
-// Read and parse multiple yml files
-function parseYamlFiles(files) {
-  const parsedYamlFiles = files.map(file => {
-    const fullPath = path.join(file.parentPath, file.name);
-    const rawFile = fs.readFileSync(fullPath, "utf-8");
-    const parsedYaml = yaml.load(rawFile);
-    const relativePath = path.relative(CACHE_DIR, fullPath);
+function getMarkdownFile(entry) {
+  const file = getFile(entry);
+  const parsed = matter(file.rawContent);
+  file.frontmatter = parsed.data;
+  file.content = parsed.content.trim();
 
-    return {
-      filename: file.name,
-      path: path.relative(CACHE_DIR, file.parentPath),
-      posixPath: toPosixPath(path.relative(CACHE_DIR, fullPath)),
-      data: parsedYaml,
-      editOnGithubUrl: getEditOnGithubUrl(relativePath),
-    }
-  });
+  const posixPathWithoutExt = file.posixPath.replace(/\.md$/, "");
+  file.permalink = "/" + posixPathWithoutExt + "/"; // backslash to make eleventy happy
+  file.id = posixPathWithoutExt.replace(/^faq\//, "");
+  file.category = file.id.replace(/\/[^\/]$/, "");
+  return file;
+}
 
-  return parsedYamlFiles;
+function getREADME(entry) { // cra-hub uses README.yml files to define FAQ lists
+  const file = getFile(entry);
+  file.yaml = yaml.load(file.rawContent);
+
+  const posixDirPath = file.posixPath.replace(/\/README\.yml$/, "");
+  file.permalink = "/" + posixDirPath + "/"; // backslash to make eleventy happy
+  file.id = posixDirPath.replace(/^faq\//, ""); // => root dir id equals "faq" as root dir has no trailing slash
+  return file;
 }
 
 // ============================================================================
@@ -237,190 +244,104 @@ function createInternalLinkIndex(faqs, lists, guidanceRequests) {
   return index;
 }
 
-// Get FAQ markdown files (excludes pending-guidance and root files)
-function getFaqFiles(dir) {
-  const files = fs.readdirSync(dir, { withFileTypes: true, recursive: true });
-
-  faqFiles = files.filter(entry => {
-    return entry.parentPath !== GUIDANCE_DIR &&  // Reject pending-guidance files
-      entry.parentPath !== dir &&     // Reject files at the root of the FAQ
-      entry.isFile() &&                     // Reject directories
-      entry.name.endsWith('.md');           // Keep only markdown files
-  });
-
-  return faqFiles;
+function isFaq(file) {
+  return file.parentPath !== GUIDANCE_DIR &&  // Reject pending-guidance files
+    file.parentPath !== FAQ_DIR &&     // Reject files at the root of the FAQ
+    file.isFile() &&                     // Reject directories
+    file.name.endsWith('.md');           // Keep only markdown files
 }
 
-// Process a single FAQ
-function getProcessedFaq(faq) {
-  // Extract category and filename
-  const category = toPosixPath(path.basename(faq.path));
-  const filename = faq.filename.replace('.md', '');
-  const id = `${category}/${filename}`;
+function createFaq(file) {
 
   // Normalize status
-  const status = faq.data.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
-  const needsRefactoring = (/>\s*\[!WARNING\]\s*\n>\s*.*needs\s+refactoring/).test(faq.content);
+  const status = file.frontmatter.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
+  const needsRefactoring = (/>\s*\[!WARNING\]\s*\n>\s*.*needs\s+refactoring/).test(file.content);
 
   // Extract question and answer
-  const [question, answer] = splitMarkdownAtFirstH1(faq.content);
+  const [question, answer] = splitMarkdownAtFirstH1(file.content);
 
   // Set guidance ID
-  const guidanceId = faq.data["guidance-id"] ? faq.data["guidance-id"].trim() : false;
-
-  // Get git timestamps for this file
-  const { createdAt, lastUpdatedAt } = getTimestampsForObj(faq);
+  const guidanceId = file.frontmatter["guidance-id"] ? "pending-guidance/" + file.frontmatter["guidance-id"].trim() : false;
 
   return {
+    ...file,
     type: "faq",
-    id,
-    category,
-    filename,
-    posixPath: faq.posixPath,
     status,
     needsRefactoring,
-    editOnGithubUrl: faq.editOnGithubUrl,
-    permalink: `/faq/${id}/`,
-    relatedIssues: parseRelatedIssues(faq.data["Related issue"] || faq.data["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
+    relatedIssues: parseRelatedIssues(file.frontmatter["Related issue"] || file.frontmatter["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
     pageTitle: markdownToPlainText(question),
     question,
     answer,
     answerMissing: (answer.length == 0),
     guidanceId,
-    relatedLists: [],
-    createdAt,
-    lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+    relatedLists: []
   };
 }
-
-
-// Process all FAQ files into structured objects
-function createProcessedFaqs(faqDir) {
-  const faqFiles = getFaqFiles(faqDir);
-  const rawFaqs = parseMarkdownFiles(faqFiles);
-  const processedFaqs = rawFaqs.map(getProcessedFaq);
-
-  return processedFaqs;
-};
 
 // ============================================================================
 // Guidance Request Processing
 // ============================================================================
 
-// Get guidance request markdown files
-function getGuidanceFiles(dir) {
-  const files = fs.readdirSync(dir, { withFileTypes: true });
-
-  const guidanceFiles = files.filter(entry => {
-    return entry.isFile() &&                     // Reject directories
-      entry.name.endsWith('.md');           // Keep only markdown files
-  });
-
-  return guidanceFiles;
+function isGuidance(file) {
+  return file.parentPath === GUIDANCE_DIR &&
+    file.isFile() &&
+    file.name.endsWith('.md');
 }
 
-function getProcessedGuidanceRequest(guidanceRequest) {
-  // Set ID to basedir/filename-without-extension.
-  const id = guidanceRequest.filename.replace('.md', '');
-
+function createGuidanceRequest(file) {
   // Normalize status
-  const status = guidanceRequest.data.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
+  const status = file.frontmatter.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
 
   // Extract title and body
-  const [title, body] = splitMarkdownAtFirstH1(guidanceRequest.content);
-
-  // Get git timestamps for this file
-  const { createdAt, lastUpdatedAt } = getTimestampsForObj(guidanceRequest);
+  const [title, body] = splitMarkdownAtFirstH1(file.content);
 
   return {
+    ...file,
+    permalink: file.permalink.replace(/^\/faq/, ""), // Move guidance permalinks out of faq dir
     type: "guidance-request",
-    id,
-    posixPath: guidanceRequest.posixPath,
     status,
-    permalink: `/pending-guidance/${id}/`,
-    editOnGithubUrl: guidanceRequest.editOnGithubUrl,
-    relatedIssue: guidanceRequest.data["Related issue"],
     pageTitle: markdownToPlainText(title),
     title,
     body,
-    guidanceText: extractGuidanceText(body),
-    createdAt,
-    lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+    guidanceText: extractGuidanceText(body)
   };
-};
-
-// Process all guidance request files into structured objects
-function createProcessedGuidanceRequests(guidanceDir) {
-  const guidanceFiles = getGuidanceFiles(guidanceDir);
-  const guidanceRequests = parseMarkdownFiles(guidanceFiles);
-  const processedGuidanceRequests = guidanceRequests.map(getProcessedGuidanceRequest);
-
-  return processedGuidanceRequests;
-};
-
-// ============================================================================
-// Curated List Processing
-// ============================================================================
-
-// Get README.yml files from FAQ subdirectories
-function getListFiles(faqDir) {
-  const files = fs.readdirSync(faqDir, { withFileTypes: true, recursive: true });
-
-  const listFiles = files.filter(entry => {
-    return entry.isFile() &&                    // Only files
-      entry.name === 'README.yml' &&            // Must be named README.yml
-      entry.parentPath !== faqDir;              // Not at the root of FAQ directory
-  });
-
-  return listFiles;
 }
 
-// Parse list
-function getProcessedList(list) {
-  const values = list.data;
-  const id = toPosixPath(path.basename(list.path));
+// ============================================================================
+// List Processing
+// ============================================================================
 
-  // Normalize FAQ references so they match FAQ Ids. Allows for a list to reference FAQ in or out of its category
-  const normalizedFaqRefs = values.faqs.map(faqRef => {
-    if (faqRef.includes('/')) {
-      return faqRef;
-    } else {
-      return `${id}/${faqRef}`;
+function normalizeReferenceIds(relativeIds = [], listId) {
+  return relativeIds.map(id => {
+    if (!listId || id.includes('/')) {
+      return id;
     }
+    return `${listId}/${id}`;
   });
+}
 
-  // Get git timestamps for this file
-  const { createdAt, lastUpdatedAt } = getTimestampsForObj(list);
+function isList(file) {
+  return file.isFile() && file.name === LIST_FILENAME;
+}
+
+function createList(file) {
+  const isRoot = file.id === ROOT_LIST_ID;
+  const itemRefs = normalizeReferenceIds(file.yaml.faqs, isRoot ? null : file.id);
 
   return {
+    ...file,
     type: "list",
-    id,
-    posixPath: list.posixPath,
-    title: values.title,
-    icon: values.icon,
-    faqs: normalizedFaqRefs,
-    permalink: `/faq/${id}/`,
-    description: values.description,
-    createdAt,
-    lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-    editOnGithubUrl: list.editOnGithubUrl,
+    pageTitle: markdownToPlainText(file.yaml.title),
+    title: file.yaml.title,
+    icon: file.yaml.icon,
+    itemRefs,
+    description: file.yaml.description,
+    isRoot,
+    parentLists: [], // Lists that include this list (filled during cross-referencing)
+    faqCount: 0,
+    listCount: 0
   }
 }
-
-// Process list files and normalize FAQ references
-function createLists(faqDir) {
-  const rawListFiles = getListFiles(faqDir);
-  const parsedLists = parseYamlFiles(rawListFiles);
-  const lists = parsedLists.map(getProcessedList);
-
-  return lists;
-};
 
 // ============================================================================
 // Authors Processing
@@ -478,14 +399,73 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
   });
 };
 
-// Link lists with their FAQs (bidirectional)
+// Link lists with their FAQs and sublists (bidirectional)
 function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
-    list.faqs = list.faqs.map(faqId => {
-      const faqObject = faqs.find(faq => faq.id === faqId);
-      faqObject.relatedLists.push(list);
-      return faqObject;
-    });
+    list.items = list.itemRefs.map(itemRef => {
+      // First check if it's a list reference
+      const sublist = lists.find(l => l.id === itemRef);
+      if (sublist) {
+        sublist.parentLists.push(list); // Track parent list
+        return sublist;
+      }
+
+      // Otherwise treat as FAQ reference
+      const faqObject = faqs.find(faq => faq.id === itemRef);
+      if (faqObject) {
+        faqObject.relatedLists.push(list); // Track parent list
+        return faqObject;
+      }
+
+      return null;
+    }).filter(item => item !== null);
+  });
+}
+
+// Recursively count all descendants (FAQs and lists) at all nesting levels
+function countListChildElementsRecursively(list) {
+  let faqCount = 0;
+  let listCount = 0;
+
+  list.items.forEach(item => {
+    if (item.type === 'faq') {
+      faqCount++;
+    } else if (item.type === 'list') {
+      listCount++;
+      // Recursively count descendants of nested lists
+      const nestedCounts = countListChildElementsRecursively(item);
+      faqCount += nestedCounts.faqCount;
+      listCount += nestedCounts.listCount;
+    }
+  });
+
+  return { faqCount, listCount };
+}
+
+// Format count text for display
+function createCountText(faqCount, listCount) {
+  const faqText = `${faqCount} FAQ${faqCount !== 1 ? 's' : ''}`;
+  if (listCount > 0) {
+    const listText = `${listCount} list${listCount !== 1 ? 's' : ''}`;
+    return `${faqText} organised in ${listText}`;
+  }
+  return faqText;
+}
+
+// Calculate counts for all lists
+function calculateListCounts(lists) {
+  lists.forEach(list => {
+    const counts = countListChildElementsRecursively(list);
+    list.faqCount = counts.faqCount;
+    list.listCount = counts.listCount;
+    list.countText = createCountText(counts.faqCount, counts.listCount);
+  });
+}
+
+// Resolve custom link syntax in content fields
+function resolveLinksInContent(items, fieldName, internalLinkIndex) {
+  items.forEach(item => {
+    item[fieldName] = resolveLinks(item[fieldName], item.category, internalLinkIndex, craReferences);
   });
 }
 
@@ -495,48 +475,32 @@ function crossReferenceListsAndFaqs(lists, faqs) {
 
 // Orchestrate the complete data processing pipeline
 function processAllContent() {
+  const entries = fs.readdirSync(FAQ_DIR, { withFileTypes: true, recursive: true });
 
-  // 1. Get and parse FAQs
-  const faqs = createProcessedFaqs(FAQ_DIR);
+  const faqs = entries.filter(isFaq).map(getMarkdownFile).map(createFaq);
+  const guidanceRequests = entries.filter(isGuidance).map(getMarkdownFile).map(createGuidanceRequest);
+  const lists = entries.filter(isList).map(getREADME).map(createList);
 
-  // 2. Get and parse Guidance Requests
-  const guidanceRequests = createProcessedGuidanceRequests(GUIDANCE_DIR);
-
-  // 3. Enrich FAQs and Guidance Requests with their cross references
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
-
-  // 4. Get lists
-  const lists = createLists(FAQ_DIR);
-
-  // 5. Connect lists with FAQs
   crossReferenceListsAndFaqs(lists, faqs);
+  calculateListCounts(lists);
 
-  // 6. Create internal link index for all content types
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
 
-  // 7. Resolve all custom link syntax in markdown content
-  faqs.forEach(faq => {
-    const context = { category: faq.category };
-    faq.answer = resolveLinks(faq.answer, context, internalLinkIndex, craReferences);
-  });
+  resolveLinksInContent(faqs, 'answer', internalLinkIndex);
+  resolveLinksInContent(guidanceRequests, 'body', internalLinkIndex);
 
-  guidanceRequests.forEach(guidance => {
-    const context = { category: 'pending-guidance' };
-    guidance.body = resolveLinks(guidance.body, context, internalLinkIndex, craReferences);
-  });
+  const acknowledgements = processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
 
-  // 8. Get and process AUTHORS.md AND CONTRIBUTORS.md
-  const authorsPath = path.join(FAQ_DIR, "AUTHORS.md");
-  const contribPath = path.join(ROOT_DIR, "CONTRIBUTORS.md");
-  const acknowledgements = processAcknowledgements(authorsPath, contribPath);
+  // Extract root list for easy access
+  const rootList = lists.find(list => list.id === ROOT_LIST_ID);
 
   return {
     faqs,
     guidance: guidanceRequests,
-    faqItems: faqs,
-    lists: lists,
-    acknowledgements,
-    internalLinks: internalLinkIndex
+    lists,
+    rootList,
+    acknowledgements
   };
 }
 

@@ -2,16 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = {
-  // Sample FAQs for the simple list component
-  sampleListFaqs: [
-    { question: "What is the Cyber Resilience Act (CRA)?", permalink: "#" },
-    { question: "Who needs to comply with the CRA?", permalink: "#" },
-    { question: "When does the CRA take effect?", permalink: "#" },
-    { question: "What are the main requirements?", permalink: "#" }
-  ],
-
-  // Sample FAQs for the accordion component
-  sampleAccordionFaqs: [
+  // Sample items for accordion (includes FAQs and nested list)
+  sampleAccordionItems: [
     {
       type: "faq",
       question: "How do I implement security updates?",
@@ -30,6 +22,17 @@ Key steps:
       editOnGithubUrl: "#"
     },
     {
+      type: "list",
+      id: "advanced-topics",
+      title: "Advanced Security Topics",
+      icon: "🔐",
+      description: "Deep dive into advanced security practices",
+      permalink: "#advanced",
+      faqCount: 2,
+      listCount: 0,
+      countText: "2 faqs"
+    },
+    {
       type: "faq",
       question: "What documentation is required for compliance?",
       answer: `You need to maintain comprehensive documentation including:
@@ -45,22 +48,97 @@ Key steps:
       filename: "documentation.md",
       status: "approved",
       editOnGithubUrl: "#"
-    },
-    {
-      type: "faq",
-      question: "How should I handle vulnerability disclosure?",
-      answer: `Establish a clear vulnerability disclosure policy that includes:
-
-> [!IMPORTANT]
-> Your disclosure timeline should align with the severity of the vulnerability.
-
-Create a security.txt file and publish contact information for security researchers.`,
-      permalink: "#faq-3",
-      filename: "vulnerability-disclosure.md",
-      status: "draft",
-      editOnGithubUrl: "#"
     }
   ],
+
+  // Sample data for recursive list component and accordion
+  sampleRecursiveList: {
+    type: "list",
+    title: "Getting Started with CRA",
+    icon: "🚀",
+    description: "Essential questions about CRA compliance organized by topic",
+    permalink: "#getting-started",
+    editOnGithubUrl: "#",
+    faqCount: 5,
+    listCount: 2,
+    countText: "5 faqs organised in 2 lists",
+    items: [
+      {
+        type: "faq",
+        question: "What is the Cyber Resilience Act?",
+        answer: "The Cyber Resilience Act (CRA) is EU legislation aimed at improving cybersecurity of digital products.",
+        permalink: "#what-is-cra",
+        status: "approved",
+        editOnGithubUrl: "#"
+      },
+      {
+        type: "list",
+        title: "For Developers",
+        icon: "💻",
+        description: "Questions specific to software developers",
+        permalink: "#for-developers",
+        editOnGithubUrl: "#",
+        faqCount: 3,
+        listCount: 1,
+        countText: "3 faqs organised in 1 list",
+        items: [
+          {
+            type: "faq",
+            question: "Do I need to comply if I maintain open source?",
+            answer: "It depends on your role. Open source stewards have different obligations than manufacturers.",
+            permalink: "#oss-compliance",
+            status: "approved",
+            editOnGithubUrl: "#"
+          },
+          {
+            type: "list",
+            title: "Security Best Practices",
+            icon: "🔒",
+            description: "Detailed security guidelines and requirements",
+            permalink: "#security-best-practices",
+            editOnGithubUrl: "#",
+            faqCount: 2,
+            listCount: 0,
+            countText: "2 faqs",
+            items: [
+              {
+                type: "faq",
+                question: "What security measures are required?",
+                answer: "CRA requires secure by design principles, vulnerability handling, and documentation.",
+                permalink: "#security-measures",
+                status: "draft",
+                editOnGithubUrl: "#"
+              },
+              {
+                type: "faq",
+                question: "How do I implement vulnerability disclosure?",
+                answer: "You need a coordinated vulnerability disclosure process and contact point.",
+                permalink: "#vulnerability-disclosure",
+                status: "approved",
+                editOnGithubUrl: "#"
+              }
+            ]
+          },
+          {
+            type: "faq",
+            question: "What about testing requirements?",
+            answer: "Products must undergo security testing before market placement.",
+            permalink: "#testing",
+            status: "approved",
+            editOnGithubUrl: "#"
+          }
+        ]
+      },
+      {
+        type: "faq",
+        question: "When does the CRA take effect?",
+        answer: "The CRA comes into force in phases, with full compliance required by December 2027.",
+        permalink: "#timeline",
+        status: "approved",
+        editOnGithubUrl: "#"
+      }
+    ]
+  },
 
   // Sample FAQs with different statuses for badge demonstration
   sampleBadgeFaqs: [
@@ -102,6 +180,17 @@ Create a security.txt file and publish contact information for security research
       guidanceFileNotFound: true
     }
   ],
+
+  // Sample list card data
+  sampleListCard: {
+    title: "Advanced Topics",
+    icon: "🎓",
+    description: "Deep dive into advanced CRA compliance topics",
+    permalink: "#advanced",
+    faqCount: 7,
+    listCount: 2,
+    countText: "7 faqs organised in 2 lists"
+  },
 
   // Read the markdown content file
   markdownContent: fs.readFileSync(

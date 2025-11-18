@@ -16,31 +16,52 @@ eleventyExcludeFromCollections: true
   {{ styleGuideData.markdownContent | markdown | safe }}
 </article>
 
-<h2>FAQ List Component (Simple Links)</h2>
-<p>Component: <code>components/faq-list-simple.njk</code> | Data: <code>styleGuideData.sampleListFaqs</code></p>
-<article class="section-card">
+<h2>FAQ List with Nesting (from All FAQs page)</h2>
+<p>The "All FAQs" page (<code>faq-all.njk</code>) renders nested list structures using the recursive component with alternating backgrounds</p>
+<p>Component: <code>components/faq-list-recursive.njk</code> - Recursively renders FAQs with nested sublists</p>
+<p>Data: <code>styleGuideData.sampleRecursiveList</code> - Shows FAQs with nested subcategory</p>
+<p>Features:</p>
+<ul>
+  <li>Alternating backgrounds: odd depths (1, 3, 5...) get light grey, even depths (2, 4, 6...) get white</li>
+  <li>Root level (depth 0) has no borders or padding around list containers</li>
+  <li>Nested levels (depth 1+) have 20px/30px padding, borders, and rounded corners</li>
+  <li>Uses <code>.nested-faq-list</code> class on section for scoped styling</li>
+</ul>
 
-{% set componentData = {
-  title: "Getting Started Questions",
-  description: "Basic questions about the Cyber Resilience Act",
-  icon: "🚀",
-  faqs: styleGuideData.sampleListFaqs
-} %}
-{% include "components/faq-list-simple.njk" %}
-</article>
+<section class="section-card nested-faq-list">
+  {% set listData = styleGuideData.sampleRecursiveList %}
+  {% include "components/faq-list-recursive.njk" %}
+</section>
 
 <h2>FAQ Accordion Component</h2>
-<p>Component: <code>components/faq-accordion.njk</code> | Data: <code>styleGuideData.sampleAccordionFaqs</code></p>
+<p>Component: <code>components/faq-accordion.njk</code> - Used on individual list pages with support for nested list cards</p>
+<p>Data: <code>styleGuideData.sampleRecursiveList</code> - Same data as above, rendered as accordion</p>
+<p>Features:</p>
+<ul>
+  <li>Conditionally wraps content in <code>&lt;article class="section-card"&gt;</code> based on <code>isRoot</code> property</li>
+  <li>When <code>isRoot: true</code>, hides the title and section wrapper (used on individual list pages)</li>
+  <li>When <code>isRoot: false</code> or undefined, shows title and wraps in section card</li>
+  <li>Includes list-level actions (Edit, Copy link, Go to page) at the bottom when not root</li>
+  <li>FAQ items render as native <code>&lt;details&gt;</code> accordions with individual actions</li>
+</ul>
 
 <article class="section-card">
-  {% set componentData = {
-    title: "Technical Questions",
-    description: "Detailed technical questions with expandable answers",
-    icon: "🔧",
-    faqs: styleGuideData.sampleAccordionFaqs
-  } %}
+  {% set componentData = styleGuideData.sampleRecursiveList %}
   {% include "components/faq-accordion.njk" %}
 </article>
+
+<h2>FAQ Accordion with isRoot (Individual List Pages)</h2>
+<p>When used on individual list pages, the list object has <code>isRoot: true</code> to hide the title and wrapper</p>
+<p>This is how <code>faq-list-paginated.njk</code> displays lists - without the section card wrapper around the entire list</p>
+<p><em>Note: On real list pages, isRoot is set in the data layer. Style guide shows the standard accordion view above.</em></p>
+
+<h2>List Card Component</h2>
+<p>Component: <code>components/list-card.njk</code> - Displays nested lists as clickable cards with FAQ/category counts</p>
+
+<div class="list-card-wrapper">
+  {% set listData = styleGuideData.sampleListCard %}
+  {% include "components/list-card.njk" %}
+</div>
 
 <h2>Status Badges</h2>
 <p>Component: <code>components/faq-badges.njk</code> | Data: <code>styleGuideData.sampleBadgeFaqs</code></p>

@@ -3,20 +3,32 @@
 
   Parameters (set via componentData variable):
   - title: Section title to display
-  - faqs: Array of FAQ item objects
+  - items: Array of mixed items (FAQs and sublists)
   - description: Optional description text
   - icon: Optional icon to display before title
 #}
 
-
+{% if not componentData.isRoot %}
+<article class="section-card">
   <h2>
     {% if componentData.icon %}{{ componentData.icon }} {% endif %}{{ componentData.title }}
   </h2>
+
   {% if componentData.description %}
     <p>{{ componentData.description }}</p>
   {% endif %}
+{% endif %}
 
-  {% for faq in componentData.faqs %}
+{% for item in componentData.items %}
+  {% if item.type == 'list' %}
+    {# Nested list item - render as card #}
+    <div class="list-card-wrapper">
+      {% set listData = item %}
+      {% include "components/list-card.njk" %}
+    </div>
+  {% else %}
+    {# FAQ item #}
+    {% set faq = item %}
     <details class="faq-accordion-item" name="faq-accordion">
       <summary>
         <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
@@ -32,4 +44,11 @@
         </div>
       </article>
     </details>
-  {% endfor %}
+  {% endif %}
+{% endfor %}
+      {% set item = componentData %}
+    {% include "components/actions.njk" %}
+
+{% if not componentData.isRoot %}
+</article>
+{% endif %}
