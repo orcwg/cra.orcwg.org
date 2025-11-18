@@ -2,6 +2,11 @@
   "title": "CRA FAQ",
   "navigation": [
     {
+      "url": "/faq/new/",
+      "title": "Recent FAQs",
+      "description": "Browse all recent FAQs"
+    },
+    {
       "url": "/faq/all/",
       "title": "All FAQs",
       "description": "Browse all FAQs in one single list"
