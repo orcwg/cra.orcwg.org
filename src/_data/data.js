@@ -207,7 +207,7 @@ function getMarkdownFile(entry) {
   const posixPathWithoutExt = file.posixPath.replace(/\.md$/, "");
   file.permalink = "/" + posixPathWithoutExt + "/"; // backslash to make eleventy happy
   file.id = posixPathWithoutExt.replace(/^faq\//, "");
-  file.category = file.id.replace(/\/[^\/]$/, "");
+  file.category = file.id.replace(/\/[^\/]+$/, ""); // Extract directory path (everything before last slash)
   return file;
 }
 

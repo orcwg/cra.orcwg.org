@@ -75,9 +75,9 @@ function resolveLinks(markdown, category, internalLinks, craReferences) {
     return match;
   });
 
-  // 6. Convert relative .md links
+  // 6. Convert relative links to files (*.md or other extensions, inline style)
   if (category) {
-    result = result.replace(/\[([^\]]+)\]\((\.\.?\/[^)]+\.(md|yml))\)/gi, (match, linkText, href) => {
+    result = result.replace(/\[([^\]]+)\]\((\.\.?\/[^)]+)\)/g, (match, linkText, href) => {
       const currentPath = `faq/${category}`;
       const resolvedPath = path.posix.resolve('/', currentPath, href);
 
@@ -105,6 +105,67 @@ function resolveLinks(markdown, category, internalLinks, craReferences) {
       }
       return match;
     });
+
+    // 7. Convert relative links (reference-style)
+    // Two-phase: collect definitions, then replace usages
+
+    const refDefinitions = new Map();
+
+    // Match: ^[label]: ./path
+    result = result.replace(/^\[([^\]]+)\]:\s*(\.\.?\/[^\s]+)(\s|$)/gim, (match, label, href, _whitespace) => {
+      const currentPath = `faq/${category}`;
+      const resolvedPath = path.posix.resolve('/', currentPath, href);
+
+      // Only process .md and .yml files (FAQs, guidance requests and Lists)
+      const pathMatch = resolvedPath.match(/^\/faq\/([^/]+)\/(.+)\.(md|yml)$/);
+      if (pathMatch) {
+        const [, targetCategory, filename, ext] = pathMatch;
+
+        let targetId;
+        if (ext === 'md') {
+          targetId = `${targetCategory}/${filename}`;
+        } else if (ext === 'yml' && filename === 'README') {
+          targetId = `lists/${targetCategory}`;
+        }
+
+        if (targetId) {
+          const item = internalLinks?.[targetId];
+          if (item) {
+            // Store for later replacement
+            refDefinitions.set(label.toLowerCase(), {
+              url: item.permalink,
+              title: item.pageTitle || item.title,
+              isPage: !!item.pageTitle
+            });
+            return ''; // Remove definition line
+          }
+        }
+      }
+      return match; // Keep if not found
+    });
+
+    // Phase 2: Replace usages with inline links
+    if (refDefinitions.size > 0) {
+      refDefinitions.forEach((ref, label) => {
+        // Handle: [text][label] and [label][]
+        const refRegex1 = new RegExp(`\\[([^\\]]+)\\]\\[${label}\\]`, 'gi');
+        const refRegex2 = new RegExp(`\\[([^\\]]+)\\]\\[\\]`, 'gi');
+
+        const emoji = ref.isPage ? '💬 FAQ' : '💬 FAQ list';
+        const inlineLink = (linkText) => mdLink(linkText, ref.url, `${emoji}: ${ref.title}`);
+
+        // Replace [text][label]
+        result = result.replace(refRegex1, (_match, linkText) => inlineLink(linkText));
+
+        // Replace [label][] only if text matches
+        result = result.replace(refRegex2, (_match, linkText) => {
+          if (linkText.toLowerCase() === label) {
+            return inlineLink(linkText);
+          }
+          return _match;
+        });
+      });
+    }
   }
 
   return result;
