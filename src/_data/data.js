@@ -350,9 +350,7 @@ function createList(file) {
     title: file.yaml.title,
     icon: file.yaml.icon,
     description: file.yaml.description,
-    emptyMsg: file.yaml.emptyMsg,
     isRoot,
-    children: [], // Populated during cross-referencing
     parents: [], // Lists that include this list (filled during cross-referencing)
     faqCount: 0,
     listCount: 0
