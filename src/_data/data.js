@@ -509,7 +509,7 @@ function generateUnlistedFAQList(faqs, root) {
     listCount: 0
   };
   generatedList.parents.push(root);
-  root.children.unshift(generatedList);
+  root.children.push(generatedList);
   return generatedList;
 }
 
@@ -543,7 +543,7 @@ function generateNewFAQList (faqs, root) {
   };
   
   generatedList.parents.push(root);
-  root.children.push(generatedList);
+  root.children.unshift(generatedList);
   return generatedList;
 }
 
@@ -564,7 +564,7 @@ function processAllContent() {
   crossReferenceListsAndFaqs(lists, faqs);
   
   lists.push(generateUnlistedFAQList(faqs, rootList));
-  lists.unshift(generateNewFAQList(faqs, rootList));
+  lists.push(generateNewFAQList(faqs, rootList));
   
   calculateListCounts(lists);
 
