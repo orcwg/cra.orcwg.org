@@ -61,7 +61,7 @@ eleventyExcludeFromCollections: true
 </section>
 
 <section class="section-card nested-faq-list">
-  {% set listData = styleGuideData.sampleRecursiveList %}
+  {% set list = styleGuideData.sampleRecursiveList %}
   {% set currentDepth = 0 %}
   {% include "components/faq/list-expanded-items.njk" %}
 </section>
@@ -80,7 +80,7 @@ eleventyExcludeFromCollections: true
   {% for item in styleGuideData.sampleRecursiveList.children %}
     {% if item.type == 'list' %}
       <div class="list-card-wrapper">
-        {% set listData = item %}
+        {% set list = item %}
         {% include "components/list-card.njk" %}
       </div>
     {% endif %}

@@ -13,7 +13,7 @@
   {% if item.type == 'list' and not item.hideFromIndex %}
     {# Render sublist as a card #}
     <div class="list-card-wrapper">
-      {% set listData = item %}
+      {% set list = item %}
       {% include "components/list-card.njk" %}
     </div>
   {% elif item.type == 'faq' %}
