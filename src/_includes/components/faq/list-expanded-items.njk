@@ -1,0 +1,31 @@
+{#
+  List Expanded Items Component
+
+  Renders the list items (FAQs and sublists) without the heading/description.
+  This is the "list part" that can be used standalone or wrapped with context.
+
+  Parameters:
+  - listData: List object with children
+  - currentDepth: Current nesting depth (default 0)
+#}
+<ul class="link-list depth-{{ 'odd' if currentDepth % 2 else 'even' }}">
+  {% for item in listData.children %}
+    {% if item.type == 'list' and not item.hideFromIndex %}
+      {# Nested list - render with context wrapper #}
+      <li>
+        {% set listData = item %}
+        {% set currentDepth = currentDepth + 1 %}
+        {% include "components/faq/list-expanded-with-context.njk" %}
+      </li>
+    {% elif item.type == "faq" %}
+      {# FAQ item #}
+      {% set faq = item %}
+      <li>
+        <a href="{{ faq.permalink }}">
+          <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+          <span class="badges" hidden>{% include "components/faq/faq-badges.njk" %}</span>
+        </a>
+      </li>
+    {% endif %}
+  {% endfor %}
+</ul>

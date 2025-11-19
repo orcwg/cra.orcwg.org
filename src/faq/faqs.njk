@@ -1,4 +1,7 @@
 ---
+# Individual FAQ Pages
+# Paginated template that generates a page for each FAQ
+# Shows the full FAQ content on its own page
 layout: layout.njk
 pagination:
   data: data.faqs
@@ -13,7 +16,7 @@ eleventyComputed:
   <h1 class="section-header">{{ faq.question | markdownInline | safe }}</h1>
   {{ faq.answer | markdown | safe }}
 
-  {% include "components/faq-warning.njk" %}
-  
-  {% include "components/actions.njk" %}
+  {% include "components/faq/faq-warning.njk" %}
+  {% set item = faq %}
+  {% include "components/common/actions.njk" %}
 </article>

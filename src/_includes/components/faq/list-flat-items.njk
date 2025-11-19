@@ -1,0 +1,29 @@
+{#
+  List Flat Items Component
+
+  Renders just the items of a list (without context/header).
+  Sublists are displayed as cards, FAQs as collapsible accordions.
+  No recursion - just the immediate children.
+
+  Parameters:
+  - list: The list object whose children to display
+#}
+
+{% for item in list.children %}
+  {% if item.type == 'list' and not item.hideFromIndex %}
+    {# Render sublist as a card #}
+    <div class="list-card-wrapper">
+      {% set listData = item %}
+      {% include "components/list-card.njk" %}
+    </div>
+  {% elif item.type == 'faq' %}
+    {# Render FAQ as accordion item #}
+    {% set faq = item %}
+    {% include "components/faq/faq-accordion-item.njk" %}
+  {% endif %}
+{% else %}
+  {{ (list.emptyMsg | default("No FAQs in this list yet.")) | markdown | safe }}
+{% endfor %}
+
+{% set item = list %}
+{% include "components/common/actions.njk" %}

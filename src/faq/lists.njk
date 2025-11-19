@@ -1,0 +1,22 @@
+---
+# FAQ List Pages
+# Paginated template that generates a page for each FAQ list (including root)
+# Root list shows items only, other lists show with context (title and description)
+layout: layout.njk
+pagination:
+  data: data.lists
+  size: 1
+  alias: list
+  addAllPagesToCollections: true
+permalink: "{{ list.permalink }}"
+eleventyComputed:
+  title: "{{ list.title }}"
+---
+
+{% if list.isRoot %}
+  {# Root list - show items directly without context header #}
+  {% include "components/faq/list-flat-items.njk" %}
+{% else %}
+  {# Non-root lists - show with context (title and description) #}
+  {% include "components/faq/list-flat-with-context.njk" %}
+{% endif %}

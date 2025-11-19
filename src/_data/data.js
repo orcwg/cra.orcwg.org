@@ -142,9 +142,9 @@ function generateTimestamps(faqs) {
   let createdAt = new Date(0);
   let lastUpdatedAt = new Date(0);
 
-  if ( faqs.length > 0 ) {
-    createdAt = new Date(Math.max(...faqs.map( faq => faq.createdAt.getTime())));
-    lastUpdatedAt = new Date(Math.max(...faqs.map( faq => faq.lastUpdatedAt.getTime())));
+  if (faqs.length > 0) {
+    createdAt = new Date(Math.max(...faqs.map(faq => faq.createdAt.getTime())));
+    lastUpdatedAt = new Date(Math.max(...faqs.map(faq => faq.lastUpdatedAt.getTime())));
   }
   return { createdAt, lastUpdatedAt };
 }
@@ -486,7 +486,7 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
 function generateUnlistedFAQList(faqs, root) {
   const unlistedFaqs = faqs.filter(unlistedFaq => unlistedFaq.parents.length === 0);
 
-  const {createdAt, lastUpdatedAt} = generateTimestamps(unlistedFaqs);
+  const { createdAt, lastUpdatedAt } = generateTimestamps(unlistedFaqs);
   const title = "Unlisted FAQs";
 
   const generatedList = {
@@ -495,8 +495,8 @@ function generateUnlistedFAQList(faqs, root) {
     pageTitle: title,
     title,
     icon: "❌",
-    description: "FAQs not yet assigned to any category",
-    emptyMsg: "Great news! All FAQs are properly categorized. There are currently no unlisted FAQs.",
+    description: "FAQs not yet assigned to any list",
+    emptyMsg: "Great news! All FAQs are properly assigned to lists. There are currently no unlisted FAQs.",
     hideFromIndex: unlistedFaqs.length == 0,
     children: unlistedFaqs,
     permalink: "/faq/unlisted/",
@@ -513,12 +513,12 @@ function generateUnlistedFAQList(faqs, root) {
   return generatedList;
 }
 
-function generateNewFAQList (faqs, root) {
+function generateNewFAQList(faqs, root) {
   // Sort all new FAQs from the newest to oldest
   // The newest-first logic is to provide the latest FAQs at first sight
   const newFAQs = faqs.filter(newFAQ => newFAQ.isNew).sort((a, b) => b.createdAt - a.createdAt);
 
-  const { createdAt, lastUpdatedAt } = generateTimestamps( newFAQs );
+  const { createdAt, lastUpdatedAt } = generateTimestamps(newFAQs);
 
   const title = "New FAQs";
 
@@ -528,7 +528,7 @@ function generateNewFAQList (faqs, root) {
     pageTitle: title,
     title,
     icon: "🌟",
-    description: `FAQs added within the last ${ NEW_CONTENT_THRESHOLD } days`,
+    description: `FAQs added within the last ${NEW_CONTENT_THRESHOLD} days`,
     emptyMsg: "It seems there aren't any newly created FAQs",
     hideFromIndex: true,
     children: newFAQs,
@@ -541,7 +541,7 @@ function generateNewFAQList (faqs, root) {
     faqCount: 0,
     listCount: 0
   };
-  
+
   generatedList.parents.push(root);
   root.children.unshift(generatedList);
   return generatedList;
@@ -559,13 +559,13 @@ function processAllContent() {
   const guidanceRequests = entries.filter(isGuidance).map(getMarkdownFile).map(createGuidanceRequest);
   const lists = entries.filter(isList).map(getREADME).map(createList);
   const rootList = lists.find(list => list.id === ROOT_LIST_ID);
-    
+
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
   crossReferenceListsAndFaqs(lists, faqs);
-  
+
   lists.push(generateUnlistedFAQList(faqs, rootList));
   lists.push(generateNewFAQList(faqs, rootList));
-  
+
   calculateListCounts(lists);
 
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
@@ -574,8 +574,6 @@ function processAllContent() {
   resolveLinksInContent(guidanceRequests, 'body', internalLinkIndex);
 
   const acknowledgements = processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
-
-  // Extract root list for easy access
 
   return {
     faqs,

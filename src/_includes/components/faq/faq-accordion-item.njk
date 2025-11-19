@@ -1,0 +1,25 @@
+{#
+  FAQ Accordion Item Component
+
+  Renders a single FAQ as a collapsible accordion item.
+  Used on list pages to show multiple FAQs.
+
+  Parameters:
+  - faq: FAQ object with question, answer, etc.
+#}
+
+<details class="faq-accordion-item" name="faq-accordion">
+  <summary>
+    <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+  </summary>
+
+  <article>
+    <div>
+      {{ faq.answer | markdown | safe }}
+
+      {% include "components/faq/faq-warning.njk" %}
+      {% set item = faq %}
+      {% include "components/common/actions.njk" %}
+    </div>
+  </article>
+</details>
