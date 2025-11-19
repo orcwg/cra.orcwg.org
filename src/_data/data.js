@@ -489,7 +489,7 @@ function generateUnlistedFAQList(faqs, root) {
   const { createdAt, lastUpdatedAt } = generateTimestamps(unlistedFaqs);
   const title = "Unlisted FAQs";
 
-  const generatedList = {
+  const list = {
     type: LIST,
     id: "unlisted",
     pageTitle: title,
@@ -501,17 +501,18 @@ function generateUnlistedFAQList(faqs, root) {
     hideInAllFaqs: unlistedFaqs.length == 0,
     children: unlistedFaqs,
     permalink: "/faq/unlisted/",
-    parents: [],
+    parents: [root],
     createdAt,
     lastUpdatedAt,
     isNew: isNew(createdAt),
     recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
     faqCount: 0,
-    listCount: 0
+    listCount: 0,
+    yaml: { faqs: [] } // Empty YAML to satisfy structure
   };
-  generatedList.parents.push(root);
-  root.children.push(generatedList);
-  return generatedList;
+
+  root.children.push(list);
+  return list;
 }
 
 function generateNewFAQList(faqs, root) {
@@ -523,7 +524,7 @@ function generateNewFAQList(faqs, root) {
 
   const title = "New FAQs";
 
-  const generatedList = {
+  const list = {
     type: LIST,
     id: "new",
     pageTitle: title,
@@ -531,57 +532,57 @@ function generateNewFAQList(faqs, root) {
     icon: "🌟",
     description: `FAQs added within the last ${NEW_CONTENT_THRESHOLD} days`,
     emptyMsg: "It seems there aren't any newly created FAQs",
-    hideInTopics: newFAQs.length == 0,
+    hideInTopics: (newFAQs.length == 0),
     hideInAllFaqs: true, // Never display the new faqs dynamic list in /faq/all
     children: newFAQs,
     permalink: "/faq/new/",
-    parents: [],
+    parents: [root],
     createdAt,
     lastUpdatedAt,
     isNew: isNew(createdAt),
     recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
     faqCount: 0,
-    listCount: 0
+    listCount: 0,
+    yaml: { faqs: [] } // Empty YAML to satisfy structure
   };
 
-  generatedList.parents.push(root);
-  root.children.unshift(generatedList);
-  return generatedList;
+  root.children.unshift(list); // Add to top
+  return list;
 }
 
-function generateUpdatedRecentFAQList (faqs, root) {
+function generateRecentlyUpdatedFAQList(faqs, root) {
   // Sort all recent FAQs from the newest to oldest
   // The newest-first logic is to provide the latest FAQs at first sight
   const recentUpdatedFAQs = faqs.filter(faq => faq.recentlyUpdated).sort((a, b) => b.createdAt - a.createdAt);
 
-  const { createdAt, lastUpdatedAt } = generateTimestamps( recentUpdatedFAQs );
+  const { createdAt, lastUpdatedAt } = generateTimestamps(recentUpdatedFAQs);
 
   const title = "Recently Updated FAQs";
 
-  const generatedList = {
+  const list = {
     type: LIST,
     id: "recently-updated",
     pageTitle: title,
     title,
     icon: "💫",
-    description: `FAQs updated within the last ${ RECENTLY_UPDATED_THRESHOLD } days`,
+    description: `FAQs updated within the last ${RECENTLY_UPDATED_THRESHOLD} days`,
     emptyMsg: "It seems there aren't any recently updated FAQs",
-    hideInTopics: false,
-    hideInAllFaqs: recentUpdatedFAQs.length == 0,
+    hideInTopics: recentUpdatedFAQs.length == 0,
+    hideInAllFaqs: true,
     children: recentUpdatedFAQs,
     permalink: "/faq/recently-updated/",
-    parents: [],
+    parents: [root],
     createdAt,
     lastUpdatedAt,
     isNew: isNew(createdAt),
     recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
     faqCount: 0,
-    listCount: 0
+    listCount: 0,
+    yaml: { faqs: [] } // Empty YAML to satisfy structure
   };
-  
-  generatedList.parents.push(root);
-  root.children.push(generatedList);
-  return generatedList;
+
+  root.children.unshift(list); // Add to top (after new)
+  return list;
 }
 
 // ============================================================================
@@ -598,11 +599,18 @@ function processAllContent() {
   const rootList = lists.find(list => list.id === ROOT_LIST_ID);
 
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
+
+  // Cross-reference YAML-based lists and FAQs first
   crossReferenceListsAndFaqs(lists, faqs);
 
-  lists.push(generateUnlistedFAQList(faqs, rootList));
-  lists.push(generateNewFAQList(faqs, rootList));
-  lists.unshift(generateUpdatedRecentFAQList(faqs, rootList));
+  // Generate dynamic lists AFTER cross-referencing (so they can detect unlisted FAQs)
+  // Generate in reverse order since unshift() adds to the beginning
+  const recentlyUpdatedList = generateRecentlyUpdatedFAQList(faqs, rootList);
+  const newList = generateNewFAQList(faqs, rootList);
+  const unlistedList = generateUnlistedFAQList(faqs, rootList);
+
+  // Add dynamic lists to the lists array so they get counted and processed
+  lists.push(newList, recentlyUpdatedList, unlistedList);
 
   calculateListCounts(lists);
 
