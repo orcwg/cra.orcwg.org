@@ -323,7 +323,7 @@ function createGuidanceRequest(file) {
 }
 
 // ============================================================================
-// List Processing
+// YAML List Processing
 // ============================================================================
 
 function normalizeReferenceIds(relativeIds = [], listId) {
@@ -339,6 +339,7 @@ function isList(file) {
   return file.isFile() && file.name === LIST_FILENAME;
 }
 
+// Create a list from a YAML file
 function createList(file) {
   const isRoot = file.id === ROOT_LIST_ID;
 
@@ -349,7 +350,9 @@ function createList(file) {
     title: file.yaml.title,
     icon: file.yaml.icon,
     description: file.yaml.description,
+    emptyMsg: file.yaml.emptyMsg,
     isRoot,
+    children: [], // Populated during cross-referencing
     parents: [], // Lists that include this list (filled during cross-referencing)
     faqCount: 0,
     listCount: 0
@@ -412,22 +415,38 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
   });
 };
 
-// Link lists with their FAQs and sublists (bidirectional)
+// Cross-reference YAML-based lists with their FAQs and sublists (bidirectional)
 function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
+    // Skip if this list has no YAML definition (dynamic lists don't have YAML)
+    if (!list.yaml?.faqs) {
+      return;
+    }
+
     const childRefs = normalizeReferenceIds(list.yaml.faqs, list.isRoot ? null : list.id);
     list.children = childRefs.map(itemRef => {
-      // First check if it's a list reference
+      // Check for dynamic list namespace (~dynamic/name)
+      if (itemRef.startsWith('~dynamic/')) {
+        const dynamicListId = itemRef.substring(9); // Remove '~dynamic/' prefix
+        const sublist = lists.find(l => l.id === dynamicListId);
+        if (sublist) {
+          sublist.parents.push(list);
+          return sublist;
+        }
+      }
+
+      // Check if it's a regular list reference
       const sublist = lists.find(l => l.id === itemRef);
       if (sublist) {
-        sublist.parents.push(list); // Track parent list
+        sublist.parents.push(list);
         return sublist;
       }
 
       // Otherwise treat as FAQ reference
       const faqObject = faqs.find(faq => faq.id === itemRef);
       if (faqObject) {
-        faqObject.parents.push(list); // Track parent list
+        faqObject.parents.push(list);
+        faqObject.listed = true;  // Tag FAQ as listed in a YAML-based list
         return faqObject;
       }
 
@@ -435,6 +454,130 @@ function crossReferenceListsAndFaqs(lists, faqs) {
     }).filter(item => item !== null);
   });
 }
+
+// ============================================================================
+// Dynamic Lists
+// ============================================================================
+
+// Dynamic list configurations
+// Each list has metadata and filter functions to determine behavior
+
+const DYNAMIC_LISTS = [
+  {
+    id: 'new',
+    title: 'New FAQs',
+    icon: '🌟',
+    description: `FAQs added within the last ${NEW_CONTENT_THRESHOLD} days`,
+    emptyMsg: "It seems there aren't any newly created FAQs",
+    inclusionFilter: (faq) => faq.isNew,
+    sortChildren: (a, b) => b.createdAt - a.createdAt,  // Newest first
+    hideInAllFaqsFilter: () => true,  // Always hide in "All FAQs" view
+    hideInTopicsFilter: (list) => list.children.length === 0,  // Hide if empty
+    insertAt: 'top'  // Insert at top of root list
+  },
+  {
+    id: 'recently-updated',
+    title: 'Recently Updated FAQs',
+    icon: '💫',
+    description: `FAQs updated within the last ${RECENTLY_UPDATED_THRESHOLD} days`,
+    emptyMsg: "It seems there aren't any recently updated FAQs",
+    inclusionFilter: (faq) => faq.recentlyUpdated,
+    sortChildren: (a, b) => b.lastUpdatedAt - a.lastUpdatedAt,  // Most recently updated first
+    hideInAllFaqsFilter: () => true,  // Always hide in "All FAQs" view
+    hideInTopicsFilter: (list) => list.children.length === 0,  // Hide if empty
+    insertAt: 'top'  // Insert at bottom of root list
+  },
+  {
+    id: 'unlisted',
+    title: 'Unlisted FAQs',
+    icon: '❌',
+    description: 'FAQs not yet assigned to any list',
+    emptyMsg: 'Great news! All FAQs are properly assigned to lists. There are currently no unlisted FAQs.',
+    inclusionFilter: (faq) => !faq.listed,  // Include FAQs not tagged as listed
+    sortChildren: null,  // No sorting
+    hideInAllFaqsFilter: (list) => list.children.length === 0,  // Hide if empty
+    hideInTopicsFilter: (list) => list.children.length === 0,  // Hide if empty
+    insertAt: 'bottom'  // Insert at bottom of root list
+  }
+];
+
+// Create a dynamic list from configuration
+function createDynamicList(config) {
+  return {
+    type: LIST,
+    id: config.id,
+    permalink: `/faq/${config.id}/`,
+    pageTitle: config.title,
+    title: config.title,
+    icon: config.icon,
+    description: config.description,
+    emptyMsg: config.emptyMsg,
+    children: [], // Populated during cross-referencing
+    parents: [], // Populated during cross-referencing
+    faqCount: 0,
+    listCount: 0
+  };
+}
+
+// Populate dynamic lists based on FAQ properties and filter functions
+function populateDynamicLists(lists, faqs) {
+  // Build index of dynamic lists
+  const dynamicListsIndex = {};
+  DYNAMIC_LISTS.forEach(config => {
+    const list = lists.find(l => l.id === config.id);
+    if (list) {
+      dynamicListsIndex[config.id] = { list, config };
+    }
+  });
+
+  // Populate all dynamic lists using their filter functions
+  faqs.forEach(faq => {
+    Object.values(dynamicListsIndex).forEach(({ list, config }) => {
+      if (config.inclusionFilter && config.inclusionFilter(faq)) {
+        list.children.push(faq);
+      }
+    });
+  });
+
+  // Sort dynamic list children using their sort functions
+  Object.values(dynamicListsIndex).forEach(({ list, config }) => {
+    if (config.sortChildren) {
+      list.children.sort(config.sortChildren);
+    }
+  });
+}
+
+// Finalize dynamic lists metadata after population
+function finalizeDynamicListMetadata(lists) {
+  const dynamicListIds = DYNAMIC_LISTS.map(config => config.id);
+  const dynamicLists = lists.filter(l => dynamicListIds.includes(l.id));
+
+  dynamicLists.forEach(list => {
+    // Find the config for this list
+    const config = DYNAMIC_LISTS.find(c => c.id === list.id);
+
+    // Calculate timestamps from children
+    const { createdAt, lastUpdatedAt } = generateTimestamps(list.children);
+    list.createdAt = createdAt;
+    list.lastUpdatedAt = lastUpdatedAt;
+    list.isNew = isNew(createdAt);
+    list.recentlyUpdated = recentlyUpdated(createdAt, lastUpdatedAt);
+
+    // Apply hideInTopicsFilter function from config
+    if (config?.hideInTopicsFilter) {
+      list.hideInTopics = config.hideInTopicsFilter(list);
+    }
+
+    // Apply hideInAllFaqsFilter function from config
+    if (config?.hideInAllFaqsFilter) {
+      list.hideInAllFaqs = config.hideInAllFaqsFilter(list);
+    }
+  });
+}
+
+// ============================================================================
+// List Utilities
+// ============================================================================
 
 // Recursively count all descendants (FAQs and lists) at all nesting levels
 function countListChildElementsRecursively(list) {
@@ -483,108 +626,6 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
   });
 }
 
-function generateUnlistedFAQList(faqs, root) {
-  const unlistedFaqs = faqs.filter(unlistedFaq => unlistedFaq.parents.length === 0);
-
-  const { createdAt, lastUpdatedAt } = generateTimestamps(unlistedFaqs);
-  const title = "Unlisted FAQs";
-
-  const list = {
-    type: LIST,
-    id: "unlisted",
-    pageTitle: title,
-    title,
-    icon: "❌",
-    description: "FAQs not yet assigned to any list",
-    emptyMsg: "Great news! All FAQs are properly assigned to lists. There are currently no unlisted FAQs.",
-    hideInTopics: unlistedFaqs.length == 0,
-    hideInAllFaqs: unlistedFaqs.length == 0,
-    children: unlistedFaqs,
-    permalink: "/faq/unlisted/",
-    parents: [root],
-    createdAt,
-    lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-    faqCount: 0,
-    listCount: 0,
-    yaml: { faqs: [] } // Empty YAML to satisfy structure
-  };
-
-  root.children.push(list);
-  return list;
-}
-
-function generateNewFAQList(faqs, root) {
-  // Sort all new FAQs from the newest to oldest
-  // The newest-first logic is to provide the latest FAQs at first sight
-  const newFAQs = faqs.filter(newFAQ => newFAQ.isNew).sort((a, b) => b.createdAt - a.createdAt);
-
-  const { createdAt, lastUpdatedAt } = generateTimestamps(newFAQs);
-
-  const title = "New FAQs";
-
-  const list = {
-    type: LIST,
-    id: "new",
-    pageTitle: title,
-    title,
-    icon: "🌟",
-    description: `FAQs added within the last ${NEW_CONTENT_THRESHOLD} days`,
-    emptyMsg: "It seems there aren't any newly created FAQs",
-    hideInTopics: (newFAQs.length == 0),
-    hideInAllFaqs: true, // Never display the new faqs dynamic list in /faq/all
-    children: newFAQs,
-    permalink: "/faq/new/",
-    parents: [root],
-    createdAt,
-    lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-    faqCount: 0,
-    listCount: 0,
-    yaml: { faqs: [] } // Empty YAML to satisfy structure
-  };
-
-  root.children.unshift(list); // Add to top
-  return list;
-}
-
-function generateRecentlyUpdatedFAQList(faqs, root) {
-  // Sort all recent FAQs from the newest to oldest
-  // The newest-first logic is to provide the latest FAQs at first sight
-  const recentUpdatedFAQs = faqs.filter(faq => faq.recentlyUpdated).sort((a, b) => b.createdAt - a.createdAt);
-
-  const { createdAt, lastUpdatedAt } = generateTimestamps(recentUpdatedFAQs);
-
-  const title = "Recently Updated FAQs";
-
-  const list = {
-    type: LIST,
-    id: "recently-updated",
-    pageTitle: title,
-    title,
-    icon: "💫",
-    description: `FAQs updated within the last ${RECENTLY_UPDATED_THRESHOLD} days`,
-    emptyMsg: "It seems there aren't any recently updated FAQs",
-    hideInTopics: recentUpdatedFAQs.length == 0,
-    hideInAllFaqs: true,
-    children: recentUpdatedFAQs,
-    permalink: "/faq/recently-updated/",
-    parents: [root],
-    createdAt,
-    lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-    faqCount: 0,
-    listCount: 0,
-    yaml: { faqs: [] } // Empty YAML to satisfy structure
-  };
-
-  root.children.unshift(list); // Add to top (after new)
-  return list;
-}
-
 // ============================================================================
 // Main Pipeline
 // ============================================================================
@@ -600,17 +641,48 @@ function processAllContent() {
 
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
 
-  // Cross-reference YAML-based lists and FAQs first
+  // Create dynamic lists BEFORE cross-referencing so they can be referenced in YAML files
+  const dynamicLists = DYNAMIC_LISTS.map(createDynamicList);
+
+  // Add dynamic lists to the lists array so they can be found during cross-referencing
+  lists.push(...dynamicLists);
+
+  // Add dynamic list IDs to root's YAML (only those not manually placed)
+  // Use ~dynamic/ namespace to distinguish from regular lists
+  // Separate into top and bottom insertions based on insertAt property
+  const topInsertions = [];
+  const bottomInsertions = [];
+
+  DYNAMIC_LISTS.forEach(config => {
+    const reference = `~dynamic/${config.id}`;
+    // Only auto-add if not already manually placed
+    if (!rootList.yaml.faqs.includes(reference)) {
+      if (config.insertAt === 'top') {
+        topInsertions.push(reference);
+      } else {
+        bottomInsertions.push(reference);
+      }
+    }
+  });
+
+  // Add top insertions in reverse order (so first in array appears first in list)
+  topInsertions.reverse().forEach(reference => {
+    rootList.yaml.faqs.unshift(reference);
+  });
+
+  // Add bottom insertions in order (so first in array appears first after regular items)
+  bottomInsertions.forEach(reference => {
+    rootList.yaml.faqs.push(reference);
+  });
+
+  // Cross-reference YAML-based lists and FAQs
   crossReferenceListsAndFaqs(lists, faqs);
 
-  // Generate dynamic lists AFTER cross-referencing (so they can detect unlisted FAQs)
-  // Generate in reverse order since unshift() adds to the beginning
-  const recentlyUpdatedList = generateRecentlyUpdatedFAQList(faqs, rootList);
-  const newList = generateNewFAQList(faqs, rootList);
-  const unlistedList = generateUnlistedFAQList(faqs, rootList);
+  // Populate dynamic lists based on FAQ properties
+  populateDynamicLists(lists, faqs);
 
-  // Add dynamic lists to the lists array so they get counted and processed
-  lists.push(newList, recentlyUpdatedList, unlistedList);
+  // Finalize dynamic list metadata (timestamps, hideInTopics, etc.)
+  finalizeDynamicListMetadata(lists);
 
   calculateListCounts(lists);
 
