@@ -112,6 +112,42 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
 - Lists maintain bidirectional links with FAQs for navigation
 - Lists are displayed using native HTML `<details>` accordions for compact navigation
 
+### Dynamic Lists
+
+The system automatically generates special lists based on FAQ properties. These are configured in the `DYNAMIC_LISTS` array in `src/_data/data.js`:
+
+**Available Dynamic Lists:**
+- `new` - FAQs created within the last 30 days (sorted newest first)
+- `recently-updated` - FAQs updated within the last 14 days (sorted by update date)
+- `unlisted` - FAQs not yet assigned to any curated list
+
+**Configuration Properties:**
+- `id` - Unique identifier for the list
+- `title`, `icon`, `description` - Display metadata
+- `emptyMsg` - Message shown when the list has no items
+- `inclusionFilter` - Function determining which FAQs to include
+- `sortChildren` - Optional function to sort FAQs in the list
+- `hideInAllFaqsFilter` - Function controlling visibility in "All FAQs" view
+- `hideInTopicsFilter` - Function controlling visibility in topics view
+- `insertAt` - Position in root list (`'top'` or `'bottom'`)
+
+**Referencing in YAML:**
+Dynamic lists can be manually referenced in any README.yml file using the `~dynamic/` namespace:
+
+```yaml
+faqs:
+  - ~dynamic/new          # Reference the "New FAQs" dynamic list
+  - category1
+  - category2
+  - ~dynamic/unlisted     # Reference the "Unlisted FAQs" dynamic list
+```
+
+**Automatic Insertion:**
+If not manually placed in the root README.yml, dynamic lists are automatically inserted:
+- Lists with `insertAt: 'top'` appear at the beginning (in array order)
+- Lists with `insertAt: 'bottom'` appear at the end (in array order)
+- Manually placed dynamic lists are not auto-inserted
+
 ### FAQ Components
 
 The site uses two reusable FAQ components with minimal markup:
