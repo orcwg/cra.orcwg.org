@@ -549,6 +549,41 @@ function generateNewFAQList(faqs, root) {
   return generatedList;
 }
 
+function generateUpdatedRecentFAQList (faqs, root) {
+  // Sort all recent FAQs from the newest to oldest
+  // The newest-first logic is to provide the latest FAQs at first sight
+  const recentUpdatedFAQs = faqs.filter(faq => faq.recentlyUpdated).sort((a, b) => b.createdAt - a.createdAt);
+
+  const { createdAt, lastUpdatedAt } = generateTimestamps( recentUpdatedFAQs );
+
+  const title = "Recently Updated FAQs";
+
+  const generatedList = {
+    type: LIST,
+    id: "recently-updated",
+    pageTitle: title,
+    title,
+    icon: "💫",
+    description: `FAQs updated within the last ${ RECENTLY_UPDATED_THRESHOLD } days`,
+    emptyMsg: "It seems there aren't any recently updated FAQs",
+    hideInTopics: false,
+    hideInAllFaqs: unlistedFaqs.length == 0,
+    children: recentUpdatedFAQs,
+    permalink: "/faq/recently-updated/",
+    parents: [],
+    createdAt,
+    lastUpdatedAt,
+    isNew: isNew(createdAt),
+    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+    faqCount: 0,
+    listCount: 0
+  };
+  
+  generatedList.parents.push(root);
+  root.children.push(generatedList);
+  return generatedList;
+}
+
 // ============================================================================
 // Main Pipeline
 // ============================================================================
@@ -567,6 +602,7 @@ function processAllContent() {
 
   lists.push(generateUnlistedFAQList(faqs, rootList));
   lists.push(generateNewFAQList(faqs, rootList));
+  lists.unshift(generateUpdatedRecentFAQList(faqs, rootList));
 
   calculateListCounts(lists);
 
