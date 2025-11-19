@@ -567,7 +567,7 @@ function generateUpdatedRecentFAQList (faqs, root) {
     description: `FAQs updated within the last ${ RECENTLY_UPDATED_THRESHOLD } days`,
     emptyMsg: "It seems there aren't any recently updated FAQs",
     hideInTopics: false,
-    hideInAllFaqs: unlistedFaqs.length == 0,
+    hideInAllFaqs: recentUpdatedFAQs.length == 0,
     children: recentUpdatedFAQs,
     permalink: "/faq/recently-updated/",
     parents: [],
