@@ -550,9 +550,9 @@ function generateNewFAQList(faqs, root) {
 }
 
 function generateUpdatedRecentFAQList (faqs, root) {
-  // Sort all new FAQs from the newest to oldest
+  // Sort all recent FAQs from the newest to oldest
   // The newest-first logic is to provide the latest FAQs at first sight
-  const recentUpdatedFAQs = faqs.filter(newFAQ => newFAQ.recentlyUpdated).sort((a, b) => b.createdAt - a.createdAt);
+  const recentUpdatedFAQs = faqs.filter(faq => faq.recentlyUpdated).sort((a, b) => b.createdAt - a.createdAt);
 
   const { createdAt, lastUpdatedAt } = generateTimestamps( recentUpdatedFAQs );
 
