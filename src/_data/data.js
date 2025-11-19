@@ -531,7 +531,7 @@ function generateNewFAQList(faqs, root) {
     icon: "🌟",
     description: `FAQs added within the last ${NEW_CONTENT_THRESHOLD} days`,
     emptyMsg: "It seems there aren't any newly created FAQs",
-    hideInTopics: unlistedFaqs.length == 0,
+    hideInTopics: newFAQs.length == 0,
     hideInAllFaqs: true, // Never display the new faqs dynamic list in /faq/all
     children: newFAQs,
     permalink: "/faq/new/",

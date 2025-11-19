@@ -6,15 +6,19 @@
 
   Parameters:
   - list: List object with children
-  - currentDepth: Current nesting depth (default 0)
+  - styleClass: 'odd' or 'even' for alternating backgrounds (default 'even')
 #}
-<ul class="link-list depth-{{ 'odd' if currentDepth % 2 else 'even' }}">
-  {% for item in list.children %}
-    {% if item.type == 'list' and not item.hideFromIndex %}
+{# Save current values before the loop #}
+{% set currentList = list %}
+{% set currentStyleClass = styleClass %}
+
+<ul class="link-list depth-{{ styleClass }}">
+  {% for item in currentList.children %}
+    {% if item.type == 'list' and not item.hideInAllFaqs %}
       {# Nested list - render with context wrapper #}
       <li>
         {% set list = item %}
-        {% set currentDepth = currentDepth + 1 %}
+        {% set styleClass = 'odd' if currentStyleClass == 'even' else 'even' %}
         {% include "components/faq/list-expanded-with-context.njk" %}
       </li>
     {% elif item.type == "faq" %}
