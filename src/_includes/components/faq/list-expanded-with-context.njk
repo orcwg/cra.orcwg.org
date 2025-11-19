@@ -1,0 +1,18 @@
+{#
+  List Expanded With Context Component
+
+  Renders a list with its heading and description (the "context part"),
+  then includes the items component to render the actual list.
+
+  Parameters:
+  - list: List object with title, icon, description, children
+  - currentDepth: Current nesting depth
+#}
+<h2>
+  <a href="{{ list.permalink }}">{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</a>
+</h2>
+{% if list.description %}
+  <p>{{ list.description }}</p>
+{% endif %}
+
+{% include "components/faq/list-expanded-items.njk" %}

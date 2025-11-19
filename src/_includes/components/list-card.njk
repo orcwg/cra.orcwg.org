@@ -1,14 +1,14 @@
 {#
   List Card Component - Card format for displaying a list reference
 
-  Parameters (set via listData variable):
+  Parameters (set via list variable):
   - list: The list object to display as a card
 #}
 
-<a href="{{ listData.permalink }}" class="card">
-  <h2>{% if listData.icon %}{{ listData.icon }} {% endif %}{{ listData.title }}</h2>
-  <p>{{ listData.description }}</p>
+<a href="{{ list.permalink }}" class="card">
+  <h2>{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</h2>
+  <p>{{ list.description }}</p>
   <span class="card-meta">
-    {{ listData.countText }}
+    {{ list.countText }}
   </span>
 </a>

@@ -6,126 +6,148 @@ eleventyExcludeFromCollections: true
 ---
 
 <section class="section-intro">
-  <p><strong>Living Style Guide </strong> - This page demonstrates all design patterns and components using semantic HTML with minimal component classes.</p>
+  <h1 class="section-header">Living Style Guide</h1>
+  <p>This page demonstrates all design patterns and components using semantic HTML with minimal component classes.</p>
   <p>Edit <code>_data/style-guide-content.md</code> or <code>_data/styleGuideData.js</code> to update examples.</p>
 </section>
 
-<h2>Markdown Content Examples</h2>
+{# ============================================================================
+   MARKDOWN CONTENT
+   ============================================================================ #}
 
-<article class="section-card">
+<section class="section-card">
+  <h2>Markdown Content Examples</h2>
   {{ styleGuideData.markdownContent | markdown | safe }}
-</article>
+</section>
 
-<h2>FAQ List with Nesting (from All FAQs page)</h2>
-<p>The "All FAQs" page (<code>faq-all.njk</code>) renders nested list structures using the recursive component with alternating backgrounds</p>
-<p>Component: <code>components/faq-list-recursive.njk</code> - Recursively renders FAQs with nested sublists</p>
-<p>Data: <code>styleGuideData.sampleRecursiveList</code> - Shows FAQs with nested subcategory</p>
-<p>Features:</p>
-<ul>
-  <li>Alternating backgrounds: odd depths (1, 3, 5...) get light grey, even depths (2, 4, 6...) get white</li>
-  <li>Root level (depth 0) has no borders or padding around list containers</li>
-  <li>Nested levels (depth 1+) have 20px/30px padding, borders, and rounded corners</li>
-  <li>Uses <code>.nested-faq-list</code> class on section for scoped styling</li>
-</ul>
+{# ============================================================================
+   FAQ & LIST COMPONENTS - All using sampleRecursiveList for consistency
+   ============================================================================ #}
+
+<section class="section-card">
+  <h2>FAQ Accordion Component</h2>
+  <p>Component: <code>components/faq/faq-accordion-item.njk</code></p>
+  <p>Native HTML accordions with CSS-only animations using <code>&lt;details&gt;</code> elements.</p>
+  <p>Showing FAQs from the same sample list used in other views below.</p>
+
+  {% for item in styleGuideData.sampleRecursiveList.children %}
+    {% if item.type == 'faq' %}
+      {% set faq = item %}
+      {% include "components/faq/faq-accordion-item.njk" %}
+    {% endif %}
+  {% endfor %}
+</section>
+
+<section class="section-card">
+  <h2>List Flat View (With Context)</h2>
+  <p>Component: <code>components/faq/list-flat-with-context.njk</code></p>
+  <p>Shows list title, description, and immediate children (no recursion). Same data as above and below.</p>
+</section>
+
+{% set list = styleGuideData.sampleRecursiveList %}
+{% include "components/faq/list-flat-with-context.njk" %}
+
+<section class="section-card">
+  <h2>List Expanded View (Recursive) with Badges</h2>
+  <p>Component: <code>components/faq/list-expanded-items.njk</code></p>
+  <p>Recursively renders nested list structures with alternating backgrounds. Same data as above.</p>
+  <p><strong>Status Badges:</strong> FAQs display status badges (Component: <code>components/faq/faq-badges.njk</code>) that use <code>&lt;data&gt;</code> elements with semantic values. Use the toggle below to show/hide badges:</p>
+
+  <p>
+    <button type="button" onclick="document.querySelectorAll('.nested-faq-list .badges').forEach(b => b.toggleAttribute('hidden'))">
+      Toggle Badge Visibility
+    </button>
+  </p>
+</section>
 
 <section class="section-card nested-faq-list">
-  {% set listData = styleGuideData.sampleRecursiveList %}
-  {% include "components/faq-list-recursive.njk" %}
+  {% set list = styleGuideData.sampleRecursiveList %}
+  {% set currentDepth = 0 %}
+  {% include "components/faq/list-expanded-items.njk" %}
 </section>
 
-<h2>FAQ Accordion Component</h2>
-<p>Component: <code>components/faq-accordion.njk</code> - Used on individual list pages with support for nested list cards</p>
-<p>Data: <code>styleGuideData.sampleRecursiveList</code> - Same data as above, rendered as accordion</p>
-<p>Features:</p>
-<ul>
-  <li>Conditionally wraps content in <code>&lt;article class="section-card"&gt;</code> based on <code>isRoot</code> property</li>
-  <li>When <code>isRoot: true</code>, hides the title and section wrapper (used on individual list pages)</li>
-  <li>When <code>isRoot: false</code> or undefined, shows title and wraps in section card</li>
-  <li>Includes list-level actions (Edit, Copy link, Go to page) at the bottom when not root</li>
-  <li>FAQ items render as native <code>&lt;details&gt;</code> accordions with individual actions</li>
-</ul>
-
-<article class="section-card">
-  {% set componentData = styleGuideData.sampleRecursiveList %}
-  {% include "components/faq-accordion.njk" %}
-</article>
-
-<h2>FAQ Accordion with isRoot (Individual List Pages)</h2>
-<p>When used on individual list pages, the list object has <code>isRoot: true</code> to hide the title and wrapper</p>
-<p>This is how <code>faq-list-paginated.njk</code> displays lists - without the section card wrapper around the entire list</p>
-<p><em>Note: On real list pages, isRoot is set in the data layer. Style guide shows the standard accordion view above.</em></p>
-
-<h2>List Card Component</h2>
-<p>Component: <code>components/list-card.njk</code> - Displays nested lists as clickable cards with FAQ/category counts</p>
-
-<div class="list-card-wrapper">
-  {% set listData = styleGuideData.sampleListCard %}
-  {% include "components/list-card.njk" %}
-</div>
-
-<h2>Status Badges</h2>
-<p>Component: <code>components/faq-badges.njk</code> | Data: <code>styleGuideData.sampleBadgeFaqs</code></p>
+{# ============================================================================
+   CARD COMPONENTS
+   ============================================================================ #}
 
 <section class="section-card">
-  <p>Status badges appear on FAQs to indicate their review state. They use <code>&lt;data&gt;</code> elements with semantic values.</p>
+  <h2>List Card Component</h2>
+  <p>Component: <code>components/list-card.njk</code></p>
+  <p>Displays nested lists as clickable cards with FAQ/list counts.</p>
+  <p>Showing nested lists from the sample data.</p>
 
-  <ul class="link-list">
-    {% for faq in styleGuideData.sampleBadgeFaqs %}
-      <li>
-        <a href="#">
-          <span class="question-text">{{ faq.question }}</span>
-          <span class="badges" visible>{% include "components/faq-badges.njk" %}</span>
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
+  {# Show all nested lists from sampleRecursiveList #}
+  {% for item in styleGuideData.sampleRecursiveList.children %}
+    {% if item.type == 'list' %}
+      <div class="list-card-wrapper">
+        {% set list = item %}
+        {% include "components/list-card.njk" %}
+      </div>
+    {% endif %}
+  {% endfor %}
 </section>
 
-<h2>Navigation Cards</h2>
-<p>Used on home page and list indexes with hover effects and arrows. Uses <code>.card-grid</code> and <code>.card</code> classes.</p>
-
-<nav class="card-grid">
-  <a href="#" class="card">
-    <h2>Example Card 1</h2>
-    <p>This is a navigation card with hover effects and an animated arrow</p>
-  </a>
-  <a href="#" class="card">
-    <h2>Example Card 2</h2>
-    <p>Cards use the <code>.card</code> class for consistent styling</p>
-  </a>
-  <a href="#" class="card">
-    <h2>Example Card 3</h2>
-    <p>Grid layout responds to screen size automatically</p>
-  </a>
-</nav>
-
-<h2>Half-Width Cards</h2>
-<p>Cards can be displayed in a two-column layout using <code>.card-grid.half-width</code>.</p>
-
-<nav class="card-grid half-width">
-  <a href="#" class="card">
-    <h2>Half Width 1</h2>
-    <p>Two columns on larger screens, with arrows positioned at bottom-right</p>
-  </a>
-  <a href="#" class="card">
-    <h2>Half Width 2</h2>
-    <p>Responsive layout adapts to screen size</p>
-  </a>
-</nav>
-
-<h2>Disclaimer/Warning Block</h2>
-<p>Uses semantic <code>&lt;aside&gt;</code> element.</p>
-
-<aside class="warning">
-  <h3>Important Notice</h3>
-  <p><strong>This is an example warning block.</strong> It uses an <code>&lt;aside&gt;</code> element with automatic styling for disclaimers and important notices.</p>
-</aside>
-
-<h2>Semantic HTML Structure</h2>
+{# ============================================================================
+   NAVIGATION CARDS (Hard-coded examples for design patterns)
+   ============================================================================ #}
 
 <section class="section-card">
-  <h3> Markup Philosophy</h3>
-  <p>The  templates use semantic HTML5 elements with minimal component classes:</p>
+  <h2>Navigation Cards</h2>
+  <p>Used on home page and list indexes with hover effects and arrows. Uses <code>.card-grid</code> and <code>.card</code> classes.</p>
+
+  <nav class="card-grid">
+    <a href="#" class="card">
+      <h3>Example Card 1</h3>
+      <p>This is a navigation card with hover effects and an animated arrow</p>
+    </a>
+    <a href="#" class="card">
+      <h3>Example Card 2</h3>
+      <p>Cards use the <code>.card</code> class for consistent styling</p>
+    </a>
+    <a href="#" class="card">
+      <h3>Example Card 3</h3>
+      <p>Grid layout responds to screen size automatically</p>
+    </a>
+  </nav>
+</section>
+
+<section class="section-card">
+  <h2>Half-Width Cards</h2>
+  <p>Cards can be displayed in a two-column layout using <code>.card-grid.half-width</code>.</p>
+
+  <nav class="card-grid half-width">
+    <a href="#" class="card">
+      <h3>Half Width 1</h3>
+      <p>Two columns on larger screens, with arrows positioned at bottom-right</p>
+    </a>
+    <a href="#" class="card">
+      <h3>Half Width 2</h3>
+      <p>Responsive layout adapts to screen size</p>
+    </a>
+  </nav>
+</section>
+
+{# ============================================================================
+   SEMANTIC ELEMENTS
+   ============================================================================ #}
+
+<section class="section-card">
+  <h2>Disclaimer/Warning Block</h2>
+  <p>Uses semantic <code>&lt;aside&gt;</code> element.</p>
+
+  <aside class="warning">
+    <h3>Important Notice</h3>
+    <p><strong>This is an example warning block.</strong> It uses an <code>&lt;aside&gt;</code> element with automatic styling for disclaimers and important notices.</p>
+  </aside>
+</section>
+
+{# ============================================================================
+   DOCUMENTATION
+   ============================================================================ #}
+
+<section class="section-card">
+  <h2>Semantic HTML Structure</h2>
+  <p>The templates use semantic HTML5 elements with minimal component classes:</p>
   <ul>
     <li><code>&lt;header class="site-header"&gt;</code> - Site header with logo and navigation</li>
     <li><code>&lt;nav class="site-nav"&gt;</code> - Navigation menu links</li>
@@ -141,13 +163,11 @@ eleventyExcludeFromCollections: true
   </ul>
 </section>
 
-<h2>CSS Architecture</h2>
-
 <section class="section-card">
-  <h3>Hybrid Approach</h3>
-  <p> uses a hybrid CSS architecture combining semantic HTML with light component classes:</p>
+  <h2>CSS Architecture</h2>
+  <p>Hybrid CSS architecture combining semantic HTML with light component classes:</p>
 
-  <h4>Component Classes</h4>
+  <h3>Component Classes</h3>
   <ul>
     <li><code>.section-card</code> - White content boxes with shadow and border</li>
     <li><code>.section-intro</code> - Light gray intro/description boxes</li>
@@ -158,7 +178,7 @@ eleventyExcludeFromCollections: true
     <li><code>.site-nav</code> - Navigation menu styling</li>
   </ul>
 
-  <h4>Utility Classes</h4>
+  <h3>Utility Classes</h3>
   <ul>
     <li><code>.half-width</code> - Two-column card grid layout</li>
     <li><code>.full-width</code> - Full-width grid items</li>
@@ -166,7 +186,7 @@ eleventyExcludeFromCollections: true
     <li><code>.success</code>, <code>.warning</code>, <code>.danger</code> - Semantic color variants</li>
   </ul>
 
-  <h4>CSS Features</h4>
+  <h3>CSS Features</h3>
   <ul>
     <li>CSS Custom Properties for theming and colors</li>
     <li><code>color-mix()</code> for automatic background/border tints</li>
@@ -176,9 +196,10 @@ eleventyExcludeFromCollections: true
   </ul>
 </section>
 
-<h2>Table Styling</h2>
-<p>Semantic table styling with subtle borders and proper spacing</p>
-<article class="section-card">
+<section class="section-card">
+  <h2>Table Styling</h2>
+  <p>Semantic table styling with subtle borders and proper spacing</p>
+
   <table>
     <thead>
       <tr>
@@ -201,13 +222,13 @@ eleventyExcludeFromCollections: true
       <tr>
         <td>Tables</td>
         <td>Structured data display</td>
-        <td>🚧 In Progress</td>
+        <td>✅ Complete</td>
       </tr>
     </tbody>
   </table>
-</article>
+</section>
 
-<h2>ORC WG Brand Guidelines</h2>
 <section class="section-card">
+  <h2>ORC WG Brand Guidelines</h2>
   <p>For the official ORC Working Group logo and brand usage guidelines, check the <a href="https://www.eclipse.org/org/artwork/guidelines/orc-branding-guidelines.pdf">ORC Brand Guidelines (PDF)</a> provided by the Eclipse Foundation</p>
 </section>

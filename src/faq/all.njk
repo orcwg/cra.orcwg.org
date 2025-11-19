@@ -10,6 +10,8 @@ permalink: "/faq/all/"
 </section>
 
 <section class="section-card nested-faq-list">
-  {% set listData = data.rootList %}
-  {% include "components/faq-list-recursive.njk" %}
+  {# Start with the list items component directly (no context for root) #}
+  {% set list = data.rootList %}
+  {% set currentDepth = 0 %}
+  {% include "components/faq/list-expanded-items.njk" %}
 </section>

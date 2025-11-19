@@ -1,0 +1,19 @@
+{#
+  List Flat With Context Component
+
+  Renders a list with its heading and description (the "context part"),
+  then includes the items component to render the actual list items.
+
+  Parameters:
+  - list: List object with title, icon, description, children
+#}
+
+<section class="section-card">
+  <h2>
+    {% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}
+  </h2>
+  {% if list.description %}
+    <p>{{ list.description | markdown | safe }}</p>
+  {% endif %}
+  {% include "components/faq/list-flat-items.njk" %}
+</section>
