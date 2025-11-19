@@ -1,0 +1,5 @@
+---
+permalink: "/api/v0/faqs.json"
+eleventyExcludeFromCollections: true
+---
+{{ data.faqs | formatFaqCollection('/api/v0/faqs.json') | safe }}

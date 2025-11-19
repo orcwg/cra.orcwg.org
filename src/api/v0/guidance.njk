@@ -1,0 +1,9 @@
+---
+pagination:
+  data: data.guidance
+  size: 1
+  alias: guidanceRequest
+permalink: "/api/v0/guidance/{{ guidanceRequest.id | replace('pending-guidance/', '') }}.json"
+eleventyExcludeFromCollections: true
+---
+{{ guidanceRequest | formatGuidanceDocument | safe }}

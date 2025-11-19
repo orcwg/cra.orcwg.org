@@ -1,0 +1,219 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cra.orcwg.org/api/schemas/faq.schema.json",
+  "title": "FAQ Resource",
+  "description": "A Frequently Asked Question about the Cyber Resilience Act (JSON:API v1.1)",
+  "type": "object",
+  "required": ["type", "id", "attributes", "links", "meta"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "faq",
+      "description": "Resource type identifier"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[^/]+/.+$",
+      "description": "Unique FAQ identifier in format {category}/{slug}",
+      "examples": ["cra-itself/cra", "maintainers/should-i-worry"]
+    },
+    "attributes": {
+      "type": "object",
+      "required": [
+        "question",
+        "answer",
+        "status",
+        "createdAt",
+        "lastUpdatedAt",
+        "isNew",
+        "recentlyUpdated",
+        "needsRefactoring",
+        "answerMissing"
+      ],
+      "properties": {
+        "question": {
+          "type": "string",
+          "description": "The FAQ question text (markdown, plain text converted)",
+          "minLength": 1
+        },
+        "answer": {
+          "type": "string",
+          "description": "The FAQ answer content (markdown with resolved links)"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "approved", "pending-guidance"],
+          "description": "Review/approval status of the FAQ"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when FAQ was created"
+        },
+        "lastUpdatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when FAQ was last modified"
+        },
+        "isNew": {
+          "type": "boolean",
+          "description": "True if created within the last 30 days"
+        },
+        "recentlyUpdated": {
+          "type": "boolean",
+          "description": "True if updated within the last 14 days (excluding initial creation)"
+        },
+        "needsRefactoring": {
+          "type": "boolean",
+          "description": "True if content contains refactoring warning"
+        },
+        "answerMissing": {
+          "type": "boolean",
+          "description": "True if answer content is empty"
+        }
+      }
+    },
+    "relationships": {
+      "type": "object",
+      "description": "Related resources",
+      "properties": {
+        "lists": {
+          "type": "object",
+          "description": "All parent lists that include this FAQ",
+          "properties": {
+            "links": {
+              "type": "object",
+              "properties": {
+                "self": { "type": "string", "format": "uri-reference" }
+              }
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type", "id"],
+                "properties": {
+                  "type": { "const": "list" },
+                  "id": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "list": {
+          "type": "object",
+          "description": "The primary parent list (first in parents array, typically the directory-based list)",
+          "properties": {
+            "links": {
+              "type": "object",
+              "properties": {
+                "self": { "type": "string", "format": "uri-reference" },
+                "related": { "type": "string", "format": "uri-reference" }
+              }
+            },
+            "data": {
+              "type": "object",
+              "required": ["type", "id"],
+              "properties": {
+                "type": { "const": "list" },
+                "id": { "type": "string" }
+              }
+            }
+          }
+        },
+        "relatedIssues": {
+          "type": "object",
+          "description": "GitHub issues related to this FAQ",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type", "id"],
+                "properties": {
+                  "type": { "const": "github-issue" },
+                  "id": { "type": "string" },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "url": { "type": "string", "format": "uri" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "guidanceRequest": {
+          "type": "object",
+          "description": "Related guidance request if status is pending-guidance",
+          "properties": {
+            "links": {
+              "type": "object",
+              "properties": {
+                "related": { "type": "string", "format": "uri-reference" }
+              }
+            },
+            "data": {
+              "type": "object",
+              "required": ["type", "id"],
+              "properties": {
+                "type": { "const": "guidance-request" },
+                "id": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "required": ["self", "html", "edit"],
+      "properties": {
+        "self": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "API endpoint for this FAQ"
+        },
+        "html": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "Human-readable webpage for this FAQ"
+        },
+        "edit": {
+          "type": "string",
+          "format": "uri",
+          "description": "GitHub edit URL for this FAQ's source"
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["license", "copyright", "source"],
+      "properties": {
+        "license": {
+          "type": "object",
+          "required": ["name", "url", "spdx"],
+          "properties": {
+            "name": { "type": "string", "const": "CC-BY-4.0" },
+            "url": { "type": "string", "format": "uri" },
+            "spdx": { "type": "string", "const": "CC-BY-4.0" }
+          }
+        },
+        "copyright": {
+          "type": "string",
+          "const": "ORC WG Contributors"
+        },
+        "source": {
+          "type": "object",
+          "required": ["repository", "path", "editUrl"],
+          "properties": {
+            "repository": { "type": "string", "format": "uri" },
+            "path": { "type": "string" },
+            "editUrl": { "type": "string", "format": "uri" }
+          }
+        }
+      }
+    }
+  }
+}
