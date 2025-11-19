@@ -12,6 +12,6 @@ permalink: "/faq/all/"
 <section class="section-card nested-faq-list">
   {# Start with the list items component directly (no context for root) #}
   {% set list = data.rootList %}
-  {% set currentDepth = 0 %}
+  {% set styleClass = 'even' %}
   {% include "components/faq/list-expanded-items.njk" %}
 </section>
