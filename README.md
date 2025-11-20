@@ -114,7 +114,7 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
 
 ### Dynamic Lists
 
-The system automatically generates special lists based on FAQ properties. These are configured in the `DYNAMIC_LISTS` array in `src/_data/data.js`:
+The system automatically generates special lists based on FAQ properties. These are configured in the `DYNAMIC_LISTS` array in `src/_data/data.js` and are automatically added to the Topics page.
 
 **Available Dynamic Lists:**
 - `new` - FAQs created within the last 30 days (sorted newest first)
@@ -131,22 +131,20 @@ The system automatically generates special lists based on FAQ properties. These 
 - `hideInTopicsFilter` - Function controlling visibility in topics view
 - `insertAt` - Position in root list (`'top'` or `'bottom'`)
 
-**Referencing in YAML:**
-Dynamic lists can be manually referenced in any README.yml file using the `~dynamic/` namespace:
+**How Dynamic Lists Work:**
 
-```yaml
-faqs:
-  - ~dynamic/new          # Reference the "New FAQs" dynamic list
-  - category1
-  - category2
-  - ~dynamic/unlisted     # Reference the "Unlisted FAQs" dynamic list
-```
+Dynamic lists are generated at build time by the `createAndInsertDynamicLists()` function:
 
-**Automatic Insertion:**
-If not manually placed in the root README.yml, dynamic lists are automatically inserted:
-- Lists with `insertAt: 'top'` appear at the beginning (in array order)
-- Lists with `insertAt: 'bottom'` appear at the end (in array order)
-- Manually placed dynamic lists are not auto-inserted
+1. Each dynamic list is created from its configuration
+2. FAQs matching the `inclusionFilter` are added as children
+3. Bidirectional parent-child relationships are established
+4. Children are sorted using `sortChildren` if configured
+5. Metadata (timestamps, visibility) is calculated from children
+6. Lists are inserted into the root list based on `insertAt`:
+   - `'top'` lists appear at the beginning (in array order)
+   - `'bottom'` lists appear at the end (in array order)
+
+Dynamic lists are fully automatic and cannot be manually referenced in YAML files.
 
 ### FAQ Components
 
