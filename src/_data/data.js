@@ -528,12 +528,11 @@ function createAndInsertDynamicLists(lists, rootList, faqs) {
     list.isNew = isNew(createdAt);
     list.recentlyUpdated = recentlyUpdated(createdAt, lastUpdatedAt);
 
-    // Apply visibility filters
-    if (config.hideInTopicsFilter) {
-      list.hideInTopics = config.hideInTopicsFilter(list);
+    if (config.hideInTopics == HIDE_IF_EMPTY) {
+      list.hideInTopics = list.children.length === 0;
     }
-    if (config.hideInAllFaqsFilter) {
-      list.hideInAllFaqs = config.hideInAllFaqsFilter(list);
+    if (config.hideInAllFaqs == HIDE_IF_EMPTY) {
+      list.hideInAllFaqs = list.children.length === 0;
     }
 
     // Categorize by insertion position
