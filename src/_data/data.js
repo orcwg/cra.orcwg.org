@@ -669,9 +669,7 @@ function processAllContent() {
   });
 
   // Add bottom insertions in order (so first in array appears first after regular items)
-  bottomInsertions.forEach(reference => {
-    rootList.yaml.faqs.push(reference);
-  });
+  rootList.yaml.faqs.push(...bottomInsertions);
 
   // Cross-reference YAML-based lists and FAQs
   crossReferenceListsAndFaqs(lists, faqs);
