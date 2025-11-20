@@ -488,13 +488,9 @@ const DYNAMIC_LISTS = [
 function initializeDynamicList(config) {
   return {
     type: LIST,
-    id: config.id,
+    ...config,
     permalink: `/faq/${config.id}/`,
     pageTitle: config.title,
-    title: config.title,
-    icon: config.icon,
-    description: config.description,
-    emptyMsg: config.emptyMsg,
     children: [], // Populated after cross-referencing
     parents: [], // Populated after cross-referencing
     faqCount: 0,
