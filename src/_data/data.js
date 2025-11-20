@@ -664,9 +664,7 @@ function processAllContent() {
   });
 
   // Add top insertions in reverse order (so first in array appears first in list)
-  topInsertions.reverse().forEach(reference => {
-    rootList.yaml.faqs.unshift(reference);
-  });
+  rootList.yaml.faqs.unshift(...topInsertions.reverse());
 
   // Add bottom insertions in order (so first in array appears first after regular items)
   rootList.yaml.faqs.push(...bottomInsertions);
