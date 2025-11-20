@@ -112,6 +112,40 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
 - Lists maintain bidirectional links with FAQs for navigation
 - Lists are displayed using native HTML `<details>` accordions for compact navigation
 
+### Dynamic Lists
+
+The system automatically generates special lists based on FAQ properties. These are configured in the `DYNAMIC_LISTS` array in `src/_data/data.js` and are automatically added to the Topics page.
+
+**Available Dynamic Lists:**
+- `new` - FAQs created within the last 30 days (sorted newest first)
+- `recently-updated` - FAQs updated within the last 14 days (sorted by update date)
+- `unlisted` - FAQs not yet assigned to any curated list
+
+**Configuration Properties:**
+- `id` - Unique identifier for the list
+- `title`, `icon`, `description` - Display metadata
+- `emptyMsg` - Message shown when the list has no items
+- `inclusionFilter` - Function determining which FAQs to include
+- `sortChildren` - Optional function to sort FAQs in the list
+- `hideInAllFaqsFilter` - Function controlling visibility in "All FAQs" view
+- `hideInTopicsFilter` - Function controlling visibility in topics view
+- `insertAt` - Position in root list (`'top'` or `'bottom'`)
+
+**How Dynamic Lists Work:**
+
+Dynamic lists are generated at build time by the `createAndInsertDynamicLists()` function:
+
+1. Each dynamic list is created from its configuration
+2. FAQs matching the `inclusionFilter` are added as children
+3. Bidirectional parent-child relationships are established
+4. Children are sorted using `sortChildren` if configured
+5. Metadata (timestamps, visibility) is calculated from children
+6. Lists are inserted into the root list based on `insertAt`:
+   - `'top'` lists appear at the beginning (in array order)
+   - `'bottom'` lists appear at the end (in array order)
+
+Dynamic lists are fully automatic and cannot be manually referenced in YAML files.
+
 ### FAQ Components
 
 The site uses two reusable FAQ components with minimal markup:

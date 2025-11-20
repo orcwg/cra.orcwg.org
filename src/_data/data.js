@@ -323,7 +323,7 @@ function createGuidanceRequest(file) {
 }
 
 // ============================================================================
-// List Processing
+// YAML List Processing
 // ============================================================================
 
 function normalizeReferenceIds(relativeIds = [], listId) {
@@ -339,6 +339,7 @@ function isList(file) {
   return file.isFile() && file.name === LIST_FILENAME;
 }
 
+// Create a list from a YAML file
 function createList(file) {
   const isRoot = file.id === ROOT_LIST_ID;
 
@@ -412,22 +413,23 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
   });
 };
 
-// Link lists with their FAQs and sublists (bidirectional)
+// Cross-reference YAML-based lists with their FAQs and sublists (bidirectional)
 function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
     const childRefs = normalizeReferenceIds(list.yaml.faqs, list.isRoot ? null : list.id);
     list.children = childRefs.map(itemRef => {
-      // First check if it's a list reference
+      // Check if it's a  list reference
       const sublist = lists.find(l => l.id === itemRef);
       if (sublist) {
-        sublist.parents.push(list); // Track parent list
+        sublist.parents.push(list);
         return sublist;
       }
 
       // Otherwise treat as FAQ reference
       const faqObject = faqs.find(faq => faq.id === itemRef);
       if (faqObject) {
-        faqObject.parents.push(list); // Track parent list
+        faqObject.parents.push(list);
+        faqObject.listed = true;  // Tag FAQ as listed in a YAML-based list
         return faqObject;
       }
 
@@ -435,6 +437,122 @@ function crossReferenceListsAndFaqs(lists, faqs) {
     }).filter(item => item !== null);
   });
 }
+
+// ============================================================================
+// Dynamic Lists
+// ============================================================================
+
+// Dynamic list configurations
+// Each list has metadata and filter functions to determine behavior
+
+const HIDE_IF_EMPTY = "hide if empty";
+
+const DYNAMIC_LISTS = [
+  {
+    id: 'new',
+    title: 'New FAQs',
+    icon: '🌟',
+    description: `FAQs added within the last ${NEW_CONTENT_THRESHOLD} days`,
+    emptyMsg: "It seems there aren't any newly created FAQs",
+    insertAt: 'top',
+    inclusionFilter: (faq) => faq.isNew,
+    sortChildren: (a, b) => b.createdAt - a.createdAt,  // Newest first
+    hideInAllFaqs: true,
+    hideInTopics: HIDE_IF_EMPTY
+  },
+  {
+    id: 'recently-updated',
+    title: 'Recently Updated FAQs',
+    icon: '💫',
+    description: `FAQs updated within the last ${RECENTLY_UPDATED_THRESHOLD} days`,
+    emptyMsg: "It seems there aren't any recently updated FAQs",
+    insertAt: 'top',
+    inclusionFilter: (faq) => faq.recentlyUpdated,
+    sortChildren: (a, b) => b.lastUpdatedAt - a.lastUpdatedAt,  // Most recently updated first
+    hideInAllFaqs: true,
+    hideInTopics: HIDE_IF_EMPTY
+  },
+  {
+    id: 'unlisted',
+    title: 'Unlisted FAQs',
+    icon: '❌',
+    description: 'FAQs not yet assigned to any list',
+    emptyMsg: 'Great news! All FAQs are properly assigned to lists. There are currently no unlisted FAQs.',
+    insertAt: 'bottom',
+    inclusionFilter: (faq) => !faq.listed,  // Include FAQs not tagged as listed
+    sortChildren: null,  // No sorting
+    hideInAllFaqs: HIDE_IF_EMPTY,
+    hideInTopics: HIDE_IF_EMPTY
+ }
+];
+
+// Create a dynamic list from configuration
+function initializeDynamicList(config) {
+  return {
+    type: LIST,
+    ...config,
+    permalink: `/faq/${config.id}/`,
+    pageTitle: config.title,
+    children: [], // Populated after cross-referencing
+    parents: [], // Populated after cross-referencing
+    faqCount: 0,
+    listCount: 0
+  };
+}
+
+// Create dynamic lists, populate them, and insert into root list
+function createAndInsertDynamicLists(lists, rootList, faqs) {
+  const topLists = [];
+  const bottomLists = [];
+
+  // Create and populate each dynamic list
+  DYNAMIC_LISTS.forEach(config => {
+    const list = initializeDynamicList(config);
+    lists.push(list);
+
+    // Cross reference matching faqs
+    const matchingFaqs = faqs.filter(config.inclusionFilter);
+    list.children.push(...matchingFaqs);
+
+    matchingFaqs.forEach(faq => faq.parents.push(list));
+
+    // Sort children if configured
+    if (config.sortChildren) {
+      list.children.sort(config.sortChildren);
+    }
+
+    // Calculate metadata from children
+    const { createdAt, lastUpdatedAt } = generateTimestamps(list.children);
+    list.createdAt = createdAt;
+    list.lastUpdatedAt = lastUpdatedAt;
+    list.isNew = isNew(createdAt);
+    list.recentlyUpdated = recentlyUpdated(createdAt, lastUpdatedAt);
+
+    if (config.hideInTopics == HIDE_IF_EMPTY) {
+      list.hideInTopics = list.children.length === 0;
+    }
+    if (config.hideInAllFaqs == HIDE_IF_EMPTY) {
+      list.hideInAllFaqs = list.children.length === 0;
+    }
+
+    // Categorize by insertion position
+    if (config.insertAt === 'top') {
+      topLists.push(list);
+    } else {
+      bottomLists.push(list);
+    }
+
+    list.parents.push(rootList);
+  });
+
+  // Insert into root list with proper ordering
+  rootList.children.unshift(...topLists);
+  rootList.children.push(...bottomLists);
+}
+
+// ============================================================================
+// List Utilities
+// ============================================================================
 
 // Recursively count all descendants (FAQs and lists) at all nesting levels
 function countListChildElementsRecursively(list) {
@@ -483,107 +601,6 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
   });
 }
 
-function generateUnlistedFAQList(faqs, root) {
-  const unlistedFaqs = faqs.filter(unlistedFaq => unlistedFaq.parents.length === 0);
-
-  const { createdAt, lastUpdatedAt } = generateTimestamps(unlistedFaqs);
-  const title = "Unlisted FAQs";
-
-  const generatedList = {
-    type: LIST,
-    id: "unlisted",
-    pageTitle: title,
-    title,
-    icon: "❌",
-    description: "FAQs not yet assigned to any list",
-    emptyMsg: "Great news! All FAQs are properly assigned to lists. There are currently no unlisted FAQs.",
-    hideInTopics: unlistedFaqs.length == 0,
-    hideInAllFaqs: unlistedFaqs.length == 0,
-    children: unlistedFaqs,
-    permalink: "/faq/unlisted/",
-    parents: [],
-    createdAt,
-    lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-    faqCount: 0,
-    listCount: 0
-  };
-  generatedList.parents.push(root);
-  root.children.push(generatedList);
-  return generatedList;
-}
-
-function generateNewFAQList(faqs, root) {
-  // Sort all new FAQs from the newest to oldest
-  // The newest-first logic is to provide the latest FAQs at first sight
-  const newFAQs = faqs.filter(newFAQ => newFAQ.isNew).sort((a, b) => b.createdAt - a.createdAt);
-
-  const { createdAt, lastUpdatedAt } = generateTimestamps(newFAQs);
-
-  const title = "New FAQs";
-
-  const generatedList = {
-    type: LIST,
-    id: "new",
-    pageTitle: title,
-    title,
-    icon: "🌟",
-    description: `FAQs added within the last ${NEW_CONTENT_THRESHOLD} days`,
-    emptyMsg: "It seems there aren't any newly created FAQs",
-    hideInTopics: newFAQs.length == 0,
-    hideInAllFaqs: true, // Never display the new faqs dynamic list in /faq/all
-    children: newFAQs,
-    permalink: "/faq/new/",
-    parents: [],
-    createdAt,
-    lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-    faqCount: 0,
-    listCount: 0
-  };
-
-  generatedList.parents.push(root);
-  root.children.unshift(generatedList);
-  return generatedList;
-}
-
-function generateUpdatedRecentFAQList (faqs, root) {
-  // Sort all recent FAQs from the newest to oldest
-  // The newest-first logic is to provide the latest FAQs at first sight
-  const recentUpdatedFAQs = faqs.filter(faq => faq.recentlyUpdated).sort((a, b) => b.createdAt - a.createdAt);
-
-  const { createdAt, lastUpdatedAt } = generateTimestamps( recentUpdatedFAQs );
-
-  const title = "Recently Updated FAQs";
-
-  const generatedList = {
-    type: LIST,
-    id: "recently-updated",
-    pageTitle: title,
-    title,
-    icon: "💫",
-    description: `FAQs updated within the last ${ RECENTLY_UPDATED_THRESHOLD } days`,
-    emptyMsg: "It seems there aren't any recently updated FAQs",
-    hideInTopics: false,
-    hideInAllFaqs: recentUpdatedFAQs.length == 0,
-    children: recentUpdatedFAQs,
-    permalink: "/faq/recently-updated/",
-    parents: [],
-    createdAt,
-    lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-    faqCount: 0,
-    listCount: 0
-  };
-  
-  generatedList.parents.push(root);
-  root.children.push(generatedList);
-  return generatedList;
-}
-
 // ============================================================================
 // Main Pipeline
 // ============================================================================
@@ -598,11 +615,12 @@ function processAllContent() {
   const rootList = lists.find(list => list.id === ROOT_LIST_ID);
 
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
+
+  // Cross-reference YAML-based lists and FAQs
   crossReferenceListsAndFaqs(lists, faqs);
 
-  lists.push(generateUnlistedFAQList(faqs, rootList));
-  lists.push(generateNewFAQList(faqs, rootList));
-  lists.unshift(generateUpdatedRecentFAQList(faqs, rootList));
+  // Create, populate, and insert dynamic lists
+  createAndInsertDynamicLists(lists, rootList, faqs);
 
   calculateListCounts(lists);
 
