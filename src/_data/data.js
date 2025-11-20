@@ -445,6 +445,8 @@ function crossReferenceListsAndFaqs(lists, faqs) {
 // Dynamic list configurations
 // Each list has metadata and filter functions to determine behavior
 
+const HIDE_IF_EMPTY = "hide if empty";
+
 const DYNAMIC_LISTS = [
   {
     id: 'new',
@@ -455,8 +457,8 @@ const DYNAMIC_LISTS = [
     insertAt: 'top',
     inclusionFilter: (faq) => faq.isNew,
     sortChildren: (a, b) => b.createdAt - a.createdAt,  // Newest first
-    hideInAllFaqsFilter: () => true,  // Always hide in "All FAQs" view
-    hideInTopicsFilter: (list) => list.children.length === 0  // Hide if empty
+    hideInAllFaqs: true,
+    hideInTopics: HIDE_IF_EMPTY
   },
   {
     id: 'recently-updated',
@@ -467,8 +469,8 @@ const DYNAMIC_LISTS = [
     insertAt: 'top',
     inclusionFilter: (faq) => faq.recentlyUpdated,
     sortChildren: (a, b) => b.lastUpdatedAt - a.lastUpdatedAt,  // Most recently updated first
-    hideInAllFaqsFilter: () => true,  // Always hide in "All FAQs" view
-    hideInTopicsFilter: (list) => list.children.length === 0  // Hide if empty
+    hideInAllFaqs: true,
+    hideInTopics: HIDE_IF_EMPTY
   },
   {
     id: 'unlisted',
@@ -479,9 +481,9 @@ const DYNAMIC_LISTS = [
     insertAt: 'bottom',
     inclusionFilter: (faq) => !faq.listed,  // Include FAQs not tagged as listed
     sortChildren: null,  // No sorting
-    hideInAllFaqsFilter: (list) => list.children.length === 0,  // Hide if empty
-    hideInTopicsFilter: (list) => list.children.length === 0  // Hide if empty
-  }
+    hideInAllFaqs: HIDE_IF_EMPTY,
+    hideInTopics: HIDE_IF_EMPTY
+ }
 ];
 
 // Create a dynamic list from configuration
