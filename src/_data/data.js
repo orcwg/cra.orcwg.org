@@ -524,26 +524,11 @@ function populateDynamicLists(lists, faqs) {
   DYNAMIC_LISTS.forEach(config => {
     const list = lists.find(l => l.id === config.id);
     if (list) {
+      list.children.push(...faqs.filter(config.inclusionFilter));
+      if (config.sortChildren) { list.children.sort(config.sortChildren); }
       dynamicListsIndex[config.id] = { list, config };
     }
   });
-
-  // Populate all dynamic lists using their filter functions
-  faqs.forEach(faq => {
-    Object.values(dynamicListsIndex).forEach(({ list, config }) => {
-      if (config.inclusionFilter && config.inclusionFilter(faq)) {
-        list.children.push(faq);
-      }
-    });
-  });
-
-  // Sort dynamic list children using their sort functions
-  Object.values(dynamicListsIndex).forEach(({ list, config }) => {
-    if (config.sortChildren) {
-      list.children.sort(config.sortChildren);
-    }
-  });
-}
 
 // Finalize dynamic lists metadata after population
 function finalizeDynamicListMetadata(lists) {
