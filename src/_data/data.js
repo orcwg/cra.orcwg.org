@@ -500,77 +500,64 @@ function createDynamicList(config) {
     icon: config.icon,
     description: config.description,
     emptyMsg: config.emptyMsg,
-    children: [], // Populated during cross-referencing
-    parents: [], // Populated during cross-referencing
+    children: [], // Populated after cross-referencing
+    parents: [], // Populated after cross-referencing
     faqCount: 0,
     listCount: 0
   };
 }
 
-// Insert dynamic list IDs into root list based on insertAt property
-function insertDynamicListsIntoRoot(rootList) {
-  const topInsertions = [];
-  const bottomInsertions = [];
+// Create dynamic lists, populate them, and insert into root list
+function createAndInsertDynamicLists(lists, rootList, faqs) {
+  const topLists = [];
+  const bottomLists = [];
 
+  // Create and populate each dynamic list
   DYNAMIC_LISTS.forEach(config => {
-    if (config.insertAt === 'top') {
-      topInsertions.push(config.id);
-    } else {
-      bottomInsertions.push(config.id);
+    const list = createDynamicList(config);
+    lists.push(list);
+
+    // Cross reference matching faqs
+    const matchingFaqs = faqs.filter(config.inclusionFilter);
+    list.children.push(...matchingFaqs);
+
+    matchingFaqs.forEach(faq => {
+      faq.parents.push(list);
+    });
+
+    // Sort children if configured
+    if (config.sortChildren) {
+      list.children.sort(config.sortChildren);
     }
-  });
 
-  // Add top insertions at the beginning
-  rootList.yaml.faqs.unshift(...topInsertions);
-
-  // Add bottom insertions at the end
-  rootList.yaml.faqs.push(...bottomInsertions);
-}
-
-// Populate dynamic lists based on FAQ properties and filter functions
-function populateDynamicLists(lists, faqs) {
-  DYNAMIC_LISTS.forEach(config => {
-    const list = lists.find(l => l.id === config.id);
-    if (list) {
-      const matchingFaqs = faqs.filter(config.inclusionFilter);
-      list.children.push(...matchingFaqs);
-
-      // Add bidirectional parent relationship
-      matchingFaqs.forEach(faq => {
-        faq.parents.push(list);
-      });
-
-      if (config.sortChildren) { list.children.sort(config.sortChildren); }
-    }
-  });
-}
-
-// Finalize dynamic lists metadata after population
-function finalizeDynamicListMetadata(lists) {
-  const dynamicListIds = DYNAMIC_LISTS.map(config => config.id);
-  const dynamicLists = lists.filter(l => dynamicListIds.includes(l.id));
-
-  dynamicLists.forEach(list => {
-    // Find the config for this list
-    const config = DYNAMIC_LISTS.find(c => c.id === list.id);
-
-    // Calculate timestamps from children
+    // Calculate metadata from children
     const { createdAt, lastUpdatedAt } = generateTimestamps(list.children);
     list.createdAt = createdAt;
     list.lastUpdatedAt = lastUpdatedAt;
     list.isNew = isNew(createdAt);
     list.recentlyUpdated = recentlyUpdated(createdAt, lastUpdatedAt);
 
-    // Apply hideInTopicsFilter function from config
-    if (config?.hideInTopicsFilter) {
+    // Apply visibility filters
+    if (config.hideInTopicsFilter) {
       list.hideInTopics = config.hideInTopicsFilter(list);
     }
-
-    // Apply hideInAllFaqsFilter function from config
-    if (config?.hideInAllFaqsFilter) {
+    if (config.hideInAllFaqsFilter) {
       list.hideInAllFaqs = config.hideInAllFaqsFilter(list);
     }
+
+    // Categorize by insertion position
+    if (config.insertAt === 'top') {
+      topLists.push(list);
+    } else {
+      bottomLists.push(list);
+    }
+
+    list.parents.push(rootList);
   });
+
+  // Insert into root list with proper ordering
+  rootList.children.unshift(...topLists);
+  rootList.children.push(...bottomLists);
 }
 
 // ============================================================================
@@ -639,21 +626,11 @@ function processAllContent() {
 
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
 
-  // Create dynamic lists FIRST (so they exist before cross-referencing)
-  const dynamicLists = DYNAMIC_LISTS.map(createDynamicList);
-  lists.push(...dynamicLists);
-
-  // Automatically insert dynamic lists into root list
-  insertDynamicListsIntoRoot(rootList);
-
-  // Cross-reference YAML-based lists and FAQs (dynamic lists now exist)
+  // Cross-reference YAML-based lists and FAQs
   crossReferenceListsAndFaqs(lists, faqs);
 
-  // Populate dynamic lists based on FAQ properties
-  populateDynamicLists(lists, faqs);
-
-  // Finalize dynamic list metadata (timestamps, hideInTopics, etc.)
-  finalizeDynamicListMetadata(lists);
+  // Create, populate, and insert dynamic lists
+  createAndInsertDynamicLists(lists, rootList, faqs);
 
   calculateListCounts(lists);
 
