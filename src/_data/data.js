@@ -512,9 +512,7 @@ function createAndInsertDynamicLists(lists, rootList, faqs) {
     const matchingFaqs = faqs.filter(config.inclusionFilter);
     list.children.push(...matchingFaqs);
 
-    matchingFaqs.forEach(faq => {
-      faq.parents.push(list);
-    });
+    matchingFaqs.forEach(faq => faq.parents.push(list));
 
     // Sort children if configured
     if (config.sortChildren) {
