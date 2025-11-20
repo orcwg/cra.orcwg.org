@@ -418,7 +418,7 @@ function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
     const childRefs = normalizeReferenceIds(list.yaml.faqs, list.isRoot ? null : list.id);
     list.children = childRefs.map(itemRef => {
-      // Check if it's a regular list reference
+      // Check if it's a  list reference
       const sublist = lists.find(l => l.id === itemRef);
       if (sublist) {
         sublist.parents.push(list);
