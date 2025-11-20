@@ -416,11 +416,6 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
 // Cross-reference YAML-based lists with their FAQs and sublists (bidirectional)
 function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
-    // Skip if this list has no YAML definition (dynamic lists don't have YAML)
-    if (!list.yaml?.faqs) {
-      return;
-    }
-
     const childRefs = normalizeReferenceIds(list.yaml.faqs, list.isRoot ? null : list.id);
     list.children = childRefs.map(itemRef => {
       // Check if it's a regular list reference
@@ -490,7 +485,7 @@ const DYNAMIC_LISTS = [
 ];
 
 // Create a dynamic list from configuration
-function createDynamicList(config) {
+function initializeDynamicList(config) {
   return {
     type: LIST,
     id: config.id,
@@ -514,7 +509,7 @@ function createAndInsertDynamicLists(lists, rootList, faqs) {
 
   // Create and populate each dynamic list
   DYNAMIC_LISTS.forEach(config => {
-    const list = createDynamicList(config);
+    const list = initializeDynamicList(config);
     lists.push(list);
 
     // Cross reference matching faqs
