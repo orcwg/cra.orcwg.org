@@ -106,6 +106,52 @@ function extractGuidanceText(content) {
   return markdownToPlainText(rawText).trim();
 }
 
+// ============================================================================
+// ORC WG Recommendation Extraction
+// ============================================================================
+
+// Extract ORC WG Recommendation section from content
+function extractOrcRecommendation(content) {
+  const lines = content.split('\n');
+
+  // Find ORC WG Recommendation heading line
+  const orcIndex = lines.findIndex(line =>
+    line.trim().match(/^#+\s*ORC\s+WG\s+Recommendation/i)
+  );
+
+  // If not found, return original content with no recommendation
+  if (orcIndex === -1) {
+    return {
+      bodyWithoutOrc: content,
+      orcRecommendation: null
+    };
+  }
+
+  // Extract the title text from the heading (remove markdown heading symbols)
+  const orcTitleMatch = lines[orcIndex].trim().match(/^#+\s*(.+)$/);
+  const orcTitle = orcTitleMatch[1].trim();
+
+  // Find the end of the ORC section (next heading or end of content)
+  let orcEnd = orcIndex + 1;
+  while (orcEnd < lines.length && !lines[orcEnd].trim().match(/^#+\s/)) {
+    orcEnd++;
+  }
+
+  // Extract the ORC recommendation content (without the heading)
+  const orcContent = lines.slice(orcIndex + 1, orcEnd).join('\n').trim();
+
+  // Build body without ORC section
+  const bodyLines = [
+    ...lines.slice(0, orcIndex),
+    ...(orcEnd < lines.length ? lines.slice(orcEnd) : [])
+  ];
+
+  return {
+    bodyWithoutOrc: bodyLines.join('\n').trim(),
+    orcRecommendation: { orcTitle, orcContent }
+  };
+}
+
 // Splits raw Markdown at the first H1, returns [h1, body]
 function splitMarkdownAtFirstH1(content) {
   const firsth1 = content.match(/^#\s+(.+)$/m);
@@ -310,6 +356,9 @@ function createGuidanceRequest(file) {
   // Extract title and body
   const [title, body] = splitMarkdownAtFirstH1(file.content);
 
+  // Extract ORC WG Recommendation section
+  const { bodyWithoutOrc, orcRecommendation } = extractOrcRecommendation(body);
+
   return {
     ...file,
     permalink: file.permalink.replace(/^\/faq/, ""), // Move guidance permalinks out of faq dir
@@ -317,7 +366,8 @@ function createGuidanceRequest(file) {
     status,
     pageTitle: markdownToPlainText(title),
     title,
-    body,
+    body: bodyWithoutOrc,
+    orcRecommendation: orcRecommendation, // null if not present
     guidanceText: extractGuidanceText(body)
   };
 }
