@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cra.orcwg.org/api/schemas/list.schema.json",
+  "title": "List Resource",
+  "description": "A curated list/category of FAQs (JSON:API v1.1)",
+  "type": "object",
+  "required": ["type", "id", "attributes", "links", "meta"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "list",
+      "description": "Resource type identifier"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique list identifier",
+      "examples": ["cra-itself", "maintainers", "stewards", "unlisted", "new"]
+    },
+    "attributes": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "icon",
+        "faqCount",
+        "listCount",
+        "countText",
+        "createdAt",
+        "lastUpdatedAt",
+        "isNew",
+        "recentlyUpdated"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The list title (markdown, plain text converted)",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of what this list contains"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Emoji icon representing this list",
+          "pattern": "^[\\p{Emoji}]+$"
+        },
+        "faqCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of FAQs in this list (including nested)"
+        },
+        "listCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of sublists in this list"
+        },
+        "countText": {
+          "type": "string",
+          "description": "Human-readable count text",
+          "examples": ["8 FAQs", "12 FAQs organised in 2 lists"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when list was created"
+        },
+        "lastUpdatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when list was last modified"
+        },
+        "isNew": {
+          "type": "boolean",
+          "description": "True if created within the last 30 days"
+        },
+        "recentlyUpdated": {
+          "type": "boolean",
+          "description": "True if updated within the last 14 days"
+        }
+      }
+    },
+    "relationships": {
+      "type": "object",
+      "description": "Related resources",
+      "properties": {
+        "faqs": {
+          "type": "object",
+          "description": "FAQs directly in this list",
+          "properties": {
+            "links": {
+              "type": "object",
+              "properties": {
+                "self": { "type": "string", "format": "uri-reference" },
+                "related": { "type": "string", "format": "uri-reference" }
+              }
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type", "id"],
+                "properties": {
+                  "type": { "const": "faq" },
+                  "id": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "sublists": {
+          "type": "object",
+          "description": "Nested lists within this list",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type", "id"],
+                "properties": {
+                  "type": { "const": "list" },
+                  "id": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "parentLists": {
+          "type": "object",
+          "description": "Parent lists that include this list",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type", "id"],
+                "properties": {
+                  "type": { "const": "list" },
+                  "id": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "required": ["self", "html"],
+      "properties": {
+        "self": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "API endpoint for this list"
+        },
+        "html": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "Human-readable webpage for this list"
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["license", "copyright", "source"],
+      "properties": {
+        "license": {
+          "type": "object",
+          "required": ["name", "url", "spdx"],
+          "properties": {
+            "name": { "type": "string", "const": "CC-BY-4.0" },
+            "url": { "type": "string", "format": "uri" },
+            "spdx": { "type": "string", "const": "CC-BY-4.0" }
+          }
+        },
+        "copyright": {
+          "type": "string",
+          "const": "ORC WG Contributors"
+        },
+        "source": {
+          "type": "object",
+          "required": ["repository", "path"],
+          "properties": {
+            "repository": { "type": "string", "format": "uri" },
+            "path": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

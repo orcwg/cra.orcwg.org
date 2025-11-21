@@ -2,6 +2,9 @@ module.exports = async function (eleventyConfig) {
   // Copy asset files to output
   eleventyConfig.addPassthroughCopy("src/assets");
 
+  // Copy API schema files to output
+  eleventyConfig.addPassthroughCopy("src/api/schemas");
+
   // Import ES modules dynamically
   const markdownIt = require("markdown-it");
   
@@ -30,6 +33,16 @@ module.exports = async function (eleventyConfig) {
   eleventyConfig.addFilter("markdownInline", function (content) {
     return md.renderInline(content || "");
   });
+
+  // Add JSON API formatter filters
+  const apiFormatter = require("./src/_data/utils/api-formatter.js");
+  eleventyConfig.addFilter("formatFaqDocument", (faq) => JSON.stringify(apiFormatter.formatFaqDocument(faq), null, 2));
+  eleventyConfig.addFilter("formatListDocument", (list) => JSON.stringify(apiFormatter.formatListDocument(list), null, 2));
+  eleventyConfig.addFilter("formatGuidanceDocument", (guidance) => JSON.stringify(apiFormatter.formatGuidanceDocument(guidance), null, 2));
+  eleventyConfig.addFilter("formatFaqCollection", (faqs, selfLink) => JSON.stringify(apiFormatter.formatFaqCollection(faqs, selfLink), null, 2));
+  eleventyConfig.addFilter("formatListCollection", (lists, selfLink) => JSON.stringify(apiFormatter.formatListCollection(lists, selfLink), null, 2));
+  eleventyConfig.addFilter("formatGuidanceCollection", (guidance, selfLink) => JSON.stringify(apiFormatter.formatGuidanceCollection(guidance, selfLink), null, 2));
+  eleventyConfig.addFilter("formatApiIndex", (stats) => JSON.stringify(apiFormatter.formatApiIndex(stats), null, 2));
 
   // Add build timestamp in website footer
   eleventyConfig.addGlobalData("build", () => {

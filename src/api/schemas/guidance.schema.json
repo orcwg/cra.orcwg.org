@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cra.orcwg.org/api/schemas/guidance.schema.json",
+  "title": "Guidance Request Resource",
+  "description": "A request for guidance from the European Commission (JSON:API v1.1)",
+  "type": "object",
+  "required": ["type", "id", "attributes", "links", "meta"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "guidance-request",
+      "description": "Resource type identifier"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^pending-guidance/.+$",
+      "description": "Unique guidance request identifier",
+      "examples": ["pending-guidance/csirt-identification", "pending-guidance/legal-person-definition"]
+    },
+    "attributes": {
+      "type": "object",
+      "required": [
+        "title",
+        "body",
+        "guidanceText",
+        "status",
+        "createdAt",
+        "lastUpdatedAt",
+        "isNew",
+        "recentlyUpdated"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The guidance request title (markdown, plain text converted)",
+          "minLength": 1
+        },
+        "body": {
+          "type": "string",
+          "description": "Full guidance request content (markdown with resolved links)"
+        },
+        "guidanceText": {
+          "type": "string",
+          "description": "Plain text summary extracted from 'Guidance Needed' section"
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the guidance request",
+          "examples": ["pending", "resolved", "draft"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when request was created"
+        },
+        "lastUpdatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when request was last modified"
+        },
+        "isNew": {
+          "type": "boolean",
+          "description": "True if created within the last 30 days"
+        },
+        "recentlyUpdated": {
+          "type": "boolean",
+          "description": "True if updated within the last 14 days"
+        }
+      }
+    },
+    "relationships": {
+      "type": "object",
+      "description": "Related resources",
+      "properties": {
+        "relatedFaqs": {
+          "type": "object",
+          "description": "FAQs that reference this guidance request",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type", "id"],
+                "properties": {
+                  "type": { "const": "faq" },
+                  "id": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "required": ["self", "html", "edit"],
+      "properties": {
+        "self": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "API endpoint for this guidance request"
+        },
+        "html": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "Human-readable webpage for this guidance request"
+        },
+        "edit": {
+          "type": "string",
+          "format": "uri",
+          "description": "GitHub edit URL for this guidance request's source"
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["license", "copyright", "source"],
+      "properties": {
+        "license": {
+          "type": "object",
+          "required": ["name", "url", "spdx"],
+          "properties": {
+            "name": { "type": "string", "const": "CC-BY-4.0" },
+            "url": { "type": "string", "format": "uri" },
+            "spdx": { "type": "string", "const": "CC-BY-4.0" }
+          }
+        },
+        "copyright": {
+          "type": "string",
+          "const": "ORC WG Contributors"
+        },
+        "source": {
+          "type": "object",
+          "required": ["repository", "path", "editUrl"],
+          "properties": {
+            "repository": { "type": "string", "format": "uri" },
+            "path": { "type": "string" },
+            "editUrl": { "type": "string", "format": "uri" }
+          }
+        }
+      }
+    }
+  }
+}
