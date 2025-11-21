@@ -1,0 +1,31 @@
+{#
+  Reusable Callout Component
+
+  Parameters:
+  - content: The markdown/HTML content to display
+  - type: CSS class (e.g., 'orc-recommendation', 'info', 'warning')
+  - title: Optional title for the callout
+  - icon: Optional emoji/icon
+  - graph: Optional graph image path or SVG string
+
+  Usage in templates:
+  {% set calloutData = {
+    content: item.orcRecommendation,
+    type: 'orc-recommendation',
+    title: 'ORC WG Recommendation',
+    icon: '💡',
+    graph: '/assets/images/chart.png'
+  } %}
+  {% include "components/callout.njk" %}
+#}
+
+
+<div class="callout {{ type }} with-graph ">
+  <h2> {{title}}</h2>
+
+  {{ content  | safe }}
+
+  <div class="graph-corner">
+      <img src= "{{graph}}" alt="Chart" />
+  </div>
+</div>
