@@ -23,9 +23,12 @@
 <div class="callout {{ type }} with-graph ">
   <h2> {{title}}</h2>
 
-  {{ content  | safe }}
+  {{ content | safe }}
 
-  <div class="graph-corner">
+  {% if graph %}
+    <div class="graph-corner">
       <img src= "{{graph}}" alt="Chart" />
-  </div>
+    </div>
+  {% endif %}
+  
 </div>
