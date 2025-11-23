@@ -14,6 +14,14 @@ eleventyComputed:
 
   {{ item.body | markdown | safe }}
 
+  {% if item.orcRecommendation %}
+    {% set content = item.orcRecommendation.orcContent %}
+    {% set type = 'orc-recommendation' %}
+    {% set title = item.orcRecommendation.orcTitle %}
+    {% set graph = '/assets/images/orcwg_orc_presents.png' %}
+    {% include "components/callout.njk" %}
+  {% endif %}
+
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
   <h2>Related FAQs</h2>
   <ul>
