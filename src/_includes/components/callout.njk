@@ -4,18 +4,14 @@
   Parameters:
   - content: The markdown/HTML content to display
   - type: CSS class (e.g., 'orc-recommendation', 'info', 'warning')
-  - title: Optional title for the callout
-  - icon: Optional emoji/icon
+  - title: Title for the callout
   - graph: Optional graph image path or SVG string
 
   Usage in templates:
-  {% set calloutData = {
-    content: item.orcRecommendation,
-    type: 'orc-recommendation',
-    title: 'ORC WG Recommendation',
-    icon: '💡',
-    graph: '/assets/images/chart.png'
-  } %}
+  {% set content = "This is a example of content you can have in a Callout Block." %}
+  {% set type = 'orc-recommendation' %}
+  {% set title = "Title of the Callout" %}
+  {% set graph = '/assets/images/orcwg_orc_presents.png' %}
   {% include "components/callout.njk" %}
 #}
 
