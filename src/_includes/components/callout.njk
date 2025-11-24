@@ -20,10 +20,10 @@
 #}
 
 
-<div class="callout {{ type }} with-graph ">
+<div class="callout {{ type }} {% if graph %} with-graph {% endif %}">
   <h2> {{title}}</h2>
 
-  {{ content | safe }}
+  {{ content | markdown | safe }}
 
   {% if graph %}
     <div class="graph-corner">
