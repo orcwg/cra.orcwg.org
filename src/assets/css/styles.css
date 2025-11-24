@@ -1117,24 +1117,6 @@ blockquote {
     padding-bottom: 80px; /* Extra space for graph */
 }
 
-.callout .graph-corner {
-    position: absolute;
-    bottom: -45px;
-    right: -30px;
-    background: rgba(255, 255, 255, 0);
-    padding: 6px;
-    border-radius: 4px;
-    max-width: 120px;
-}
-
-.callout .graph-corner img {
-    max-width: 110%;
-    max-height: 110%;
-    width: auto;
-    height: auto;
-    display: block;
-}
-
 /* Aside and GitHub markdown alerts inherit callout styles */
 aside,
 .markdown-alert {
@@ -1249,6 +1231,16 @@ aside h3 {
     background: color-mix(in srgb, var(--primary-color) 8%, white);
     border-color: color-mix(in srgb, var(--primary-color) 40%, white);
     border-left-color: var(--primary-color);
+    padding-bottom: 60px; /* Extra space for image to avoid overlaps*/
+}
+
+.callout.orc-recommendation img {
+    position: absolute;
+    bottom: -37px;
+    right: -45px;
+    width: 120px;
+    height: auto;
+    display: block;
 }
 
 .callout.orc-recommendation :first-child {

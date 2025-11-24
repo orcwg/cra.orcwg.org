@@ -12,15 +12,8 @@
 #}
 
 
-<div class="callout orc-recommendation {% if graph %} with-graph {% endif %}">
+<div class="callout orc-recommendation">
   <h2>ORC WG recommendation</h2>
-
   {{ content | markdown | safe }}
-
-  {% if graph %}
-    <div class="graph-corner">
-      <img src= "{{graph}}" alt="Chart" />
-    </div>
-  {% endif %}
-  
+  <img src="/assets/images/orcwg_orc_presents.png" alt= "Orc Image">
 </div>
