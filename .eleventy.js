@@ -17,7 +17,13 @@ module.exports = async function (eleventyConfig) {
     html: true,
     linkify: true,
     typographer: true
-  }).use(markdownItGitHubAlerts).use(markdownItFootnote);
+  }).use(markdownItGitHubAlerts, {
+    markers: ["ORC_REC"],
+    titles: {
+      "orc_rec": "ORC WG Recommendations"
+    }
+  }
+  ).use(markdownItFootnote);
 
   // Add markdown filter
   // Note: Link resolution now happens in data layer, so content already has resolved links
