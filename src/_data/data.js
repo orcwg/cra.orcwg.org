@@ -310,9 +310,6 @@ function createGuidanceRequest(file) {
   // Extract title and body
   const [title, body] = splitMarkdownAtFirstH1(file.content);
 
-  // Extract ORC WG Recommendation section
-  const { bodyWithoutOrc, orcRecommendation } = extractOrcRecommendation(body);
-
   return {
     ...file,
     permalink: file.permalink.replace(/^\/faq/, ""), // Move guidance permalinks out of faq dir
@@ -320,8 +317,7 @@ function createGuidanceRequest(file) {
     status,
     pageTitle: markdownToPlainText(title),
     title,
-    body: bodyWithoutOrc,
-    orcRecommendation: orcRecommendation, // null if not present
+    body,
     guidanceText: extractGuidanceText(body)
   };
 }
