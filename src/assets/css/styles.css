@@ -1139,6 +1139,35 @@ aside h3 {
     --color: var(--color-danger);
 }
 
+.markdown-alert-orc_rec {
+    border-color: var(--primary-color);
+    position: relative;
+    overflow: visible;
+    padding-bottom: 60px;
+    border-width: 3px;
+}
+
+.markdown-alert-orc_rec::after {
+    content: '';
+    position: absolute;
+    background-image: url(/assets/images/ORC_CRA_Presents.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 140px;
+    width: 140px;
+    bottom: -20%;
+    right: -5%;
+}
+
+.markdown-alert-orc_rec .markdown-alert-title {
+    color: var(--primary-dark);
+    font-size: 1.4em;
+    margin: 0 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--primary-dark), var(--primary-color)) 1;
+}
+
 /* Apply colors using --color variable (DRY) */
 .markdown-alert-note,
 .markdown-alert-tip,
