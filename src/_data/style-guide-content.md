@@ -58,6 +58,11 @@ console.log(result);
 > [!CAUTION]
 > Negative potential consequences of an action.
 
+## CRA Hub Specific Alerts
+
+> [!ORC_REC] ORC WG Recommendation 
+> ORC Working Group Recommendation Callout.
+
 ## Complex Example
 
 Here's a paragraph with a callout:
