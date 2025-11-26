@@ -1139,12 +1139,20 @@ aside h3 {
     --color: var(--color-danger);
 }
 
+/* ===================================================================
+   CRA HUB ALERTS   =================================================================== */
+
 .markdown-alert-orc_rec {
     border-color: var(--primary-color);
+    background-color: color-mix(in srgb, var(--primary-color) 20%, white);
     position: relative;
     overflow: visible;
-    padding-bottom: 60px;
     border-width: 3px;
+    width: 85%;
+    margin: 15px 0 40px 0;
+    box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
+    border-radius: 8px;
+    padding: 20px; 
 }
 
 .markdown-alert-orc_rec::after {
@@ -1153,10 +1161,10 @@ aside h3 {
     background-image: url(/assets/images/ORC_CRA_Presents.png);
     background-repeat: no-repeat;
     background-size: contain;
-    height: 140px;
-    width: 140px;
-    bottom: -20%;
-    right: -5%;
+    height: 160px;
+    width: 160px;
+    bottom: -30px;
+    right: -25%;
 }
 
 .markdown-alert-orc_rec .markdown-alert-title {
