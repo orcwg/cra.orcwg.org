@@ -18,7 +18,11 @@ module.exports = async function (eleventyConfig) {
     linkify: true,
     typographer: true
   }).use(markdownItGitHubAlerts, 
-    { markers: ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION", "ORC_REC"] }
+    { 
+      markers: ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION", "ORC_REC"],
+      
+      titles: {"orc_rec": "ORC WG Recommendation"}
+    }
   ).use(markdownItFootnote);
 
   // Add markdown filter
