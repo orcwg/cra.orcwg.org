@@ -1144,7 +1144,6 @@ aside h3 {
 
 .markdown-alert-orc_rec {
     border-color: var(--primary-color);
-    background-color: color-mix(in srgb, var(--primary-color) 20%, white);
     position: relative;
     overflow: visible;
     border-width: 3px;
