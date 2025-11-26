@@ -60,7 +60,7 @@ console.log(result);
 
 ## CRA Hub Specific Alerts
 
-> [!ORC_REC] ORC WG Recommendation 
+> [!ORC_REC]
 > ORC Working Group Recommendation Callout.
 
 ## Complex Example
