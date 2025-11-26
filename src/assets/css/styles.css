@@ -1139,6 +1139,42 @@ aside h3 {
     --color: var(--color-danger);
 }
 
+/* ===================================================================
+   CRA HUB ALERTS   =================================================================== */
+
+.markdown-alert-orc_rec {
+    border-color: var(--primary-color);
+    position: relative;
+    overflow: visible;
+    border-width: 3px;
+    width: 85%;
+    margin: 15px 0 40px 0;
+    box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
+    border-radius: 8px;
+    padding: 20px; 
+}
+
+.markdown-alert-orc_rec::after {
+    content: '';
+    position: absolute;
+    background-image: url(/assets/images/ORC_CRA_Presents.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 160px;
+    width: 160px;
+    bottom: -30px;
+    right: -25%;
+}
+
+.markdown-alert-orc_rec .markdown-alert-title {
+    color: var(--primary-dark);
+    font-size: 1.4em;
+    margin: 0 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--primary-dark), var(--primary-color)) 1;
+}
+
 /* Apply colors using --color variable (DRY) */
 .markdown-alert-note,
 .markdown-alert-tip,
