@@ -711,81 +711,7 @@ hr.footnotes-sep {
     border-top: 1px solid var(--border-color);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    body {
-        padding: 20px 15px;
-    }
 
-    /* Mobile header layout: Title and Logo on first line, Nav on second line */
-    .site-header {
-        align-items: center;
-    }
-
-    .site-nav {
-        order: 1;
-        flex-basis: 100%;
-    }
-
-    footer {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 30px;
-    }
-
-    /* Remove section boxing on mobile to save space */
-    .section-card {
-        background: transparent;
-        box-shadow: none;
-        padding: 0;
-        border: none;
-        border-radius: 0;
-        margin-bottom: 30px;
-    }
-
-    .section-card > .section-header {
-        background: var(--background-light);
-        padding: 15px;
-        margin: 0 -15px 20px -15px;
-        border-radius: 0;
-    }
-
-    /* Also simplify intro sections */
-    .section-intro {
-        padding: 15px;
-        margin: 0 -15px 20px -15px;
-        border-radius: 0;
-    }
-
-    /* Card grids should be single column on mobile */
-    .card-grid {
-        grid-template-columns: 1fr;
-    }
-
-    /* Stack action buttons vertically on mobile */
-    .actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .actions .regular-actions,
-    .actions .admin-links {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .actions a,
-    .actions button {
-        width: 100%;
-        text-align: center;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    footer {
-        grid-template-columns: 1fr;
-    }
-}
 
 /* Admin Mode Toggle */
 .admin-toggle {
@@ -1147,11 +1073,10 @@ aside h3 {
     position: relative;
     overflow: visible;
     border-width: 3px;
-    width: 85%;
-    margin: 15px 0 40px 0;
+    margin: 30px 100px 40px 0;
     box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
     border-radius: 8px;
-    padding: 20px; 
+    padding: 20px;
 }
 
 .markdown-alert-orc_rec::after {
@@ -1160,10 +1085,10 @@ aside h3 {
     background-image: url(/assets/images/ORC_CRA_Presents.png);
     background-repeat: no-repeat;
     background-size: contain;
-    height: 160px;
-    width: 160px;
+    height: 150px;
+    width: 120px;
     bottom: -30px;
-    right: -25%;
+    right: -125px;
 }
 
 .markdown-alert-orc_rec .markdown-alert-title {
@@ -1209,4 +1134,88 @@ aside h3 {
 
 .markdown-alert-caution .markdown-alert-title::before {
     content: '🛑 ';
+}
+
+
+/* ===================================================================
+   MEDIA QUERIES  =================================================================== */
+
+/* Responsive */
+@media (max-width: 768px) {
+    body {
+        padding: 20px 15px;
+    }
+
+    /* Mobile header layout: Title and Logo on first line, Nav on second line */
+    .site-header {
+        align-items: center;
+    }
+
+    .site-nav {
+        order: 1;
+        flex-basis: 100%;
+    }
+
+    footer {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+
+    /* Remove section boxing on mobile to save space */
+    .section-card {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        margin-bottom: 30px;
+    }
+
+    .section-card > .section-header {
+        background: var(--background-light);
+        padding: 15px;
+        margin: 0 -15px 20px -15px;
+        border-radius: 0;
+    }
+
+    /* Also simplify intro sections */
+    .section-intro {
+        padding: 15px;
+        margin: 0 -15px 20px -15px;
+        border-radius: 0;
+    }
+
+    /* Card grids should be single column on mobile */
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Stack action buttons vertically on mobile */
+    .actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .actions .regular-actions,
+    .actions .admin-links {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .actions a,
+    .actions button {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .markdown-alert-orc_rec::after {
+        right: -100px;
+    }
+}
+
+@media (max-width: 480px) {
+    footer {
+        grid-template-columns: 1fr;
+    }
 }
