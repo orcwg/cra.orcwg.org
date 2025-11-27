@@ -1151,7 +1151,7 @@ aside h3 {
     margin: 30px 0 40px 0;
     box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
     border-radius: 8px;
-    padding: 20px; 
+    padding: 20px;
 }
 
 .markdown-alert-orc_rec::after {
