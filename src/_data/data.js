@@ -1,7 +1,7 @@
 // ============================================================================
 // Dependencies
 // ============================================================================
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
 const matter = require("gray-matter");
 const markdownIt = require("markdown-it");
@@ -192,9 +192,9 @@ const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
 // Utility Functions - File Operations
 // ============================================================================
 
-function getFile(file) {
+async function getFile(file) {
   const fullPath = path.join(file.parentPath, file.name);
-  const rawContent = fs.readFileSync(fullPath, "utf-8");
+  const rawContent = await fs.readFile(fullPath, "utf-8");
   const relativePath = path.relative(CACHE_DIR, fullPath);
   const posixPath = toPosixPath(relativePath);
   const { createdAt, lastUpdatedAt } = getTimestampsForObj(posixPath);
@@ -213,8 +213,8 @@ function getFile(file) {
   };
 }
 
-function getMarkdownFile(entry) {
-  const file = getFile(entry);
+async function getMarkdownFile(entry) {
+  const file = await getFile(entry);
   const parsed = matter(file.rawContent);
   file.frontmatter = parsed.data;
   file.content = parsed.content.trim();
@@ -226,8 +226,8 @@ function getMarkdownFile(entry) {
   return file;
 }
 
-function getREADME(entry) { // cra-hub uses README.yml files to define FAQ lists
-  const file = getFile(entry);
+async function getREADME(entry) { // cra-hub uses README.yml files to define FAQ lists
+  const file = await getFile(entry);
   file.yaml = yaml.load(file.rawContent);
 
   const posixDirPath = file.posixPath.replace(/\/README\.yml$/, "");
@@ -363,16 +363,10 @@ function createList(file) {
 
 
 // Read and return AUTHORS.md/CONTRIBUTORS.md content
-function fetchAcknowledgementsFile(path) {
-
-  if (!fs.existsSync(path)) {
-    throw new Error(`File not found at ${path}.`);
-  }
-
-  const rawContent = fs.readFileSync(path, "utf-8");
+async function fetchAcknowledgementsFile(path) {
+  const rawContent = await fs.readFile(path, "utf-8");
   const parsed = matter(rawContent);
   const content = parsed.content.trim();
-
 
   if (!content) {
     throw new Error(`File at ${path} is empty or has no content after frontmatter.`);
@@ -381,13 +375,14 @@ function fetchAcknowledgementsFile(path) {
   return content;
 }
 
-// Read, curate and compose the data for the merge of the two files
-function processAcknowledgements(authorsPath, contribPath) {
+async function processAcknowledgements(authorsPath, contribPath) {
   // Extract the different names list in the bodies into arrays
-  return {
-    faqAuthors: extractNames(fetchAcknowledgementsFile(authorsPath)),
-    websiteContributors: extractNames(fetchAcknowledgementsFile(contribPath))
-  };
+  let content;
+  content = await fetchAcknowledgementsFile(authorsPath);
+  const faqAuthors = extractNames(content);
+  content = await fetchAcknowledgementsFile(contribPath);
+  const websiteContributors = extractNames(content);
+  return { faqAuthors, websiteContributors };
 }
 
 function extractNames(content) {
@@ -606,13 +601,28 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
 // ============================================================================
 
 // Orchestrate the complete data processing pipeline
-function processAllContent() {
-  const entries = fs.readdirSync(FAQ_DIR, { withFileTypes: true, recursive: true });
+async function processAllContent() {
+  const entries = await fs.readdir(FAQ_DIR, { withFileTypes: true, recursive: true });
 
-  const faqs = entries.filter(isFaq).map(getMarkdownFile).map(createFaq);
-  const guidanceRequests = entries.filter(isGuidance).map(getMarkdownFile).map(createGuidanceRequest);
-  const lists = entries.filter(isList).map(getREADME).map(createList);
-  const rootList = lists.find(list => list.id === ROOT_LIST_ID);
+  const faqs = [], guidanceRequests = [], lists = [];
+  let rootList;
+  
+  for (const entry of entries) {
+    if (isFaq(entry)) {
+      const file = await getMarkdownFile(entry);
+      const faq = createFaq(file);
+      faqs.push(faq);
+    } else if (isGuidance(entry)) {
+      const file = await getMarkdownFile(entry);
+      const guidanceRequest = createGuidanceRequest(file);
+      guidanceRequests.push(guidanceRequest);
+    } else if (isList(entry)) {
+      const file = await getREADME(entry);
+      const list = createList(file);
+      lists.push(list);
+      if (list.id === ROOT_LIST_ID) { rootList = list; }
+    }
+  }
 
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
 
@@ -629,7 +639,7 @@ function processAllContent() {
   resolveLinksInContent(faqs, 'answer', internalLinkIndex);
   resolveLinksInContent(guidanceRequests, 'body', internalLinkIndex);
 
-  const acknowledgements = processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
+  const acknowledgements = await processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
 
   return {
     faqs,
