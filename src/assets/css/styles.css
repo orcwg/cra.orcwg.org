@@ -1175,6 +1175,31 @@ aside h3 {
     border-image: linear-gradient(90deg, var(--primary-dark), var(--primary-color)) 1;
 }
 
+@media (max-width: 880px) {
+
+    .markdown-alert-orc_rec {
+        width: 80%;
+    }
+
+    .markdown-alert-orc_rec::after {
+    bottom: -30px;
+    left: 100%;
+    }
+}
+
+@media (max-width: 560px) {
+
+    .markdown-alert-orc_rec {
+        width: 70%;
+    }
+
+    .markdown-alert-orc_rec::after {
+    bottom: -30px;
+    right: -45%;
+    }
+}
+
+
 /* Apply colors using --color variable (DRY) */
 .markdown-alert-note,
 .markdown-alert-tip,
