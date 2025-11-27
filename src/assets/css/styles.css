@@ -711,81 +711,7 @@ hr.footnotes-sep {
     border-top: 1px solid var(--border-color);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    body {
-        padding: 20px 15px;
-    }
 
-    /* Mobile header layout: Title and Logo on first line, Nav on second line */
-    .site-header {
-        align-items: center;
-    }
-
-    .site-nav {
-        order: 1;
-        flex-basis: 100%;
-    }
-
-    footer {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 30px;
-    }
-
-    /* Remove section boxing on mobile to save space */
-    .section-card {
-        background: transparent;
-        box-shadow: none;
-        padding: 0;
-        border: none;
-        border-radius: 0;
-        margin-bottom: 30px;
-    }
-
-    .section-card > .section-header {
-        background: var(--background-light);
-        padding: 15px;
-        margin: 0 -15px 20px -15px;
-        border-radius: 0;
-    }
-
-    /* Also simplify intro sections */
-    .section-intro {
-        padding: 15px;
-        margin: 0 -15px 20px -15px;
-        border-radius: 0;
-    }
-
-    /* Card grids should be single column on mobile */
-    .card-grid {
-        grid-template-columns: 1fr;
-    }
-
-    /* Stack action buttons vertically on mobile */
-    .actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .actions .regular-actions,
-    .actions .admin-links {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .actions a,
-    .actions button {
-        width: 100%;
-        text-align: center;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    footer {
-        grid-template-columns: 1fr;
-    }
-}
 
 /* Admin Mode Toggle */
 .admin-toggle {
@@ -1175,31 +1101,6 @@ aside h3 {
     border-image: linear-gradient(90deg, var(--primary-dark), var(--primary-color)) 1;
 }
 
-@media (max-width: 880px) {
-
-    .markdown-alert-orc_rec {
-        width: 80%;
-    }
-
-    .markdown-alert-orc_rec::after {
-    bottom: -30px;
-    left: 100%;
-    }
-}
-
-@media (max-width: 560px) {
-
-    .markdown-alert-orc_rec {
-        width: 70%;
-    }
-
-    .markdown-alert-orc_rec::after {
-    bottom: -30px;
-    left: 100%;
-    }
-}
-
-
 /* Apply colors using --color variable (DRY) */
 .markdown-alert-note,
 .markdown-alert-tip,
@@ -1234,4 +1135,88 @@ aside h3 {
 
 .markdown-alert-caution .markdown-alert-title::before {
     content: '🛑 ';
+}
+
+
+/* ===================================================================
+   MEDIA QUERIES  =================================================================== */
+
+/* Responsive */
+@media (max-width: 768px) {
+    body {
+        padding: 20px 15px;
+    }
+
+    /* Mobile header layout: Title and Logo on first line, Nav on second line */
+    .site-header {
+        align-items: center;
+    }
+
+    .site-nav {
+        order: 1;
+        flex-basis: 100%;
+    }
+
+    footer {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+
+    /* Remove section boxing on mobile to save space */
+    .section-card {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        margin-bottom: 30px;
+    }
+
+    .section-card > .section-header {
+        background: var(--background-light);
+        padding: 15px;
+        margin: 0 -15px 20px -15px;
+        border-radius: 0;
+    }
+
+    /* Also simplify intro sections */
+    .section-intro {
+        padding: 15px;
+        margin: 0 -15px 20px -15px;
+        border-radius: 0;
+    }
+
+    /* Card grids should be single column on mobile */
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Stack action buttons vertically on mobile */
+    .actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .actions .regular-actions,
+    .actions .admin-links {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .actions a,
+    .actions button {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .markdown-alert-orc_rec::after {
+        right: -100px;
+    }
+}
+
+@media (max-width: 480px) {
+    footer {
+        grid-template-columns: 1fr;
+    }
 }
