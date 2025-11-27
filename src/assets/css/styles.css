@@ -1073,8 +1073,7 @@ aside h3 {
     position: relative;
     overflow: visible;
     border-width: 3px;
-    width: 85%;
-    margin: 30px 0 40px 0;
+    margin: 30px 100px 40px 0;
     box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
     border-radius: 8px;
     padding: 20px;
@@ -1087,9 +1086,9 @@ aside h3 {
     background-repeat: no-repeat;
     background-size: contain;
     height: 150px;
-    width: 150px;
+    width: 120px;
     bottom: -30px;
-    right: -25%;
+    right: -125px;
 }
 
 .markdown-alert-orc_rec .markdown-alert-title {
