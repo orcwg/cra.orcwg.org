@@ -15,7 +15,7 @@ eleventyComputed:
 <article class="section-card">
   <h1 class="section-header">
     {{ faq.question | markdownInline | safe }}
-    {% include "components/badges/new.njk" %}
+    {% include "components/badges/freshness.njk" %}
   </h1>
   {{ faq.answer | markdown | safe }}
 
