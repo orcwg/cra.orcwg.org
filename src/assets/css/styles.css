@@ -711,6 +711,17 @@ hr.footnotes-sep {
     border-top: 1px solid var(--border-color);
 }
 
+.faq-attribution {
+    text-align: center;
+    font-size: 0.7em;
+    color: var(--text-light);
+    margin-top: 1em;
+}
+
+.faq-attribution a {
+    color: var(--text-light);
+}
+
 
 
 /* Admin Mode Toggle */

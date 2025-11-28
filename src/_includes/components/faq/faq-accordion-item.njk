@@ -17,6 +17,8 @@
     <div>
       {{ faq.answer | markdown | safe }}
 
+      {% include "components/faq/faq-attribution.njk" %}
+
       {% include "components/faq/faq-warning.njk" %}
       {% set item = faq %}
       {% include "components/common/actions.njk" %}
