@@ -1,6 +1,4 @@
-{% if faq.isNew %}
-  <data class="badge important" data-emoji="🌟" value="new">New</data>
-{% endif %}
+{% include "components/badges/new.njk" %}
 
 {% if faq.recentlyUpdated %}
   <data class="badge important" data-emoji="💫" value="recently-updated">Recently Updated</data>

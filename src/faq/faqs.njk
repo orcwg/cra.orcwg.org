@@ -15,9 +15,7 @@ eleventyComputed:
 <article class="section-card">
   <h1 class="section-header">
     {{ faq.question | markdownInline | safe }}
-    {% if faq.isNew %}
-      <data class="badge important" data-emoji="🌟" value="new">New</data>
-    {% endif %}
+    {% include "components/badges/new.njk" %}
   </h1>
   {{ faq.answer | markdown | safe }}
 
