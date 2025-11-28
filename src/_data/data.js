@@ -600,9 +600,140 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
 // Main Pipeline
 // ============================================================================
 
+// Fetch and parse EC documents
+async function fetchECDocuments() {
+  const response = await fetch("https://ec.europa.eu/commission/presscorner/api/documents?reference=QANDA/22/5375&language=en&ts=1764255415176");
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  return data;
+}
+
+// Create EC official FAQ list
+function createECList(ecFaqs, sourceData, updateDate) {
+  const title = "CRA Basics";
+  const publishDate = new Date(sourceData.publishDate);
+  const lastUpdated = updateDate || publishDate;
+
+  return {
+    type: LIST,
+    id: "cra-basics",
+    permalink: "/faq/cra-basics/",
+    pageTitle: title,
+    title,
+    icon: "🏛️",
+    description: "Official questions and answers from the European Commission",
+    isRoot: false,
+    parents: [],
+    faqCount: 0,
+    listCount: 0,
+    createdAt: publishDate,
+    lastUpdatedAt: lastUpdated,
+    isNew: isNew(publishDate),
+    recentlyUpdated: recentlyUpdated(publishDate, lastUpdated)
+  };
+}
+
+// Create URL-friendly slug from text
+function createSlug(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "") // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, "-")     // Replace spaces with hyphens
+    .replace(/-+/g, "-")      // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, "");   // Remove leading/trailing hyphens
+}
+
+// Extract update date from HTML content and remove it
+function extractAndRemoveUpdateDate(htmlContent) {
+  // Look for "*Updated on DD/MM/YYYY" pattern
+  const updateMatch = htmlContent.match(/\*Updated on (\d{2})\/(\d{2})\/(\d{4})/);
+  let updateDate = null;
+  let cleanedContent = htmlContent;
+
+  if (updateMatch) {
+    const [, day, month, year] = updateMatch;
+    updateDate = new Date(`${year}-${month}-${day}`);
+    // Remove the update text from content
+    cleanedContent = htmlContent.replace(/<p><em>\*Updated on \d{2}\/\d{2}\/\d{4}<\/em><\/p>/, "").trim();
+  }
+
+  return { updateDate, cleanedContent };
+}
+
+// Extract and convert EC FAQs from HTML content to internal format
+function extractECFaqsFromHTML(htmlContent, sourceData, updateDate) {
+  const faqs = [];
+  const publishDate = new Date(sourceData.publishDate);
+  const lastUpdated = updateDate || publishDate;
+
+  // Split content by question patterns (looking for <strong>question</strong>)
+  const questionRegex = /<p><strong>(.*?)<\/strong><\/p>/g;
+  const sections = htmlContent.split(questionRegex).filter(section => section.trim());
+
+  for (let i = 0; i < sections.length - 1; i += 2) {
+    const question = sections[i].trim();
+    const answer = sections[i + 1].trim();
+
+    if (question && answer) {
+      const slug = createSlug(question);
+      const id = `cra-basics/${slug}`;
+
+      faqs.push({
+        id,
+        category: "cra-basics",
+        type: FAQ,
+        status: "official",
+        pageTitle: question,
+        question: question,
+        answer: answer,
+        parents: [],
+        listed: false,
+        permalink: `/faq/cra-basics/${slug}/`,
+        filename: `${slug}.md`,
+        createdAt: publishDate,
+        lastUpdatedAt: lastUpdated,
+        isNew: isNew(publishDate),
+        recentlyUpdated: recentlyUpdated(publishDate, lastUpdated),
+        copyrightText: `© ${publishDate.getFullYear()} European Union`,
+        license: "CC BY 4.0",
+        licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
+        sourceUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375"
+      });
+    }
+  }
+
+  return faqs;
+}
+
+function createAndInsertECList(faqs, lists, rootList, ecFaqs, ecList) {
+  faqs.push(...ecFaqs);
+  lists.push(ecList);
+  ecList.children = ecFaqs;
+  ecFaqs.forEach(faq => {
+    faq.parents.push(ecList);
+    faq.listed = true;
+  });
+  rootList.children.unshift(ecList);
+  ecList.parents.push(rootList);
+}
+
+// Fetch, process, and create EC FAQs and list
+async function processECContent() {
+  const ecData = await fetchECDocuments();
+  const { updateDate, cleanedContent } = extractAndRemoveUpdateDate(ecData.docuLanguageResource.htmlContent);
+  const ecFaqs = extractECFaqsFromHTML(cleanedContent, ecData, updateDate);
+  const ecList = createECList(ecFaqs, ecData, updateDate);
+  return { ecFaqs, ecList };
+}
+
 // Orchestrate the complete data processing pipeline
 async function processAllContent() {
   const entries = await fs.readdir(FAQ_DIR, { withFileTypes: true, recursive: true });
+
+  // Fetch and process EC content
+  const { ecFaqs, ecList } = await processECContent();
 
   const faqs = [], guidanceRequests = [], lists = [];
   let rootList;
@@ -628,6 +759,9 @@ async function processAllContent() {
 
   // Cross-reference YAML-based lists and FAQs
   crossReferenceListsAndFaqs(lists, faqs);
+
+  // Add and cross-reference EC content
+  createAndInsertECList(faqs, lists, rootList, ecFaqs, ecList);
 
   // Create, populate, and insert dynamic lists
   createAndInsertDynamicLists(lists, rootList, faqs);
