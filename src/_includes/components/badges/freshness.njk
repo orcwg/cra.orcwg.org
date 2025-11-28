@@ -1,7 +1,5 @@
 {% if faq.isNew %}
   <data class="badge important" data-emoji="🌟" value="new">New</data>
-{% endif %}
-
-{% if faq.recentlyUpdated %}
+{% elif faq.recentlyUpdated %}
   <data class="badge important" data-emoji="💫" value="recently-updated">Recently Updated</data>
 {% endif %}
