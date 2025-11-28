@@ -13,10 +13,8 @@ eleventyComputed:
 ---
 
 <article class="section-card">
-  <h1 class="section-header">
-    {{ faq.question | markdownInline | safe }}
-    {% include "components/badges/freshness.njk" %}
-  </h1>
+  <h1 class="section-header">{{ faq.question | markdownInline | safe }} </h1>
+  <header>{% include "components/badges/freshness.njk" %}</header>
   {{ faq.answer | markdown | safe }}
 
   {% include "components/faq/faq-warning.njk" %}
