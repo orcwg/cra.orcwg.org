@@ -1,0 +1,10 @@
+---
+permalink: "/api/v0/index.json"
+eleventyExcludeFromCollections: true
+---
+{%- set stats = {
+  faqCount: data.faqs.length,
+  listCount: data.lists.length,
+  guidanceCount: data.guidance.length
+} -%}
+{{ stats | formatApiIndex | safe }}

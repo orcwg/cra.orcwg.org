@@ -1,0 +1,5 @@
+---
+permalink: "/api/v0/lists.json"
+eleventyExcludeFromCollections: true
+---
+{{ data.lists | formatListCollection('/api/v0/lists.json') | safe }}

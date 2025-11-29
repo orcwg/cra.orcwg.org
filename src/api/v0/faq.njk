@@ -1,0 +1,9 @@
+---
+pagination:
+  data: data.faqs
+  size: 1
+  alias: faq
+permalink: "/api/v0/faqs/{{ faq.id }}.json"
+eleventyExcludeFromCollections: true
+---
+{{ faq | formatFaqDocument | safe }}

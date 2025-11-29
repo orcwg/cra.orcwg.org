@@ -222,7 +222,7 @@ async function getMarkdownFile(entry) {
   const posixPathWithoutExt = file.posixPath.replace(/\.md$/, "");
   file.permalink = "/" + posixPathWithoutExt + "/"; // backslash to make eleventy happy
   file.id = posixPathWithoutExt.replace(/^faq\//, "");
-  file.category = file.id.replace(/\/[^\/]+$/, ""); // Extract directory path (everything before last slash)
+  file.directory = file.id.replace(/\/[^\/]+$/, ""); // Extract directory path (everything before last slash) - used for link resolution
   return file;
 }
 
@@ -592,7 +592,7 @@ function calculateListCounts(lists) {
 // Resolve custom link syntax in content fields
 function resolveLinksInContent(items, fieldName, internalLinkIndex) {
   items.forEach(item => {
-    item[fieldName] = resolveLinks(item[fieldName], item.category, internalLinkIndex, craReferences);
+    item[fieldName] = resolveLinks(item[fieldName], item.directory, internalLinkIndex, craReferences);
   });
 }
 

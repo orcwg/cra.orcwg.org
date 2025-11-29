@@ -1,0 +1,5 @@
+---
+permalink: "/api/v0/guidance.json"
+eleventyExcludeFromCollections: true
+---
+{{ data.guidance | formatGuidanceCollection('/api/v0/guidance.json') | safe }}
