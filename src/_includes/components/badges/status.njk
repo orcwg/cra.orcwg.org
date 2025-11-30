@@ -1,9 +1,11 @@
 {% if faq.status == 'pending-guidance' %}
-  <data class="badge danger" value="pending-guidance">Pending Guidance</data>
+  <data class="badge danger" value="{{ faq.status }}" data-emoji="🛑" title="This FAQ has been approved by the ORC WG. However, it depends on official guidance from the European Commission which hasn't been made public yet.">Pending Guidance</data>
 {% elif faq.status == 'draft' %}
-  <data class="badge warning" value="draft">Draft</data>
+  <data class="badge warning" value="{{ faq.status }}" data-emoji="⚠️" title="This FAQ is draft. It hasn't been reviewed by the ORC WG. The answer may be incomplete or incorrect.">Draft</data>
 {% elif faq.status == "approved" %}
-  <data class="badge success" value="approved">Approved</data>
+  <data class="badge success" value="{{ faq.status }}" data-emoji="✅" title="This FAQ has been reviewed and approved by the ORC WG. It represents ORC WG's informed understanding of the CRA (but doesn't constitue legal advice).">Approved</data>
+{% elif faq.status == "official" %}
+  <data class="badge info" value="{{ faq.status }}" data-emoji="🇪🇺" title="This FAQ is an official FAQ from the European Commission. Note that it might be dated and no longer fully represent the perspective of the European Commission.">Official FAQ</data>
 {% else %}
-  <data class="badge danger" value="unknown">Status not set</data>
+  <data class="badge danger" value="unknown" data-emoji="❌" title="All FAQs should have a status. This one somehow doesn't. This means that something is wrong in our data pipeline. We're sorry.">Status not set</data>
 {% endif %}

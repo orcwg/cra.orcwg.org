@@ -22,7 +22,8 @@ const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
 const AUTHORS_PATH = path.join(FAQ_DIR, "AUTHORS.md");
 const CONTRIBUTORS_PATH = path.join(ROOT_DIR, "CONTRIBUTORS.md");
 
-const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
+const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/";
+const GITHUB_ROOT = "https://github.com/orcwg/cra-hub/tree/main/";
 
 // Timestamp constants (in days)
 const NEW_CONTENT_THRESHOLD = 30;  // Content is "new" if created within 30 days
@@ -35,16 +36,6 @@ const GUIDANCE_REQUEST = "guidance-request";
 const LIST = "list";
 
 const mdPlain = markdownIt().use(plainTextPlugin);
-
-// ============================================================================
-// Utility Functions - Path and URL
-// ============================================================================
-
-// Generate edit-on-GitHub URL for a file relative to CACHE_DIR
-function getEditOnGithubUrl(relativePath) {
-  return new URL(relativePath, EDIT_ON_GITHUB_ROOT).href;
-}
-
 
 // ============================================================================
 // Utility Functions - Text Processing
@@ -204,7 +195,12 @@ async function getFile(file) {
     path: path.relative(CACHE_DIR, file.parentPath),
     fullPath,
     posixPath,
-    editOnGithubUrl: getEditOnGithubUrl(relativePath),
+    editOnGithubUrl: new URL(posixPath, EDIT_ON_GITHUB_ROOT).href,
+    srcUrl: new URL(posixPath, GITHUB_ROOT).href,
+    license: "CC BY 4.0",
+    licenseUrl: new URL("LICENSE.md", GITHUB_ROOT).href,
+    author: "ORC WG Authors",
+    authorUrl: "https://cra.orcwg.org/acknowledgements/",
     rawContent,
     createdAt,
     lastUpdatedAt,
@@ -468,13 +464,25 @@ const DYNAMIC_LISTS = [
     hideInTopics: HIDE_IF_EMPTY
   },
   {
+    id: 'cra-basics',
+    title: 'CRA Basics',
+    icon: '🏛️',
+    description: 'Official questions and answers from the European Commission',
+    emptyMsg: 'EC content is currently unavailable',
+    insertAt: 'top',
+    inclusionFilter: (faq) => faq.category === 'cra-basics',
+    sortChildren: null,  // Maintain original order
+    hideInAllFaqs: HIDE_IF_EMPTY,
+    hideInTopics: HIDE_IF_EMPTY
+  },
+  {
     id: 'unlisted',
     title: 'Unlisted FAQs',
     icon: '❌',
     description: 'FAQs not yet assigned to any list',
     emptyMsg: 'Great news! All FAQs are properly assigned to lists. There are currently no unlisted FAQs.',
     insertAt: 'bottom',
-    inclusionFilter: (faq) => !faq.listed,  // Include FAQs not tagged as listed
+    inclusionFilter: (faq) => !faq.listed,
     sortChildren: null,  // No sorting
     hideInAllFaqs: HIDE_IF_EMPTY,
     hideInTopics: HIDE_IF_EMPTY
@@ -600,13 +608,84 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
 // Main Pipeline
 // ============================================================================
 
+// Create URL-friendly slug from text
+function createSlug(text) {
+  return text
+    .toLowerCase()
+    .replace("cyber resilience act", "cra")
+    .replace(/[^\w\s-]/g, "") // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, "-")     // Replace spaces with hyphens
+    .replace(/-+/g, "-")      // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, "");   // Remove leading/trailing hyphens
+}
+
+// Fetch and process EC content, adding FAQs directly to main FAQ array
+async function fetchAndAddECFaqs(faqs) {
+  const category = "cra-basics";
+  const response = await fetch("https://ec.europa.eu/commission/presscorner/api/documents?reference=QANDA/22/5375&language=en&ts=1764255415176");
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const ecData = await response.json();
+
+  // Extract update date and clean content
+  const updateMatch = ecData.docuLanguageResource.htmlContent.match(/\*Updated on (\d{2})\/(\d{2})\/(\d{4})/);
+  let updateDate = null;
+  let cleanedContent = ecData.docuLanguageResource.htmlContent;
+
+  if (updateMatch) {
+    const [, day, month, year] = updateMatch;
+    updateDate = new Date(`${ year }-${ month }-${ day }`);
+    cleanedContent = cleanedContent.replace(/<p><em>\*Updated on \d{2}\/\d{2}\/\d{4}<\/em><\/p>/, "").trim();
+  }
+
+  // Extract FAQs and add to main array
+  const createdAt = new Date(ecData.publishDate);
+  const lastUpdatedAt = updateDate || createdAt;
+  const sections = cleanedContent
+    .split(/<p><strong>(.*?)<\/strong><\/p>/g)
+    .map(s => s.replace("<p>&nbsp;</p>","").trim())
+    .filter(s => s);
+
+  for (let i = 0; i < sections.length - 1; i += 2) {
+    const question = sections[i];
+    const answer = sections[i + 1];
+
+    if (question && answer) {
+      const slug = createSlug(question);
+      const id = `${ category }/${ slug }`;
+
+      faqs.push({
+        id,
+        category,
+        type: FAQ,
+        status: "official",
+        pageTitle: question,
+        question,
+        answer,
+        parents: [],
+        listed: true,  // Prevents these FAQs from appearing in the "unlisted" filter
+        permalink: `/faq/${ id }/`,
+        createdAt,
+        lastUpdatedAt,
+        isNew: isNew(createdAt),
+        recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+        author: "European Union",
+        license: "CC BY 4.0",
+        licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
+        srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375"
+      });
+    }
+  }
+}
+
 // Orchestrate the complete data processing pipeline
 async function processAllContent() {
   const entries = await fs.readdir(FAQ_DIR, { withFileTypes: true, recursive: true });
 
   const faqs = [], guidanceRequests = [], lists = [];
   let rootList;
-  
+
   for (const entry of entries) {
     if (isFaq(entry)) {
       const file = await getMarkdownFile(entry);
@@ -628,6 +707,9 @@ async function processAllContent() {
 
   // Cross-reference YAML-based lists and FAQs
   crossReferenceListsAndFaqs(lists, faqs);
+
+  // Fetch and add EC content (now handled by dynamic list system)
+  await fetchAndAddECFaqs(faqs);
 
   // Create, populate, and insert dynamic lists
   createAndInsertDynamicLists(lists, rootList, faqs);
