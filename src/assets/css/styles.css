@@ -21,6 +21,7 @@
     /* Text Colors */
     --text-color: #333;
     --text-light: #666;
+    --text-very-light: #aaa;
 
     /* Link Colors */
     --link-color: var(--primary-dark);
@@ -612,6 +613,21 @@ a.action-button {
     gap: 10px;
 }
 
+.faq-attribution {
+    text-align: center;
+    font-size: 0.7em;
+    color: var(--text-very-light);
+    margin-top: 20px;
+}
+
+.faq-attribution a {
+    color: var(--text-very-light);
+}
+
+.faq-attribution + .actions {
+  margin-top: 4px;
+}
+
 /* Accordion summary hover: white background with border highlight */
 .faq-accordion-item summary:hover {
     background: white;
@@ -710,19 +726,6 @@ hr.footnotes-sep {
     border-width: 0;
     border-top: 1px solid var(--border-color);
 }
-
-.faq-attribution {
-    text-align: center;
-    font-size: 0.7em;
-    color: var(--text-light);
-    margin-top: 1em;
-}
-
-.faq-attribution a {
-    color: var(--text-light);
-}
-
-
 
 /* Admin Mode Toggle */
 .admin-toggle {

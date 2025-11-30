@@ -22,7 +22,8 @@ const GUIDANCE_DIR = path.join(CACHE_DIR, "faq", "pending-guidance");
 const AUTHORS_PATH = path.join(FAQ_DIR, "AUTHORS.md");
 const CONTRIBUTORS_PATH = path.join(ROOT_DIR, "CONTRIBUTORS.md");
 
-const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/"
+const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/";
+const GITHUB_ROOT = "https://github.com/orcwg/cra-hub/tree/main/";
 
 // Timestamp constants (in days)
 const NEW_CONTENT_THRESHOLD = 30;  // Content is "new" if created within 30 days
@@ -35,16 +36,6 @@ const GUIDANCE_REQUEST = "guidance-request";
 const LIST = "list";
 
 const mdPlain = markdownIt().use(plainTextPlugin);
-
-// ============================================================================
-// Utility Functions - Path and URL
-// ============================================================================
-
-// Generate edit-on-GitHub URL for a file relative to CACHE_DIR
-function getEditOnGithubUrl(relativePath) {
-  return new URL(relativePath, EDIT_ON_GITHUB_ROOT).href;
-}
-
 
 // ============================================================================
 // Utility Functions - Text Processing
@@ -204,7 +195,12 @@ async function getFile(file) {
     path: path.relative(CACHE_DIR, file.parentPath),
     fullPath,
     posixPath,
-    editOnGithubUrl: getEditOnGithubUrl(relativePath),
+    editOnGithubUrl: new URL(posixPath, EDIT_ON_GITHUB_ROOT).href,
+    srcUrl: new URL(posixPath, GITHUB_ROOT).href,
+    license: "CC BY 4.0",
+    licenseUrl: new URL("LICENSE.md", GITHUB_ROOT).href,
+    author: "ORC WG Authors",
+    authorUrl: "https://cra.orcwg.org/acknowledgements/",
     rawContent,
     createdAt,
     lastUpdatedAt,
@@ -639,6 +635,7 @@ function createECList(ecFaqs, sourceData, updateDate) {
 function createSlug(text) {
   return text
     .toLowerCase()
+    .replace("cyber resilience act", "cra")
     .replace(/[^\w\s-]/g, "") // Remove special characters except spaces and hyphens
     .replace(/\s+/g, "-")     // Replace spaces with hyphens
     .replace(/-+/g, "-")      // Replace multiple hyphens with single hyphen
@@ -674,7 +671,7 @@ function extractECFaqsFromHTML(htmlContent, sourceData, updateDate) {
 
   for (let i = 0; i < sections.length - 1; i += 2) {
     const question = sections[i].trim();
-    const answer = sections[i + 1].trim();
+    const answer = sections[i + 1].replace("<p>&nbsp;</p>","").trim();
 
     if (question && answer) {
       const slug = createSlug(question);
@@ -691,15 +688,14 @@ function extractECFaqsFromHTML(htmlContent, sourceData, updateDate) {
         parents: [],
         listed: false,
         permalink: `/faq/cra-basics/${slug}/`,
-        filename: `${slug}.md`,
         createdAt: publishDate,
         lastUpdatedAt: lastUpdated,
         isNew: isNew(publishDate),
         recentlyUpdated: recentlyUpdated(publishDate, lastUpdated),
-        copyrightText: `© ${publishDate.getFullYear()} European Union`,
+        author: "European Union",
         license: "CC BY 4.0",
         licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
-        sourceUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375"
+        srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375"
       });
     }
   }

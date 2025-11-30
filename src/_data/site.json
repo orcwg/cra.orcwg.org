@@ -30,8 +30,6 @@
       {
         "title": "Licenses & Trademarks",
         "list": [
-          "Copyright [ORC WG Contributors](https://github.com/orcwg/cra-hub/graphs/contributors).",
-          "Content: [CC-By 4.0](https://github.com/orcwg/cra-hub/blob/main/LICENSE.md).",
           "Source code: [Apache License 2.0](https://github.com/orcwg/cra.orcwg.org/blob/main/LICENSE).",
           "ORC WG logo and Orc Mascot are trademarks of the Eclipse Foundation (see [policy](https://www.eclipse.org/legal/logo-guidelines/))."
         ]
