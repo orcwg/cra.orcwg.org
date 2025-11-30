@@ -464,13 +464,26 @@ const DYNAMIC_LISTS = [
     hideInTopics: HIDE_IF_EMPTY
   },
   {
+    id: 'cra-basics',
+    title: 'CRA Basics',
+    icon: '🏛️',
+    description: 'Official questions and answers from the European Commission',
+    emptyMsg: 'EC content is currently unavailable',
+    insertAt: 'top',
+    inclusionFilter: (faq) => faq.category === 'cra-basics',
+    sortChildren: null,  // Maintain original order
+    hideInAllFaqs: false,
+    hideInTopics: false,
+    isExternal: true  // Flag to indicate this comes from external source
+  },
+  {
     id: 'unlisted',
     title: 'Unlisted FAQs',
     icon: '❌',
     description: 'FAQs not yet assigned to any list',
     emptyMsg: 'Great news! All FAQs are properly assigned to lists. There are currently no unlisted FAQs.',
     insertAt: 'bottom',
-    inclusionFilter: (faq) => !faq.listed,  // Include FAQs not tagged as listed
+    inclusionFilter: (faq) => !faq.listed,
     sortChildren: null,  // No sorting
     hideInAllFaqs: HIDE_IF_EMPTY,
     hideInTopics: HIDE_IF_EMPTY
@@ -596,41 +609,6 @@ function resolveLinksInContent(items, fieldName, internalLinkIndex) {
 // Main Pipeline
 // ============================================================================
 
-// Fetch and parse EC documents
-async function fetchECDocuments() {
-  const response = await fetch("https://ec.europa.eu/commission/presscorner/api/documents?reference=QANDA/22/5375&language=en&ts=1764255415176");
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const data = await response.json();
-  return data;
-}
-
-// Create EC official FAQ list
-function createECList(ecFaqs, sourceData, updateDate) {
-  const title = "CRA Basics";
-  const publishDate = new Date(sourceData.publishDate);
-  const lastUpdated = updateDate || publishDate;
-
-  return {
-    type: LIST,
-    id: "cra-basics",
-    permalink: "/faq/cra-basics/",
-    pageTitle: title,
-    title,
-    icon: "🏛️",
-    description: "Official questions and answers from the European Commission",
-    isRoot: false,
-    parents: [],
-    faqCount: 0,
-    listCount: 0,
-    createdAt: publishDate,
-    lastUpdatedAt: lastUpdated,
-    isNew: isNew(publishDate),
-    recentlyUpdated: recentlyUpdated(publishDate, lastUpdated)
-  };
-}
-
 // Create URL-friendly slug from text
 function createSlug(text) {
   return text
@@ -642,98 +620,75 @@ function createSlug(text) {
     .replace(/^-|-$/g, "");   // Remove leading/trailing hyphens
 }
 
-// Extract update date from HTML content and remove it
-function extractAndRemoveUpdateDate(htmlContent) {
-  // Look for "*Updated on DD/MM/YYYY" pattern
-  const updateMatch = htmlContent.match(/\*Updated on (\d{2})\/(\d{2})\/(\d{4})/);
-  let updateDate = null;
-  let cleanedContent = htmlContent;
-
-  if (updateMatch) {
-    const [, day, month, year] = updateMatch;
-    updateDate = new Date(`${year}-${month}-${day}`);
-    // Remove the update text from content
-    cleanedContent = htmlContent.replace(/<p><em>\*Updated on \d{2}\/\d{2}\/\d{4}<\/em><\/p>/, "").trim();
-  }
-
-  return { updateDate, cleanedContent };
-}
-
-// Extract and convert EC FAQs from HTML content to internal format
-function extractECFaqsFromHTML(htmlContent, sourceData, updateDate) {
-  const faqs = [];
-  const publishDate = new Date(sourceData.publishDate);
-  const lastUpdated = updateDate || publishDate;
-
-  // Split content by question patterns (looking for <strong>question</strong>)
-  const questionRegex = /<p><strong>(.*?)<\/strong><\/p>/g;
-  const sections = htmlContent.split(questionRegex).filter(section => section.trim());
-
-  for (let i = 0; i < sections.length - 1; i += 2) {
-    const question = sections[i].trim();
-    const answer = sections[i + 1].replace("<p>&nbsp;</p>","").trim();
-
-    if (question && answer) {
-      const slug = createSlug(question);
-      const id = `cra-basics/${slug}`;
-
-      faqs.push({
-        id,
-        category: "cra-basics",
-        type: FAQ,
-        status: "official",
-        pageTitle: question,
-        question: question,
-        answer: answer,
-        parents: [],
-        listed: false,
-        permalink: `/faq/cra-basics/${slug}/`,
-        createdAt: publishDate,
-        lastUpdatedAt: lastUpdated,
-        isNew: isNew(publishDate),
-        recentlyUpdated: recentlyUpdated(publishDate, lastUpdated),
-        author: "European Union",
-        license: "CC BY 4.0",
-        licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
-        srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375"
-      });
+// Fetch and process EC content, adding FAQs directly to main FAQ array
+async function fetchAndAddECFaqs(faqs) {
+  try {
+    const response = await fetch("https://ec.europa.eu/commission/presscorner/api/documents?reference=QANDA/22/5375&language=en&ts=1764255415176");
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    const ecData = await response.json();
+
+    // Extract update date and clean content
+    const updateMatch = ecData.docuLanguageResource.htmlContent.match(/\*Updated on (\d{2})\/(\d{2})\/(\d{4})/);
+    let updateDate = null;
+    let cleanedContent = ecData.docuLanguageResource.htmlContent;
+
+    if (updateMatch) {
+      const [, day, month, year] = updateMatch;
+      updateDate = new Date(`${year}-${month}-${day}`);
+      cleanedContent = cleanedContent.replace(/<p><em>\*Updated on \d{2}\/\d{2}\/\d{4}<\/em><\/p>/, "").trim();
+    }
+
+    // Extract FAQs and add to main array
+    const publishDate = new Date(ecData.publishDate);
+    const lastUpdated = updateDate || publishDate;
+    const questionRegex = /<p><strong>(.*?)<\/strong><\/p>/g;
+    const sections = cleanedContent.split(questionRegex).filter(section => section.trim());
+
+    for (let i = 0; i < sections.length - 1; i += 2) {
+      const question = sections[i].trim();
+      const answer = sections[i + 1].replace("<p>&nbsp;</p>","").trim();
+
+      if (question && answer) {
+        const slug = createSlug(question);
+        const id = `cra-basics/${slug}`;
+
+        faqs.push({
+          id,
+          category: "cra-basics",
+          type: FAQ,
+          status: "official",
+          pageTitle: question,
+          question: question,
+          answer: answer,
+          parents: [],
+          listed: true,  // Prevents these FAQs from appearing in the "unlisted" filter
+          permalink: `/faq/cra-basics/${slug}/`,
+          createdAt: publishDate,
+          lastUpdatedAt: lastUpdated,
+          isNew: isNew(publishDate),
+          recentlyUpdated: recentlyUpdated(publishDate, lastUpdated),
+          author: "European Union",
+          license: "CC BY 4.0",
+          licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
+          srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375"
+        });
+      }
+    }
+
+
+  } catch (error) {
   }
-
-  return faqs;
-}
-
-function createAndInsertECList(faqs, lists, rootList, ecFaqs, ecList) {
-  faqs.push(...ecFaqs);
-  lists.push(ecList);
-  ecList.children = ecFaqs;
-  ecFaqs.forEach(faq => {
-    faq.parents.push(ecList);
-    faq.listed = true;
-  });
-  rootList.children.unshift(ecList);
-  ecList.parents.push(rootList);
-}
-
-// Fetch, process, and create EC FAQs and list
-async function processECContent() {
-  const ecData = await fetchECDocuments();
-  const { updateDate, cleanedContent } = extractAndRemoveUpdateDate(ecData.docuLanguageResource.htmlContent);
-  const ecFaqs = extractECFaqsFromHTML(cleanedContent, ecData, updateDate);
-  const ecList = createECList(ecFaqs, ecData, updateDate);
-  return { ecFaqs, ecList };
 }
 
 // Orchestrate the complete data processing pipeline
 async function processAllContent() {
   const entries = await fs.readdir(FAQ_DIR, { withFileTypes: true, recursive: true });
 
-  // Fetch and process EC content
-  const { ecFaqs, ecList } = await processECContent();
-
   const faqs = [], guidanceRequests = [], lists = [];
   let rootList;
-  
+
   for (const entry of entries) {
     if (isFaq(entry)) {
       const file = await getMarkdownFile(entry);
@@ -756,8 +711,8 @@ async function processAllContent() {
   // Cross-reference YAML-based lists and FAQs
   crossReferenceListsAndFaqs(lists, faqs);
 
-  // Add and cross-reference EC content
-  createAndInsertECList(faqs, lists, rootList, ecFaqs, ecList);
+  // Fetch and add EC content (now handled by dynamic list system)
+  await fetchAndAddECFaqs(faqs);
 
   // Create, populate, and insert dynamic lists
   createAndInsertDynamicLists(lists, rootList, faqs);
