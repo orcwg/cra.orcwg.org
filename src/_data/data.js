@@ -472,8 +472,8 @@ const DYNAMIC_LISTS = [
     insertAt: 'top',
     inclusionFilter: (faq) => faq.category === 'cra-basics',
     sortChildren: null,  // Maintain original order
-    hideInAllFaqs: false,
-    hideInTopics: false
+    hideInAllFaqs: HIDE_IF_EMPTY,
+    hideInTopics: HIDE_IF_EMPTY
   },
   {
     id: 'unlisted',
