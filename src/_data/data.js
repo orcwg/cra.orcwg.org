@@ -473,8 +473,7 @@ const DYNAMIC_LISTS = [
     inclusionFilter: (faq) => faq.category === 'cra-basics',
     sortChildren: null,  // Maintain original order
     hideInAllFaqs: false,
-    hideInTopics: false,
-    isExternal: true  // Flag to indicate this comes from external source
+    hideInTopics: false
   },
   {
     id: 'unlisted',
@@ -622,63 +621,61 @@ function createSlug(text) {
 
 // Fetch and process EC content, adding FAQs directly to main FAQ array
 async function fetchAndAddECFaqs(faqs) {
-  try {
-    const response = await fetch("https://ec.europa.eu/commission/presscorner/api/documents?reference=QANDA/22/5375&language=en&ts=1764255415176");
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  const category = "cra-basics";
+  const response = await fetch("https://ec.europa.eu/commission/presscorner/api/documents?reference=QANDA/22/5375&language=en&ts=1764255415176");
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const ecData = await response.json();
+
+  // Extract update date and clean content
+  const updateMatch = ecData.docuLanguageResource.htmlContent.match(/\*Updated on (\d{2})\/(\d{2})\/(\d{4})/);
+  let updateDate = null;
+  let cleanedContent = ecData.docuLanguageResource.htmlContent;
+
+  if (updateMatch) {
+    const [, day, month, year] = updateMatch;
+    updateDate = new Date(`${ year }-${ month }-${ day }`);
+    cleanedContent = cleanedContent.replace(/<p><em>\*Updated on \d{2}\/\d{2}\/\d{4}<\/em><\/p>/, "").trim();
+  }
+
+  // Extract FAQs and add to main array
+  const createdAt = new Date(ecData.publishDate);
+  const lastUpdatedAt = updateDate || createdAt;
+  const sections = cleanedContent
+    .split(/<p><strong>(.*?)<\/strong><\/p>/g)
+    .map(s => s.replace("<p>&nbsp;</p>","").trim())
+    .filter(s => s);
+
+  for (let i = 0; i < sections.length - 1; i += 2) {
+    const question = sections[i];
+    const answer = sections[i + 1];
+
+    if (question && answer) {
+      const slug = createSlug(question);
+      const id = `${ category }/${ slug }`;
+
+      faqs.push({
+        id,
+        category,
+        type: FAQ,
+        status: "official",
+        pageTitle: question,
+        question,
+        answer,
+        parents: [],
+        listed: true,  // Prevents these FAQs from appearing in the "unlisted" filter
+        permalink: `/faq/${ id }/`,
+        createdAt,
+        lastUpdatedAt,
+        isNew: isNew(createdAt),
+        recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+        author: "European Union",
+        license: "CC BY 4.0",
+        licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
+        srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375"
+      });
     }
-    const ecData = await response.json();
-
-    // Extract update date and clean content
-    const updateMatch = ecData.docuLanguageResource.htmlContent.match(/\*Updated on (\d{2})\/(\d{2})\/(\d{4})/);
-    let updateDate = null;
-    let cleanedContent = ecData.docuLanguageResource.htmlContent;
-
-    if (updateMatch) {
-      const [, day, month, year] = updateMatch;
-      updateDate = new Date(`${year}-${month}-${day}`);
-      cleanedContent = cleanedContent.replace(/<p><em>\*Updated on \d{2}\/\d{2}\/\d{4}<\/em><\/p>/, "").trim();
-    }
-
-    // Extract FAQs and add to main array
-    const publishDate = new Date(ecData.publishDate);
-    const lastUpdated = updateDate || publishDate;
-    const questionRegex = /<p><strong>(.*?)<\/strong><\/p>/g;
-    const sections = cleanedContent.split(questionRegex).filter(section => section.trim());
-
-    for (let i = 0; i < sections.length - 1; i += 2) {
-      const question = sections[i].trim();
-      const answer = sections[i + 1].replace("<p>&nbsp;</p>","").trim();
-
-      if (question && answer) {
-        const slug = createSlug(question);
-        const id = `cra-basics/${slug}`;
-
-        faqs.push({
-          id,
-          category: "cra-basics",
-          type: FAQ,
-          status: "official",
-          pageTitle: question,
-          question: question,
-          answer: answer,
-          parents: [],
-          listed: true,  // Prevents these FAQs from appearing in the "unlisted" filter
-          permalink: `/faq/cra-basics/${slug}/`,
-          createdAt: publishDate,
-          lastUpdatedAt: lastUpdated,
-          isNew: isNew(publishDate),
-          recentlyUpdated: recentlyUpdated(publishDate, lastUpdated),
-          author: "European Union",
-          license: "CC BY 4.0",
-          licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
-          srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375"
-        });
-      }
-    }
-
-
-  } catch (error) {
   }
 }
 
