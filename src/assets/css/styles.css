@@ -981,19 +981,6 @@ tbody tr:hover {
     color: var(--color);
 }
 
-/* Badge icons based on utility classes */
-.badge.success::before {
-    content: '✅ ';
-}
-
-.badge.warning::before {
-    content: '⚠️ ';
-}
-
-.badge.danger::before {
-    content: '🛑 ';
-}
-
 .badge[data-emoji]::before {
     content: attr(data-emoji) " ";
 }
