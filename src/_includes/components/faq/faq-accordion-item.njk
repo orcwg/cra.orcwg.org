@@ -11,6 +11,7 @@
 <details class="faq-accordion-item" name="faq-accordion">
   <summary>
     <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
+    {% include "components/badges/freshness.njk"%}
   </summary>
 
   <article>
