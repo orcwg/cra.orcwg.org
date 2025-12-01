@@ -1,0 +1,27 @@
+{#
+  FAQ Attribution Component
+
+  Renders copyright and license attribution for FAQs when applicable.
+
+  Parameters:
+  - faq: FAQ object with optional author, authorUrl, copyrightDate, license, and licenseUrl fields
+#}
+
+{% if faq.author or faq.license %}
+<div class="faq-attribution">
+  {% if faq.author %}
+    © {{ faq.createdAt.getFullYear() }}
+    {% if faq.authorUrl %}
+      <a href="{{ faq.authorUrl }}">{{ faq.author }}</a>
+    {% else %}
+      {{ faq.author }}
+    {% endif %}
+  {% endif %}
+  {% if faq.license %}
+     • {% if faq.licenseUrl %}<a href="{{ faq.licenseUrl }}">{{ faq.license }}</a>{% else %}{{ faq.license }}{% endif %}
+  {% endif %}
+  {% if faq.srcUrl %}
+    • <a href="{{ faq.srcUrl }}">Source</a>
+  {% endif %}
+</div>
+{% endif %}
