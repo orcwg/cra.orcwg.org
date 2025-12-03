@@ -1,0 +1,9 @@
+---
+pagination:
+  data: data.api.collections
+  size: 1
+  alias: collection
+permalink: "/api/v0/{{ collection.collectionName }}.json"
+eleventyExcludeFromCollections: true
+---
+{{ collection.formatted | toJson | safe }}

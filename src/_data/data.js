@@ -6,10 +6,12 @@ const path = require("path");
 const matter = require("gray-matter");
 const markdownIt = require("markdown-it");
 const plainTextPlugin = require("markdown-it-plain-text");
+const markdownItFootnote = require("markdown-it-footnote");
 const yaml = require("js-yaml");
 const { resolveLinks } = require("./utils/link-resolver.js");
 const { isNew, recentlyUpdated, NEW_CONTENT_THRESHOLD, RECENTLY_UPDATED_THRESHOLD } = require("./utils/timestamp-helpers.js");
 const craReferences = require("./craReferences.json");
+const apiFormatter = require("./utils/api-formatter.js");
 const { execSync } = require("child_process");
 const { parsePDFFAQs } = require("./parse-official-faqs-pdf.js");
 
@@ -30,11 +32,78 @@ const GITHUB_ROOT = "https://github.com/orcwg/cra-hub/tree/main/";
 const ROOT_LIST_ID = "faq";
 const LIST_FILENAME = 'README.yml';
 
-const FAQ = "faq";
-const GUIDANCE_REQUEST = "guidance-request";
-const LIST = "list";
+// Resource type configurations with API metadata
+const RESOURCES = {
+  FAQ: {
+    type: 'faq',
+    collectionName: 'faqs',
+    data: []
+  },
+  GUIDANCE_REQUEST: {
+    type: 'guidance-request',
+    collectionName: 'guidance-requests',
+    data: []
+  },
+  LIST: {
+    type: 'list',
+    collectionName: 'lists',
+    data: []
+  }
+};
 
+// API Configuration
+const API = {
+  base: "/api/v0",
+  index: {
+    type: "api-index",
+    id: "v0",
+    attributes: {
+      apiVersion: "v0",
+      description: "CRA FAQ content API (v0 - unstable)"
+    }
+  },
+  metadata: {
+    license: {
+      name: "CC-BY-4.0",
+      url: "https://creativecommons.org/licenses/by/4.0/",
+      spdx: "CC-BY-4.0"
+    },
+    copyright: "ORC WG Contributors"
+  }
+};
+
+// ============================================================================
+// Markdown Renderers
+// ============================================================================
+
+// Plain text renderer (for page titles)
 const mdPlain = markdownIt().use(plainTextPlugin);
+
+// Full markdown renderer with plugins (for HTML output)
+// Note: GitHub alerts plugin loaded async, will be ready before render calls
+let md = markdownIt({
+  html: true,
+  linkify: true,
+  typographer: true
+}).use(markdownItFootnote);
+
+// Load GitHub alerts plugin asynchronously
+const mdReady = (async () => {
+  const { default: markdownItGitHubAlerts } = await import("markdown-it-github-alerts");
+  md = md.use(markdownItGitHubAlerts);
+})();
+
+// Render markdown to HTML
+function renderMarkdown(content) {
+  if (!content) return "";
+  return md.render(content);
+}
+
+// Render markdown inline (no paragraph wrapping)
+function renderMarkdownInline(content) {
+  if (!content) return "";
+  return md.renderInline(content);
+}
 
 // ============================================================================
 // Utility Functions - Text Processing
@@ -176,17 +245,19 @@ async function getFile(file) {
   const { createdAt, lastUpdatedAt } = getTimestampsForObj(posixPath);
 
   return {
-    filename: file.name,
-    path: path.relative(CACHE_DIR, file.parentPath),
-    fullPath,
-    posixPath,
+    // Internal fields (prefixed with _)
+    _filename: file.name,
+    _path: path.relative(CACHE_DIR, file.parentPath),
+    _fullPath: fullPath,
+    _posixPath: posixPath,
+    _rawContent: rawContent,
+    // Public fields
     editOnGithubUrl: new URL(posixPath, EDIT_ON_GITHUB_ROOT).href,
     srcUrl: new URL(posixPath, GITHUB_ROOT).href,
     license: "CC BY 4.0",
     licenseUrl: new URL("LICENSE.md", GITHUB_ROOT).href,
     author: "ORC WG Authors",
     authorUrl: "https://cra.orcwg.org/acknowledgements/",
-    rawContent,
     createdAt,
     lastUpdatedAt,
     isNew: isNew(createdAt),
@@ -196,22 +267,24 @@ async function getFile(file) {
 
 async function getMarkdownFile(entry) {
   const file = await getFile(entry);
-  const parsed = matter(file.rawContent);
-  file.frontmatter = parsed.data;
-  file.content = parsed.content.trim();
+  const parsed = matter(file._rawContent);
 
-  const posixPathWithoutExt = file.posixPath.replace(/\.md$/, "");
+  // Internal fields
+  file._frontmatter = parsed.data;
+  file._content = parsed.content.trim();
+
+  const posixPathWithoutExt = file._posixPath.replace(/\.md$/, "");
   file.permalink = "/" + posixPathWithoutExt + "/"; // backslash to make eleventy happy
-  file.id = posixPathWithoutExt.replace(/^faq\//, "");
-  file.category = file.id.replace(/\/[^\/]+$/, ""); // Extract directory path (everything before last slash)
+  file.id = posixPathWithoutExt.replace(/^faq\/pending-guidance\//, "").replace(/^faq\//, "");
+  file._directory = file.id.replace(/\/[^\/]+$/, ""); // Extract directory path (everything before last slash) - used for link resolution
   return file;
 }
 
 async function getREADME(entry) { // cra-hub uses README.yml files to define FAQ lists
   const file = await getFile(entry);
-  file.yaml = yaml.load(file.rawContent);
+  file._yaml = yaml.load(file._rawContent);
 
-  const posixDirPath = file.posixPath.replace(/\/README\.yml$/, "");
+  const posixDirPath = file._posixPath.replace(/\/README\.yml$/, "");
   file.permalink = "/" + posixDirPath + "/"; // backslash to make eleventy happy
   file.id = posixDirPath.replace(/^faq\//, ""); // => root dir id equals "faq" as root dir has no trailing slash
   return file;
@@ -233,8 +306,8 @@ function createInternalLinkIndex(faqs, lists, guidanceRequests) {
     index[`lists/${list.id}`] = list;
   });
 
-  guidanceRequests.forEach(guidance => {
-    index[`guidance/${guidance.id}`] = guidance;
+  guidanceRequests.forEach(guidanceRequest => {
+    index[`guidance/${guidanceRequest.id}`] = guidanceRequest;
   });
 
   return index;
@@ -250,32 +323,37 @@ function isFaq(file) {
 function createFaq(file) {
 
   // Normalize status
-  const status = file.frontmatter.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
-  const needsRefactoring = (/>\s*\[!WARNING\]\s*\n>\s*.*needs\s+refactoring/).test(file.content);
+  const status = file._frontmatter.Status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
+  const needsRefactoring = (/>\s*\[!WARNING\]\s*\n>\s*.*needs\s+refactoring/).test(file._content);
 
   // Extract question and answer
-  const [question, answer] = splitMarkdownAtFirstH1(file.content);
+  const [question, answer] = splitMarkdownAtFirstH1(file._content);
 
   // Set guidance ID
-  const guidanceId = file.frontmatter["guidance-id"] ? "pending-guidance/" + file.frontmatter["guidance-id"].trim() : false;
+  const guidanceId = file._frontmatter["guidance-id"] ? file._frontmatter["guidance-id"].trim() : false;
 
   return {
     ...file,
-    type: FAQ,
+    type: RESOURCES.FAQ.type,
     status,
     needsRefactoring,
-    relatedIssues: parseRelatedIssues(file.frontmatter["Related issue"] || file.frontmatter["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
+    relatedIssues: parseRelatedIssues(file._frontmatter["Related issue"] || file._frontmatter["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
     pageTitle: markdownToPlainText(question),
     question,
+    questionHtml: renderMarkdownInline(question),
     answer,
     disclaimer: `The information contained in this FAQ is of a general nature only
       and is not intended to address the specific circumstances of any particular individual or entity.
       It is not necessarily comprehensive, complete, accurate, or up to date.
       It does not constitute professional or legal advice.
       If you need specific advice, you should consult a suitably qualified professional.`,
+    answerHtml: "", // Populated after link resolution
     answerMissing: (answer.length == 0),
     guidanceId,
-    parents: []
+    parents: [],
+    // API properties (prefixed with _ to exclude from API output)
+    _apiCollectionName: RESOURCES.FAQ.collectionName,
+    _apiSelfLink: `/api/v0/${RESOURCES.FAQ.collectionName}/${file.id}.json`
   };
 }
 
@@ -291,20 +369,25 @@ function isGuidance(file) {
 
 function createGuidanceRequest(file) {
   // Normalize status
-  const status = file.frontmatter.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
+  const status = file._frontmatter.status.replace(/^(⚠️|🛑|✅)\s*/, '').replace(" ", "-").trim().toLowerCase();
 
   // Extract title and body
-  const [title, body] = splitMarkdownAtFirstH1(file.content);
+  const [title, body] = splitMarkdownAtFirstH1(file._content);
 
   return {
     ...file,
     permalink: file.permalink.replace(/^\/faq/, ""), // Move guidance permalinks out of faq dir
-    type: GUIDANCE_REQUEST,
+    type: RESOURCES.GUIDANCE_REQUEST.type,
     status,
     pageTitle: markdownToPlainText(title),
     title,
+    titleHtml: renderMarkdownInline(title),
     body,
-    guidanceText: extractGuidanceText(body)
+    bodyHtml: "", // Populated after link resolution
+    guidanceText: extractGuidanceText(body),
+    // API properties (prefixed with _ to exclude from API output)
+    _apiCollectionName: RESOURCES.GUIDANCE_REQUEST.collectionName,
+    _apiSelfLink: `/api/v0/${RESOURCES.GUIDANCE_REQUEST.collectionName}/${file.id}.json`
   };
 }
 
@@ -331,16 +414,19 @@ function createList(file) {
 
   return {
     ...file,
-    type: LIST,
-    pageTitle: markdownToPlainText(file.yaml.title),
-    title: file.yaml.title,
-    icon: file.yaml.icon,
-    description: file.yaml.description,
+    type: RESOURCES.LIST.type,
+    pageTitle: markdownToPlainText(file._yaml.title),
+    title: file._yaml.title,
+    icon: file._yaml.icon,
+    description: file._yaml.description,
     isRoot,
     children: [],
     parents: [], // Lists that include this list (filled during cross-referencing)
     faqCount: 0,
-    listCount: 0
+    listCount: 0,
+    // API properties (prefixed with _ to exclude from API output)
+    _apiCollectionName: RESOURCES.LIST.collectionName,
+    _apiSelfLink: `/api/v0/${RESOURCES.LIST.collectionName}/${file.id}.json`
   }
 }
 
@@ -474,20 +560,23 @@ const DYNAMIC_LISTS = [
     sortChildren: null,  // No sorting
     hideInAllFaqs: HIDE_IF_EMPTY,
     hideInTopics: HIDE_IF_EMPTY
- }
+  }
 ];
 
 // Create a dynamic list from configuration
 function initializeDynamicList(config) {
   return {
-    type: LIST,
+    type: RESOURCES.LIST.type,
     ...config,
     permalink: `/faq/${config.id}/`,
     pageTitle: config.title,
     children: [], // Populated after cross-referencing
     parents: [], // Populated after cross-referencing
     faqCount: 0,
-    listCount: 0
+    listCount: 0,
+    // API properties (prefixed with _ to exclude from API output)
+    _apiCollectionName: RESOURCES.LIST.collectionName,
+    _apiSelfLink: `/api/v0/${RESOURCES.LIST.collectionName}/${config.id}.json`
   };
 }
 
@@ -551,9 +640,9 @@ function countListChildElementsRecursively(list) {
   let listCount = 0;
 
   list.children.forEach(item => {
-    if (item.type === 'faq') {
+    if (item.type === RESOURCES.FAQ.type) {
       faqCount++;
-    } else if (item.type === 'list') {
+    } else if (item.type === RESOURCES.LIST.type) {
       listCount++;
       // Recursively count descendants of nested lists
       const nestedCounts = countListChildElementsRecursively(item);
@@ -585,15 +674,19 @@ function calculateListCounts(lists) {
   });
 }
 
-// Resolve custom link syntax in content fields
-function resolveLinksInContent(items, fieldName, internalLinkIndex) {
+// Resolve custom link syntax in content fields and render to HTML
+function resolveLinksAndRender(items, markdownField, htmlField, internalLinkIndex) {
   items.forEach(item => {
-    item[fieldName] = resolveLinks(item[fieldName], item.category, internalLinkIndex, craReferences, item);
+    // First resolve links in markdown
+    item[markdownField] = resolveLinks(item[markdownField], item._directory, internalLinkIndex, craReferences, item);
+    // Then render to HTML
+    item[htmlField] = renderMarkdown(item[markdownField]);
   });
 }
 
+
 // ============================================================================
-// Main Pipeline
+// EC Content fetching and processing
 // ============================================================================
 
 // Create URL-friendly slug from text
@@ -623,7 +716,7 @@ async function fetchAndAddECFaqs(faqs) {
 
   if (updateMatch) {
     const [, day, month, year] = updateMatch;
-    updateDate = new Date(`${ year }-${ month }-${ day }`);
+    updateDate = new Date(`${year}-${month}-${day}`);
     cleanedContent = cleanedContent.replace(/<p><em>\*Updated on \d{2}\/\d{2}\/\d{4}<\/em><\/p>/, "").trim();
   }
 
@@ -632,7 +725,7 @@ async function fetchAndAddECFaqs(faqs) {
   const lastUpdatedAt = updateDate || createdAt;
   const sections = cleanedContent
     .split(/<p><strong>(.*?)<\/strong><\/p>/g)
-    .map(s => s.replace("<p>&nbsp;</p>","").trim())
+    .map(s => s.replace("<p>&nbsp;</p>", "").trim())
     .filter(s => s);
 
   for (let i = 0; i < sections.length - 1; i += 2) {
@@ -641,19 +734,21 @@ async function fetchAndAddECFaqs(faqs) {
 
     if (question && answer) {
       const slug = createSlug(question);
-      const id = `${ category }/${ slug }`;
+      const id = `${category}/${slug}`;
 
       faqs.push({
         id,
         category,
-        type: FAQ,
+        type: RESOURCES.FAQ.type,
         status: "official",
         pageTitle: question,
         question,
+        questionHtml: renderMarkdownInline(question),
         answer,
+        answerHtml: "", // Populated after link resolution
         parents: [],
         listed: true,  // Prevents these FAQs from appearing in the "unlisted" filter
-        permalink: `/faq/${ id }/`,
+        permalink: `/faq/${id}/`,
         createdAt,
         lastUpdatedAt,
         isNew: isNew(createdAt),
@@ -664,24 +759,36 @@ async function fetchAndAddECFaqs(faqs) {
         srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375",
         source: "“Cyber Resilience Act - Questions and Answers”",
         disclaimer: "This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website."
+        // API properties (prefixed with _ to exclude from API output)
+        _apiCollectionName: RESOURCES.FAQ.collectionName,
+        _apiSelfLink: `/api/v0/${RESOURCES.FAQ.collectionName}/${id}.json`
       });
     }
   }
 }
 
 async function fetchOfficialFAQs(faqs, lists, rootList) {
-    const result = await parsePDFFAQs();
-    faqs.push(...result.faqs);
-    lists.push(...result.lists);
-    result.rootList.parents.push(rootList);
-    return result.rootList;
+  const result = await parsePDFFAQs();
+  faqs.push(...result.faqs);
+  lists.push(...result.lists);
+  result.rootList.parents.push(rootList);
+  return result.rootList;
 }
+
+// ============================================================================
+// Main Pipeline
+// ============================================================================
 
 // Orchestrate the complete data processing pipeline
 async function processAllContent() {
+  // Wait for markdown plugins to load
+  await mdReady;
+
   const entries = await fs.readdir(FAQ_DIR, { withFileTypes: true, recursive: true });
 
-  const faqs = [], guidanceRequests = [], lists = [];
+  const faqs = RESOURCES.FAQ.data;
+  const guidanceRequests = RESOURCES.GUIDANCE_REQUEST.data;
+  const lists = RESOURCES.LIST.data;
   let rootList;
 
   for (const entry of entries) {
@@ -700,7 +807,7 @@ async function processAllContent() {
       if (list.id === ROOT_LIST_ID) { rootList = list; }
     }
   }
-  
+
   // Fetch and add EC content (now handled by dynamic list system)
   await fetchAndAddECFaqs(faqs);
 
@@ -714,24 +821,28 @@ async function processAllContent() {
 
   // Create, populate, and insert dynamic lists
   createAndInsertDynamicLists(lists, rootList, faqs);
-  
+
   rootList.children.push(officialFaqList);
 
   calculateListCounts(lists);
 
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
 
-  resolveLinksInContent(faqs, 'answer', internalLinkIndex);
-  resolveLinksInContent(guidanceRequests, 'body', internalLinkIndex);
+  // Resolve links and render to HTML in one pass
+  resolveLinksAndRender(faqs, 'answer', 'answerHtml', internalLinkIndex);
+  resolveLinksAndRender(guidanceRequests, 'body', 'bodyHtml', internalLinkIndex);
 
   const acknowledgements = await processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
 
+  const api = apiFormatter.generateApiDocuments(RESOURCES, API);
+
   return {
     faqs,
-    guidance: guidanceRequests,
+    guidanceRequests,
     lists,
     rootList,
-    acknowledgements
+    acknowledgements,
+    api
   };
 }
 

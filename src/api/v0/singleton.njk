@@ -1,0 +1,9 @@
+---
+pagination:
+  data: data.api.singletons
+  size: 1
+  alias: singleton
+permalink: "/api/v0/{{ singleton.collectionName }}/{{ singleton.itemKey }}.json"
+eleventyExcludeFromCollections: true
+---
+{{ singleton.formatted | toJson | safe }}
