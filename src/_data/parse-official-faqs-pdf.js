@@ -262,6 +262,7 @@ async function parse(pdf) {
     });
   }
   flush("END");
+  regularFontName = null;
   return { blocks, footnotes };
 }
 
