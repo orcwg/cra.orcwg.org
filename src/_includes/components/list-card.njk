@@ -7,7 +7,7 @@
 
 <a href="{{ list.permalink }}" class="card">
   <h2>{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</h2>
-  <p>{{ list.description }}</p>
+  {{ list.description | markdown | safe }}
   <span class="card-meta">
     {{ list.countText }}
   </span>

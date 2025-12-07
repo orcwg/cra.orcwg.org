@@ -13,7 +13,7 @@
     {% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}
   </h2>
   {% if list.description %}
-    <p>{{ list.description | markdown | safe }}</p>
+    {{ list.description | markdown | safe }}
   {% endif %}
   {% include "components/faq/list-flat-items.njk" %}
 </section>
