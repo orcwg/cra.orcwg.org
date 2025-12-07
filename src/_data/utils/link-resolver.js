@@ -31,7 +31,7 @@ function mdLink(text, url, title) {
  * @param {Object} craReferences - CRA article/annex/recital titles
  * @returns {string} Markdown with resolved standard links
  */
-function resolveLinks(markdown, category, internalLinks, craReferences) {
+function resolveLinks(markdown, category, internalLinks, craReferences, caller) {
   if (!markdown) return markdown;
 
   let result = markdown;

@@ -590,7 +590,7 @@ function calculateListCounts(lists) {
 // Resolve custom link syntax in content fields
 function resolveLinksInContent(items, fieldName, internalLinkIndex) {
   items.forEach(item => {
-    item[fieldName] = resolveLinks(item[fieldName], item.category, internalLinkIndex, craReferences);
+    item[fieldName] = resolveLinks(item[fieldName], item.category, internalLinkIndex, craReferences, item);
   });
 }
 
