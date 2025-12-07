@@ -20,6 +20,8 @@
     "markdown-it": "^14.1.0",
     "markdown-it-footnote": "^4.0.0",
     "markdown-it-github-alerts": "^1.0.0",
-    "markdown-it-plain-text": "^0.3.0"
+    "markdown-it-plain-text": "^0.3.0",
+    "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.4.449"
   }
 }

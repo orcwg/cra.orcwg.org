@@ -7,6 +7,11 @@
       "description": "Browse all FAQs in one single list"
     },
     {
+      "url": "/faq/official/",
+      "title": "🇪🇺 Official FAQs",
+      "description": "Browse the official FAQ of the EU Commission"
+    },
+    {
       "url": "/faq/",
       "title": "Topics",
       "description": "FAQs organized by topic and/or audience"

@@ -16,7 +16,7 @@ module.exports = async function (eleventyConfig) {
   const md = markdownIt({
     html: true,
     linkify: true,
-    typographer: true
+    typographer: false
   }).use(markdownItGitHubAlerts, { 
     markers: ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION", "ORC_REC"],
     titles: { "orc_rec": "ORC WG Recommendation" }

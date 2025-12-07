@@ -8,8 +8,10 @@ const markdownIt = require("markdown-it");
 const plainTextPlugin = require("markdown-it-plain-text");
 const yaml = require("js-yaml");
 const { resolveLinks } = require("./utils/link-resolver.js");
+const { isNew, recentlyUpdated, NEW_CONTENT_THRESHOLD, RECENTLY_UPDATED_THRESHOLD } = require("./utils/timestamp-helpers.js");
 const craReferences = require("./craReferences.json");
 const { execSync } = require("child_process");
+const { parsePDFFAQs } = require("./parse-official-faqs-pdf.js");
 
 // ============================================================================
 // Constants
@@ -25,9 +27,6 @@ const CONTRIBUTORS_PATH = path.join(ROOT_DIR, "CONTRIBUTORS.md");
 const EDIT_ON_GITHUB_ROOT = "https://github.com/orcwg/cra-hub/edit/main/";
 const GITHUB_ROOT = "https://github.com/orcwg/cra-hub/tree/main/";
 
-// Timestamp constants (in days)
-const NEW_CONTENT_THRESHOLD = 30;  // Content is "new" if created within 30 days
-const RECENTLY_UPDATED_THRESHOLD = 14;  // Content is "recently updated" if modified within 14 days
 const ROOT_LIST_ID = "faq";
 const LIST_FILENAME = 'README.yml';
 
@@ -114,20 +113,6 @@ function toPosixPath(p) {
 // Utility Functions - Timestamp Helpers
 // ============================================================================
 
-// Check if content is new (created within threshold)
-function isNew(createdAt) {
-  const daysAgo = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-  return daysAgo <= NEW_CONTENT_THRESHOLD;
-}
-
-// Check if content was recently updated (modified within threshold, but not counting initial creation)
-function recentlyUpdated(createdAt, lastUpdatedAt) {
-  // If creation and update dates are the same, it hasn't been updated since creation
-  if (createdAt.getTime() === lastUpdatedAt.getTime()) return false;
-
-  const daysAgo = (Date.now() - lastUpdatedAt.getTime()) / (1000 * 60 * 60 * 24);
-  return daysAgo <= RECENTLY_UPDATED_THRESHOLD;
-}
 
 function generateTimestamps(faqs) {
   let createdAt = new Date(0);
@@ -283,6 +268,11 @@ function createFaq(file) {
     pageTitle: markdownToPlainText(question),
     question,
     answer,
+    disclaimer: `The information contained in this FAQ is of a general nature only
+      and is not intended to address the specific circumstances of any particular individual or entity.
+      It is not necessarily comprehensive, complete, accurate, or up to date.
+      It does not constitute professional or legal advice.
+      If you need specific advice, you should consult a suitably qualified professional.`,
     answerMissing: (answer.length == 0),
     guidanceId,
     parents: []
@@ -673,10 +663,19 @@ async function fetchAndAddECFaqs(faqs) {
         author: "European Union",
         license: "CC BY 4.0",
         licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
-        srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375"
+        srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375",
+        disclaimer: "This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website."
       });
     }
   }
+}
+
+async function fetchOfficialFAQs(faqs, lists, rootList) {
+    const result = await parsePDFFAQs();
+    faqs.push(...result.faqs);
+    lists.push(...result.lists);
+    result.rootList.parents.push(rootList);
+    rootList.children.push(result.rootList);
 }
 
 // Orchestrate the complete data processing pipeline
@@ -710,6 +709,9 @@ async function processAllContent() {
 
   // Fetch and add EC content (now handled by dynamic list system)
   await fetchAndAddECFaqs(faqs);
+
+  // Fetch and add CRA implementation FAQs from PDF
+  await fetchOfficialFAQs(faqs, lists, rootList);
 
   // Create, populate, and insert dynamic lists
   createAndInsertDynamicLists(lists, rootList, faqs);
