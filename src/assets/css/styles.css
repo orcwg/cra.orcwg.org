@@ -461,7 +461,7 @@ a.card>h2 {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.faq-accordion-item summary {
+.faq-accordion-item > summary {
     padding: 18px 20px;
     cursor: pointer;
     font-weight: 500;
@@ -476,22 +476,22 @@ a.card>h2 {
     transition: all 0.2s ease;
 }
 
-.faq-accordion-item summary .question-text {
+.faq-accordion-item > summary .question-text {
     flex: 1;
     color: var(--text-color);
     font-weight: 500;
 }
 
-.faq-accordion-item summary .question-text p {
+.faq-accordion-item > summary .question-text p {
     margin: 0;
     display: inline;
 }
 
-.faq-accordion-item summary::-webkit-details-marker {
+.faq-accordion-item > summary::-webkit-details-marker {
     display: none;
 }
 
-.faq-accordion-item summary::after {
+.faq-accordion-item > summary::after {
     content: '▼';
     flex-shrink: 0;
     color: var(--primary-color);
@@ -501,7 +501,7 @@ a.card>h2 {
     margin-top: 2px;
 }
 
-.faq-accordion-item[open] summary::after {
+.faq-accordion-item[open] > summary::after {
     transform: rotate(-180deg);
 }
 
@@ -624,23 +624,31 @@ a.action-button {
     color: var(--text-very-light);
 }
 
+.faq-attribution a:hover {
+    color: var(--text-light);
+}
+
 .faq-attribution + .actions {
   margin-top: 4px;
 }
 
+.faq-attribution:has(.disclaimer[open]) + .actions {
+  margin-top: 0;
+}
+
 /* Accordion summary hover: white background with border highlight */
-.faq-accordion-item summary:hover {
+.faq-accordion-item > summary:hover {
     background: white;
     border-radius: 11px 11px 0 0;
 }
 
 /* Accordion summary hover when closed: rounded bottom corners */
-.faq-accordion-item:not([open]) summary:hover {
+.faq-accordion-item:not([open]) > summary:hover {
     border-radius: 11px;
 }
 
 /* Accordion summary when open: lighter tint */
-.faq-accordion-item[open] summary {
+.faq-accordion-item[open] > summary {
     background: rgba(28, 177, 209, 0.05);
 }
 
@@ -1219,4 +1227,58 @@ aside h3 {
     footer {
         grid-template-columns: 1fr;
     }
+}
+
+/* Disclaimer Styles */
+.disclaimer {
+    display: inline;
+    position: relative;
+}
+
+.disclaimer > summary {
+    cursor: pointer;
+    color: var(--text-very-light);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    list-style: none;
+    display: inline;
+}
+
+.disclaimer > summary:hover {
+    color: var(--text-light);
+}
+
+/* Use max-height trick to animate variable-height content smoothly */
+.disclaimer > p {
+    display: block;
+    margin: 8px 0px 0 0px;
+    padding: 12px 20px;
+    background: var(--background-light);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--text-light);
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    text-align: left;
+    max-height: 0;
+    overflow: hidden;
+}
+
+.disclaimer a {
+    color: var(--link-color);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.disclaimer a:hover {
+    color: var(--link-hover-color);
+}
+
+.disclaimer[open] > p {
+    max-height: 200px;
 }

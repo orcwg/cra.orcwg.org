@@ -12,7 +12,7 @@
   <a href="{{ list.permalink }}">{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</a>
 </h2>
 {% if list.description %}
-  <p>{{ list.description }}</p>
+  {{ list.description | markdown | safe }}
 {% endif %}
 
 {% include "components/faq/list-expanded-items.njk" %}

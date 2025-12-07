@@ -1,0 +1,140 @@
+{
+  "": {
+    "title": "Official FAQs",
+    "icon": "🇪🇺",
+    "slug": "official",
+    "description": "Official EU Commission FAQ on Cyber Resilience Act implementation"
+  },
+  "1": {
+    "title": "Scope",
+    "icon": "🎯",
+    "slug": "scope",
+    "description": "Understanding which products and situations fall under the CRA"
+  },
+  "2": {
+    "title": "Interplay with Other Legislation",
+    "icon": "⚖️",
+    "slug": "interplay",
+    "description": "How the CRA works alongside other EU regulations and directives"
+  },
+  "2.1": {
+    "title": "Civil Aviation Regulation",
+    "icon": "✈️",
+    "slug": "aviation",
+    "description": "Overlap between EU regulations on civil aviation and the CRA"
+  },
+  "2.2": {
+    "title": "Marine Equipment",
+    "icon": "⚓",
+    "slug": "marine",
+    "description": "Marine equipment directive and CRA requirements"
+  },
+  "2.3": {
+    "title": "Product Liability",
+    "icon": "⚖️",
+    "slug": "liability",
+    "description": "Product liability directive interaction with CRA"
+  },
+  "2.4": {
+    "title": "Machinery Regulation",
+    "icon": "🛠️",
+    "slug": "machinery",
+    "description": "Machinery regulation cybersecurity requirements"
+  },
+  "2.5": {
+    "title": "Product Safety",
+    "icon": "🛡️",
+    "slug": "safety",
+    "description": "General product safety regulation compliance"
+  },
+  "2.6": {
+    "title": "Radio Equipment",
+    "icon": "📻",
+    "slug": "radio",
+    "description": "Radio equipment directive requirements"
+  },
+  "2.7": {
+    "title": "Health Data Space",
+    "icon": "🏥",
+    "slug": "health-data",
+    "description": "European health data space regulation"
+  },
+  "2.8": {
+    "title": "Data Protection",
+    "icon": "🔒",
+    "slug": "gdpr",
+    "description": "GDPR and data protection requirements"
+  },
+  "2.9": {
+    "title": "Data Act",
+    "icon": "📊",
+    "slug": "data-act",
+    "description": "Data act requirements and obligations"
+  },
+  "3": {
+    "title": "Important and Critical Products",
+    "icon": "📡",
+    "slug": "important-and-critical-products",
+    "description": "Classification and requirements for high-risk products"
+  },
+  "4": {
+    "title": "Manufacturer's Obligations",
+    "icon": "🏭",
+    "slug": "manufacturers",
+    "description": "Key responsibilities and requirements for manufacturers"
+  },
+  "4.1": {
+    "title": "Risk Assessment",
+    "icon": "⚠️",
+    "slug": "risk-assessment",
+    "description": "Cybersecurity risk assessment requirements"
+  },
+  "4.2": {
+    "title": "Essential Requirements",
+    "icon": "✅",
+    "slug": "essential-requirements",
+    "description": "Product-related essential cybersecurity requirements"
+  },
+  "4.3": {
+    "title": "Vulnerability Handling",
+    "icon": "🚒",
+    "slug": "vulnerability-handling",
+    "description": "Vulnerability management and remediation obligations"
+  },
+  "4.4": {
+    "title": "Due Diligence",
+    "icon": "🔍",
+    "slug": "due-diligence",
+    "description": "Due diligence for integrating components"
+  },
+  "4.5": {
+    "title": "Support Period",
+    "icon": "⏰",
+    "slug": "support-period",
+    "description": "Product support period requirements"
+  },
+  "4.6": {
+    "title": "Other Obligations",
+    "icon": "📋",
+    "slug": "other-obligations",
+    "description": "Additional manufacturer responsibilities"
+  },
+  "5": {
+    "title": "Reporting Obligations",
+    "icon": "🚨",
+    "slug": "reporting",
+    "description": "When and how manufacturers must report incidents and vulnerabilities"
+  },
+  "6": {
+    "title": "Conformity Assessment",
+    "icon": "✅",
+    "slug": "assessment",
+    "description": "Procedures for demonstrating compliance with CRA requirements"
+  },
+  "7": {
+    "title": "Transition Period",
+    "icon": "⏳",
+    "slug": "transition",
+    "description": "Timeline and provisions for implementing the CRA"
+  }
+}

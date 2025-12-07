@@ -21,7 +21,15 @@
      • {% if faq.licenseUrl %}<a href="{{ faq.licenseUrl }}">{{ faq.license }}</a>{% else %}{{ faq.license }}{% endif %}
   {% endif %}
   {% if faq.srcUrl %}
-    • <a href="{{ faq.srcUrl }}">Source</a>
+    • <a href="{{ faq.srcUrl }}">{{ faq.source or "Source" }}</a>
+  {% endif %}
+  {% if faq.disclaimer %}
+    • <details class="disclaimer">
+        <summary>Disclaimer</summary>
+        <p>
+          <strong>Disclaimer:</strong> {{ faq.disclaimer | markdownInline | safe }}
+        </p>
+      </details>
   {% endif %}
 </div>
 {% endif %}
