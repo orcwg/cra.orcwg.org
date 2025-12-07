@@ -4,132 +4,139 @@
     "full_title": "Regulation (EU) No 168/2013 of the European Parliament and of the Council of 15 January 2013 on the approval and market surveillance of two- or three-wheel vehicles and quadricycles",
     "status": "Regulation",
     "description": "Establishes harmonised rules for type-approval, safety, emissions and market surveillance for motorcycles, mopeds, trikes and quadricycles (L-category vehicles).",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32013R0168"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32013R0168"
   },
   "748/2012": {
     "short_name": "EASA Airworthiness Regulation",
     "full_title": "Commission Regulation (EU) No 748/2012 of 3 August 2012 laying down implementing rules for the airworthiness and environmental certification of aircraft and related products, parts and appliances, as well as for the certification of design and production organizations",
     "status": "Commission Regulation",
     "description": "Defines detailed rules for aircraft airworthiness certification procedures, including design and production approval under the EU aviation framework.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32012R0748"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32012R0748"
   },
   "1025/2012": {
     "short_name": "European Standardisation Regulation",
     "full_title": "Regulation (EU) No 1025/2012 of the European Parliament and of the Council of 25 October 2012 on European standardisation and amending various EU directives and a decision",
     "status": "Regulation",
     "description": "Sets the legal framework for European standardisation, defining how European standards are requested, developed and used to support EU product legislation and policies.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32012R1025"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32012R1025"
   },
   "2014/53": {
     "short_name": "Radio Equipment Directive (RED)",
     "full_title": "Directive 2014/53/EU of the European Parliament and of the Council of 16 April 2014 on the harmonisation of the laws of the Member States relating to the making available on the market of radio equipment",
     "status": "Directive",
     "description": "Lays down essential requirements for safety, EMC, and efficient use of radio spectrum for radio equipment placed on the EU market.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32014L0053"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32014L0053"
   },
   "2014/90": {
     "short_name": "Marine Equipment Directive (MED)",
     "full_title": "Directive 2014/90/EU of the European Parliament and of the Council of 23 July 2014 on marine equipment and repealing Council Directive 96/98/EC",
     "status": "Directive",
     "description": "Harmonises safety requirements and conformity assessment for marine equipment installed on EU-flagged ships.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32014L0090"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32014L0090"
   },
   "2017/745": {
     "short_name": "Medical Devices Regulation (MDR)",
     "full_title": "Regulation (EU) 2017/745 of the European Parliament and of the Council of 5 April 2017 on medical devices, amending and repealing several earlier acts",
     "status": "Regulation",
     "description": "Overhauls the EU framework for medical devices, strengthening pre-market scrutiny, clinical evaluation, post-market surveillance and traceability.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32017R0745"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017R0745"
   },
   "2017/746": {
     "short_name": "In Vitro Diagnostic Medical Devices Regulation (IVDR)",
     "full_title": "Regulation (EU) 2017/746 of the European Parliament and of the Council of 5 April 2017 on in vitro diagnostic medical devices and repealing Directive 98/79/EC",
     "status": "Regulation",
     "description": "Establishes a stricter regulatory regime for in vitro diagnostic devices (IVDs), including classification, notified bodies, UDI and post-market surveillance.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32017R0746"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017R0746"
   },
   "2018/1139": {
     "short_name": "EASA Basic Regulation",
     "full_title": "Regulation (EU) 2018/1139 of the European Parliament and of the Council of 4 July 2018 on common rules in the field of civil aviation and establishing a European Union Aviation Safety Agency",
     "status": "Regulation",
     "description": "Sets the core safety and regulatory framework for EU civil aviation and establishes the tasks and powers of the European Union Aviation Safety Agency (EASA).",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32018R1139"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32018R1139"
   },
   "2019/1020": {
     "short_name": "Market Surveillance Regulation",
     "full_title": "Regulation (EU) 2019/1020 of the European Parliament and of the Council of 20 June 2019 on market surveillance and compliance of products",
     "status": "Regulation",
     "description": "Provides a horizontal framework for market surveillance of products in the EU, strengthening enforcement and cooperation among Member States.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32019R1020"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R1020"
   },
   "2019/2144": {
     "short_name": "General Safety Regulation (vehicles)",
     "full_title": "Regulation (EU) 2019/2144 of the European Parliament and of the Council of 27 November 2019 on type-approval requirements for motor vehicles and their trailers, and systems, components and separate technical units as regards their general safety and protection of vehicle occupants and vulnerable road users",
     "status": "Regulation",
     "description": "Updates EU vehicle type-approval to mandate advanced safety systems (e.g. ISA, emergency braking, lane keeping) and improve protection for occupants and vulnerable road users.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32019R2144"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R2144"
   },
   "2022/30": {
     "short_name": "RED Cybersecurity Delegated Regulation",
     "full_title": "Commission Delegated Regulation (EU) 2022/30 of 29 October 2021 supplementing Directive 2014/53/EU with regard to cybersecurity, privacy and fraud-prevention requirements",
     "status": "Commission Delegated Regulation",
     "description": "Introduces additional cybersecurity, privacy and fraud-prevention requirements for certain categories of radio equipment under the RED.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022R0030"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R0030"
   },
   "2022/2554": {
     "short_name": "Digital Operational Resilience Act (DORA)",
     "full_title": "Regulation (EU) 2022/2554 of the European Parliament and of the Council of 14 December 2022 on digital operational resilience for the financial sector",
     "status": "Regulation",
     "description": "Establishes a harmonised framework for ICT risk management, incident reporting, testing and oversight of critical third-party ICT providers in the financial sector.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022R2554"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554"
   },
   "2022/2555": {
     "short_name": "NIS 2 Directive",
     "full_title": "Directive (EU) 2022/2555 of the European Parliament and of the Council of 14 December 2022 on measures for a high common level of cybersecurity across the Union",
     "status": "Directive",
     "description": "Replaces the original NIS Directive, expanding scope and imposing stricter cybersecurity risk-management and incident-reporting obligations on essential and important entities.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022L2555"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022L2555"
   },
   "2023/1230": {
     "short_name": "Machinery Regulation",
     "full_title": "Regulation (EU) 2023/1230 of the European Parliament and of the Council of 14 June 2023 on machinery and repealing Directive 2006/42/EC",
     "status": "Regulation",
     "description": "Modernises the EU machinery framework, tightening safety requirements, conformity assessment and market surveillance for machinery and related products.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32023R1230"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R1230"
   },
   "2024/2847": {
     "short_name": "Cyber Resilience Act (CRA)",
     "full_title": "Regulation (EU) 2024/2847 of the European Parliament and of the Council of 23 October 2024 on horizontal cybersecurity requirements for products with digital elements",
     "status": "Regulation",
     "description": "Sets horizontal cybersecurity and vulnerability-management requirements for “products with digital elements” (hardware and software), covering the full product lifecycle.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R2847"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R2847"
   },
   "2024/2853": {
     "short_name": "New Product Liability Directive (PLD 2024)",
     "full_title": "Directive (EU) 2024/2853 of the European Parliament and of the Council of 23 October 2024 on liability for defective products and repealing Council Directive 85/374/EEC",
     "status": "Directive",
     "description": "Updates EU product-liability rules for the digital age, explicitly covering software, AI and other modern products, and broadening access to compensation for damage caused by defective products.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024L2853"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024L2853"
   },
   "2025/1533": {
     "short_name": "Marine Equipment Directive – Implementing Regulation 2025",
     "full_title": "Commission Implementing Regulation (EU) 2025/1533 of 23 July 2025 laying down rules for the application of Directive 2014/90/EU",
     "status": "Commission Implementing Regulation",
     "description": "Periodically updates the list of approved marine equipment and detailed conformity rules under the Marine Equipment Directive 2014/90/EU.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32025R1533"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R1533"
   },
   "2025/1535": {
     "short_name": "CRA Motor-Vehicle Exclusion Delegated Regulation",
     "full_title": "Commission Delegated Regulation (EU) 2025/1535 of 29 July 2025 supplementing Regulation (EU) 2024/2847 with regard to an exclusion for certain vehicles",
     "status": "Commission Delegated Regulation",
     "description": "Clarifies that certain L-category vehicles and related systems covered by type-approval Regulation (EU) No 168/2013 are excluded from the CRA, to avoid overlap of regulatory regimes.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32025R1535"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R1535"
   },
   "2025/2392": {
     "short_name": "CRA Implementing Regulation on Product Categories",
     "full_title": "Commission Implementing Regulation (EU) 2025/2392 of 28 November 2025 on the technical description of important and critical products with digital elements under Regulation 2024/2847",
     "status": "Commission Implementing Regulation",
     "description": "Provides detailed technical descriptions for the “important” and “critical” product categories under the CRA, guiding conformity-assessment procedures.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32025R2392"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2392"
+  },
+  "52022XC0629(04)": {
+      "short_name": "Blue Guide (2022 Edition)",
+      "full_title": "Commission Notice — The ‘Blue Guide’ on the implementation of EU product rules 2022",
+      "status": "Commission Notice (Guidance)",
+      "description": "Non-binding guidance explaining how EU product legislation works in practice, including conformity assessment, CE marking, economic operator roles, market surveillance, and harmonised standards.",
+      "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:52022XC0629(04)"
   }
 }

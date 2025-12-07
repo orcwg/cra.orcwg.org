@@ -46,6 +46,15 @@ function resolveLinks(markdown, category, internalLinks, craReferences, caller) 
     return match;
   });
 
+  // Convert "Blue Guide" references to links
+  result = result.replace(/\bBlue Guide\b/g, (match) => {
+    const blueGuideData = euRegData['52022XC0629(04)'];
+    if (blueGuideData) {
+      return mdLink(match, blueGuideData.url, `📘 ${blueGuideData.short_name} - ${blueGuideData.description}`);
+    }
+    return match;
+  });
+
   if (category === 'official') {
 
     // Convert _4.5.1 Question title?_ patterns (Official EU FAQ cross-references)
