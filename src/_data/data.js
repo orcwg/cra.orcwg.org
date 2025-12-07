@@ -664,6 +664,7 @@ async function fetchAndAddECFaqs(faqs) {
         license: "CC BY 4.0",
         licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
         srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375",
+        source: "“Cyber Resilience Act - Questions and Answers”",
         disclaimer: "This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website."
       });
     }
