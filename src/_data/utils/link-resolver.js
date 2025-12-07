@@ -12,7 +12,7 @@
 const path = require('path');
 const euRegData = require('../eu-reg.json');
 
-const CRA_BASE_URL = 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202402847';
+const CRA_BASE_URL = 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R2847';
 
 /**
  * Helper to create markdown link with optional title
