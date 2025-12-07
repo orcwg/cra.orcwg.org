@@ -6,9 +6,10 @@
 
   Parameters:
   - faq: FAQ object with question, answer, etc.
+  - open: whether the item should display as open
 #}
 
-<details class="faq-accordion-item" name="faq-accordion">
+<details class="faq-accordion-item" name="faq-accordion" {% if open %}{{ "open" }}{% endif %}>
   <summary>
     <span class="question-text">{{ faq.question | markdownInline | safe }}</span>
   </summary>

@@ -19,6 +19,7 @@
   {% elif item.type == 'faq' %}
     {# Render FAQ as accordion item #}
     {% set faq = item %}
+    {% set open = list.children.length == 1 %}
     {% include "components/faq/faq-accordion-item.njk" %}
   {% endif %}
 {% else %}
