@@ -284,7 +284,7 @@ function formatPageSource(pageStart, pageEnd) {
   const pageRange = pageStart === pageEnd
     ? pageStart
     : `${ pageStart }–${ pageEnd }`;
-  return `"FAQs on the Cyber Resilience Act" p.${ pageRange } (PDF)`;
+  return `“FAQs on the Cyber Resilience Act” p.${ pageRange } (PDF)`;
 }
 
 function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
@@ -311,7 +311,6 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
     listCount: 0,
     countText: "",
     level: 0,
-    sectionNumber: null,
     createdAt,
     lastUpdatedAt,
     isNew: isNew(createdAt),
@@ -396,7 +395,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
           id: listId,
           type: LIST,
           title: text,
-          pageTitle: text,
+          pageTitle: section.title,
           icon: config.icon,
           description: config.description,
           permalink: `/faq/${listId}/`,
@@ -406,7 +405,6 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
           listCount: 0,
           countText: "",
           level: section.level,
-          sectionNumber: section.number,
           createdAt,
           lastUpdatedAt,
           isNew: isNew(createdAt),
@@ -430,7 +428,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
           category,
           type: FAQ,
           status: "official",
-          pageTitle: text,
+          pageTitle: section.title,
           question: text,
           questionNumber: section.number,
           answer: "",
