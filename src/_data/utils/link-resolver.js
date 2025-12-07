@@ -35,6 +35,38 @@ function resolveLinks(markdown, category, internalLinks, craReferences) {
 
   let result = markdown;
 
+  if (category === 'official') {
+
+    // Convert _4.5.1 Question title?_ patterns (Official EU FAQ cross-references)
+    result = result.replace(/_(\d+(?:\.\d+)*)\s+([^_]+)_/g, (match, number, title) => {
+      // Look for FAQ with matching question number
+      const faqId = `official/faq_${number.replace(/\./g, '-')}`;
+      const faq = internalLinks?.[faqId];
+      if (faq) {
+        return mdLink(`_${number} ${title}_`, faq.permalink, `🇪🇺 Official European Commission FAQ: ${ faq.pageTitle }`);
+      }
+      return match; // Return original if not found
+    });
+    
+    // Convert parenthetical references to wiki-style syntax, then let existing patterns handle them
+
+    // Natural language legal references (only for official EU FAQs) - BEFORE wiki patterns
+    // Convert (Article 13(8)) -> ([[Article 13(8)]])
+    result = result.replace(/\(Article\s+(\d+)(\([^)]*\))?\)/g, (match, num, subsection) => {
+      return `([[Article ${num}${subsection || ''}]])`;
+    });
+
+    // Convert (Annex IV) -> ([[Annex IV]])
+    result = result.replace(/\(Annex\s+([IVX]+)\)/g, (match, num) => {
+      return `([[Annex ${num.toUpperCase()}]])`;
+    });
+
+    // Convert (Recital 35) -> ([[Recital 35]])
+    result = result.replace(/\(Recital\s+(\d+)\)/g, (match, num) => {
+      return `([[Recital ${num}]])`;
+    });
+  }
+
   // 1. Convert [[Article X]] patterns
   result = result.replace(/\[\[(ARTICLE|ART\.)\s+(\d+)(\([^)]*\))?\]\]/gi, (match, type, num, subsection) => {
     const displayText = `Article ${num}${subsection || ''}`;
@@ -63,16 +95,6 @@ function resolveLinks(markdown, category, internalLinks, craReferences) {
     return match;
   });
 
-  // 4.5. Convert _4.5.1 Question title?_ patterns (Official EU FAQ cross-references)
-  result = result.replace(/_(\d+(?:\.\d+)*)\s+([^_]+?)_/g, (match, number, title) => {
-    // Look for FAQ with matching question number
-    const faqId = `official/faq_${number.replace(/\./g, '-')}`;
-    const faq = internalLinks?.[faqId];
-    if (faq) {
-      return mdLink(`_${number} ${title}_`, faq.permalink, `🇪🇺 Official FAQ: ${faq.pageTitle}`);
-    }
-    return match; // Return original if not found
-  });
 
   // 5. Convert [[category]] patterns (list references)
   result = result.replace(/\[\[([a-z0-9-]+)\]\]/gi, (match, categoryName) => {
