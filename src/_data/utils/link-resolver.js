@@ -10,6 +10,7 @@
  */
 
 const path = require('path');
+const euRegData = require('../eu-reg.json');
 
 const CRA_BASE_URL = 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202402847';
 
@@ -34,6 +35,16 @@ function resolveLinks(markdown, category, internalLinks, craReferences) {
   if (!markdown) return markdown;
 
   let result = markdown;
+
+  // Convert EU Directive/Regulation patterns to links using a single comprehensive regex
+  // Captures patterns like: "Directive 2014/53", "Regulation (EU) 2024/2847", "Implementing Regulation (EU) 748/2012", "Delegated Directive 2025/123", etc.
+  result = result.replace(/(?:Commission\s+)?(Delegated|Implementing|)\s*(Directive|Regulation)\s*(?:\(EU\)\s*)?(?:No\s+)?(\d{3,4}\/\d{2,4})/g, (match, prefix, type, yearNum) => {
+    const regData = euRegData[yearNum];
+    if (regData) {
+      return mdLink(match, regData.url, `⚖️ ${regData.short_name} - ${regData.description}`);
+    }
+    return match;
+  });
 
   if (category === 'official') {
 
