@@ -9,6 +9,7 @@ const plainTextPlugin = require("markdown-it-plain-text");
 const yaml = require("js-yaml");
 const { resolveLinks } = require("./utils/link-resolver.js");
 const { isNew, recentlyUpdated, NEW_CONTENT_THRESHOLD, RECENTLY_UPDATED_THRESHOLD } = require("./utils/timestamp-helpers.js");
+const { parseRelatedIssues } = require("./utils/issue-parser.js");
 const craReferences = require("./craReferences.json");
 const { execSync } = require("child_process");
 const { parsePDFFAQs } = require("./parse-official-faqs-pdf.js");
@@ -50,30 +51,6 @@ function markdownToPlainText(markdownText) {
 // Utility Functions - Content Specific Extractions from Markdown Data
 // ============================================================================
 
-// Extract GitHub issue number from URL
-// Returns the issue number or null if not found
-function extractIssueNumber(issueUrl) {
-  // Match GitHub issue URL pattern: /issues/123
-  const match = issueUrl.match(/\/issues\/(\d+)/);
-  return match ? match[1] : null;
-}
-
-// Parse related issues from frontmatter
-// Input can be a single string or an array of strings
-// Returns an array of issue objects with url and number
-function parseRelatedIssues(relatedIssues) {
-  if (!relatedIssues) {
-    return [];
-  }
-
-  const issueUrls = relatedIssues.trim().split(/,\s*/);
-  // Transform URLs to objects with url and number
-
-  return issueUrls.map(url => ({
-    url: url,
-    number: extractIssueNumber(url)
-  }));
-}
 
 // Extract the "Guidance Needed" section from markdown content
 function extractGuidanceText(content) {

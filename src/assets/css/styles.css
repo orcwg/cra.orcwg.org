@@ -595,19 +595,7 @@ a.action-button {
     border-top: 1px solid var(--border-color);
 }
 
-.actions .admin-links {
-    display: flex;
-    gap: 10px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.admin-mode .actions .admin-links {
-    opacity: 1;
-    pointer-events: auto;
-}
-
+.actions .related-issues,
 .actions .regular-actions {
     display: flex;
     gap: 10px;
@@ -1206,7 +1194,7 @@ aside h3 {
     }
 
     .actions .regular-actions,
-    .actions .admin-links {
+    .actions .related-issues {
         flex-direction: column;
         width: 100%;
     }

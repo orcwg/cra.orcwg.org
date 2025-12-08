@@ -1,10 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const { isNew, recentlyUpdated } = require('./utils/timestamp-helpers.js');
+const { parseRelatedIssues } = require('./utils/issue-parser.js');
 
 // Load configuration for list metadata
 const craConfigPath = path.join(__dirname, 'official-faqs-config-lists.json');
 const craConfig = JSON.parse(fs.readFileSync(craConfigPath, 'utf8'));
+
+// Load configuration for FAQ metadata
+const faqConfigPath = path.join(__dirname, 'official-faqs-config-faqs.json');
+const faqConfig = JSON.parse(fs.readFileSync(faqConfigPath, 'utf8'));
 
 const LINE_START = 72.024;
 const LINE_END = LINE_START + 451;
@@ -425,6 +430,9 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
         const faqId = `official/faq_${faqNumber}`;
         const faqPermalink = `/faq/${ faqId }/`;
 
+        // Get FAQ config for related issues
+        const currentFaqConfig = faqConfig[section.number];
+        const relatedIssues = currentFaqConfig && currentFaqConfig.relatedIssues.join(', ') || "";
         currentFaq = {
           id: faqId,
           category,
@@ -443,7 +451,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
           srcUrl: "https://ec.europa.eu/newsroom/dae/redirection/document/122331",
           source: null, // Will be set after page range is determined
           disclaimer: disclaimer, // Add disclaimer to all EU FAQs
-          relatedIssues: [],
+          relatedIssues: parseRelatedIssues(relatedIssues),
           guidanceId: false,
           footnotes: [],
           pageStart,
