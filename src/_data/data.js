@@ -337,6 +337,7 @@ function createList(file) {
     icon: file.yaml.icon,
     description: file.yaml.description,
     isRoot,
+    children: [],
     parents: [], // Lists that include this list (filled during cross-referencing)
     faqCount: 0,
     listCount: 0
@@ -397,25 +398,22 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
 // Cross-reference YAML-based lists with their FAQs and sublists (bidirectional)
 function crossReferenceListsAndFaqs(lists, faqs) {
   lists.forEach(list => {
-    const childRefs = normalizeReferenceIds(list.yaml.faqs, list.isRoot ? null : list.id);
-    list.children = childRefs.map(itemRef => {
+    const childRefs = list.yaml ? normalizeReferenceIds(list.yaml.faqs, list.isRoot ? null : list.id) : [];
+    childRefs.forEach(itemRef => {
       // Check if it's a  list reference
       const sublist = lists.find(l => l.id === itemRef);
       if (sublist) {
         sublist.parents.push(list);
-        return sublist;
+        list.children.push(sublist);
+      } else {
+        const faqObject = faqs.find(faq => faq.id === itemRef);
+        if (faqObject) {
+          faqObject.parents.push(list);
+          faqObject.listed = true;  // Tag FAQ as listed in a YAML-based list
+          list.children.push(faqObject);
+        }
       }
-
-      // Otherwise treat as FAQ reference
-      const faqObject = faqs.find(faq => faq.id === itemRef);
-      if (faqObject) {
-        faqObject.parents.push(list);
-        faqObject.listed = true;  // Tag FAQ as listed in a YAML-based list
-        return faqObject;
-      }
-
-      return null;
-    }).filter(item => item !== null);
+    });
   });
 }
 
@@ -676,7 +674,7 @@ async function fetchOfficialFAQs(faqs, lists, rootList) {
     faqs.push(...result.faqs);
     lists.push(...result.lists);
     result.rootList.parents.push(rootList);
-    rootList.children.push(result.rootList);
+    return result.rootList;
 }
 
 // Orchestrate the complete data processing pipeline
@@ -702,20 +700,22 @@ async function processAllContent() {
       if (list.id === ROOT_LIST_ID) { rootList = list; }
     }
   }
+  
+  // Fetch and add EC content (now handled by dynamic list system)
+  await fetchAndAddECFaqs(faqs);
+
+  // Fetch and add CRA implementation FAQs from PDF
+  const officialFaqList = await fetchOfficialFAQs(faqs, lists, rootList);
 
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
 
   // Cross-reference YAML-based lists and FAQs
   crossReferenceListsAndFaqs(lists, faqs);
 
-  // Fetch and add EC content (now handled by dynamic list system)
-  await fetchAndAddECFaqs(faqs);
-
-  // Fetch and add CRA implementation FAQs from PDF
-  await fetchOfficialFAQs(faqs, lists, rootList);
-
   // Create, populate, and insert dynamic lists
   createAndInsertDynamicLists(lists, rootList, faqs);
+  
+  rootList.children.push(officialFaqList);
 
   calculateListCounts(lists);
 
