@@ -340,7 +340,6 @@ function createFaq(file) {
     relatedIssues: parseRelatedIssues(file._frontmatter["Related issue"] || file._frontmatter["Related issues"]), // Temporarily use both, remove once CRA-HUB source is normalized to Related issues.
     pageTitle: markdownToPlainText(question),
     question,
-    questionHtml: renderMarkdownInline(question),
     answer,
     disclaimer: `The information contained in this FAQ is of a general nature only
       and is not intended to address the specific circumstances of any particular individual or entity.
@@ -743,7 +742,6 @@ async function fetchAndAddECFaqs(faqs) {
         status: "official",
         pageTitle: question,
         question,
-        questionHtml: renderMarkdownInline(question),
         answer,
         answerHtml: "", // Populated after link resolution
         parents: [],
@@ -758,7 +756,7 @@ async function fetchAndAddECFaqs(faqs) {
         licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
         srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375",
         source: "“Cyber Resilience Act - Questions and Answers”",
-        disclaimer: "This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website."
+        disclaimer: "This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.",
         // API properties (prefixed with _ to exclude from API output)
         _apiCollectionName: RESOURCES.FAQ.collectionName,
         _apiSelfLink: `/api/v0/${RESOURCES.FAQ.collectionName}/${id}.json`
@@ -828,7 +826,12 @@ async function processAllContent() {
 
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
 
-  // Resolve links and render to HTML in one pass
+  // Render FAQ questions to HTML
+  faqs.forEach(faq => {
+    faq.questionHtml = renderMarkdownInline(faq.question);
+  });
+
+  // Resolve links and render to HTML
   resolveLinksAndRender(faqs, 'answer', 'answerHtml', internalLinkIndex);
   resolveLinksAndRender(guidanceRequests, 'body', 'bodyHtml', internalLinkIndex);
 
