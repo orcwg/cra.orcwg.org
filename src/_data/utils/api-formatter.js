@@ -15,7 +15,7 @@ const API_VERSION = "1.1";
  * Check if a value is a resource reference (object with type/id)
  */
 function isResourceRef(value) {
-  return value && typeof value === 'object' && value.type !== undefined && value.id !== undefined;
+  return typeof value === 'object' && value.type !== undefined && value.id !== undefined;
 }
 
 /**
