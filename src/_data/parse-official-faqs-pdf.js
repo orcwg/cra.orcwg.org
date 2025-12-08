@@ -311,6 +311,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
     listCount: 0,
     countText: "",
     level: 0,
+    showQuestionNumbers: true,
     createdAt,
     lastUpdatedAt,
     isNew: isNew(createdAt),
@@ -405,6 +406,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
           listCount: 0,
           countText: "",
           level: section.level,
+          showQuestionNumbers: true, // Official FAQs should show numbers in lists
           createdAt,
           lastUpdatedAt,
           isNew: isNew(createdAt),
@@ -429,7 +431,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
           type: FAQ,
           status: "official",
           pageTitle: section.title,
-          question: text,
+          question: section.title, // Use title without number as default
           questionNumber: section.number,
           answer: "",
           parents: [],
