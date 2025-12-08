@@ -81,7 +81,7 @@
     "relatedIssues": []
   },
   "3.2": {
-    "relatedIssues": []
+    "relatedIssues": ["https://github.com/orcwg/cra-hub/issues/193"]
   },
   "3.3": {
     "relatedIssues": []
