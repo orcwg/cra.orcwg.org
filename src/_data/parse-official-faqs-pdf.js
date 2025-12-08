@@ -3,7 +3,7 @@ const path = require('path');
 const { isNew, recentlyUpdated } = require('./utils/timestamp-helpers.js');
 
 // Load configuration for list metadata
-const craConfigPath = path.join(__dirname, 'official-faqs-config.json');
+const craConfigPath = path.join(__dirname, 'official-faqs-config-lists.json');
 const craConfig = JSON.parse(fs.readFileSync(craConfigPath, 'utf8'));
 
 const LINE_START = 72.024;
