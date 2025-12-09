@@ -188,6 +188,7 @@ async function parse(pdf) {
           IN_LIST = true;
           break;
         case _TITLE:
+          flushFootnote(type);
           if (blockBreak) {
             flush("BLOCK_BREAK");
           }
@@ -202,6 +203,7 @@ async function parse(pdf) {
           break;
         case _BODY_TEXT:
           IN_BODY_TEXT = i.width + i.transform[4] > LINE_END;
+          flushFootnote(type);
           if (blockBreak) {
             flush("BLOCK_BREAK");
           }
@@ -225,6 +227,7 @@ async function parse(pdf) {
           break;
         case _BODY_TEXT_ITALIC:
           IN_BODY_TEXT = i.width + i.transform[4] > LINE_END;
+          flushFootnote(type);
           if (blockBreak) {
             flush("BLOCK_BREAK");
           }
