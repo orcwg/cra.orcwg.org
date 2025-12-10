@@ -38,10 +38,95 @@ if (adminModeValue === '1') {
     applyAdminMode(true);
 }
 
+// Accordion collapse animation
+document.addEventListener('click', function (e) {
+    const summary = e.target.closest('summary');
+    if (!summary) return;
+
+    const details = summary.closest('details.faq-accordion-item');
+    if (!details) return;
+
+    // Always prevent default to control opening/closing ourselves
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (details.open) {
+        // User clicked an open accordion - close it with animation
+        details.classList.add('closing');
+        setTimeout(() => {
+            details.classList.remove('closing');
+            details.open = false;
+        }, 300);
+    } else {
+        // User clicked a closed accordion - close any open ones first with animation
+        const clickedDetailsRect = details.getBoundingClientRect();
+        const clickedDetailsY = clickedDetailsRect.top + window.scrollY;
+
+        const openAccordions = document.querySelectorAll('details.faq-accordion-item[open]');
+
+        // Store info about accordions we're closing
+        const closingInfo = Array.from(openAccordions).map(accordion => {
+            const article = accordion.querySelector('article');
+            const accordionY = accordion.getBoundingClientRect().top + window.scrollY;
+            const isAbove = accordionY < clickedDetailsY;
+
+            return {
+                accordion: accordion,
+                article: article,
+                isAbove: isAbove,
+                heightBefore: article ? article.offsetHeight : 0
+            };
+        });
+
+        openAccordions.forEach(openDetail => {
+            openDetail.classList.add('closing');
+            setTimeout(() => {
+                openDetail.classList.remove('closing');
+                openDetail.open = false;
+            }, 300);
+        });
+
+        // Then open this one
+        details.open = true;
+
+        // Compensate scroll for accordions above
+        const initialScrollY = window.scrollY;
+        const duration = 300;
+        const startTime = Date.now();
+
+        function compensateScroll() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Calculate total height lost from accordions above the clicked one
+            let totalHeightLostAbove = 0;
+            closingInfo.forEach(({ isAbove, article, heightBefore }) => {
+                if (isAbove) {
+                    const heightAfter = article ? article.offsetHeight : 0;
+                    const heightLost = heightBefore - heightAfter;
+                    totalHeightLostAbove += heightLost;
+                }
+            });
+
+            // Set scroll position to compensate for height lost above
+            // But don't scroll past the maximum possible scroll position
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const targetScroll = Math.max(0, Math.min(initialScrollY - totalHeightLostAbove, maxScroll));
+            window.scrollTo(0, targetScroll);
+
+            if (progress < 1) {
+                requestAnimationFrame(compensateScroll);
+            }
+        }
+
+        compensateScroll();
+    }
+}, true);
+
 // Mermaid diagram initialization
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const mermaidBlocks = document.querySelectorAll('code.language-mermaid');
-    mermaidBlocks.forEach(function(block) {
+    mermaidBlocks.forEach(function (block) {
         const mermaidDiv = document.createElement('div');
         mermaidDiv.className = 'mermaid';
         mermaidDiv.textContent = block.textContent;
@@ -64,8 +149,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Copy link functionality
-    document.querySelectorAll('.action-button[data-permalink]').forEach(function(button) {
-        button.addEventListener('click', function(e) {
+    document.querySelectorAll('.action-button[data-permalink]').forEach(function (button) {
+        button.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
 
@@ -73,19 +158,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const fullUrl = window.location.origin + permalink;
             const textSpan = button.querySelector('span');
 
-            navigator.clipboard.writeText(fullUrl).then(function() {
+            navigator.clipboard.writeText(fullUrl).then(function () {
                 // Visual feedback
                 textSpan.textContent = 'Copied!';
                 button.classList.add('copied');
 
-                setTimeout(function() {
+                setTimeout(function () {
                     textSpan.textContent = 'Copy link';
                     button.classList.remove('copied');
                 }, 2000);
-            }).catch(function(err) {
+            }).catch(function (err) {
                 console.error('Failed to copy: ', err);
                 textSpan.textContent = 'Failed';
-                setTimeout(function() {
+                setTimeout(function () {
                     textSpan.textContent = 'Copy link';
                 }, 2000);
             });
