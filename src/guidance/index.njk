@@ -9,9 +9,9 @@ permalink: "/pending-guidance/"
 </section>
 
 <nav class="card-grid">
-  {% for item in data.guidance %}
+  {% for item in data.guidanceRequests %}
     <a href="{{ item.permalink }}" class="card">
-      <h2>{{ item.title | markdownInline | safe }}</h2>
+      <h2>{{ item.titleHtml | safe }}</h2>
       {% if item.data.status %}
         <p><strong>Status:</strong> {{ item.data.status | replace('-', ' ') | title }}</p>
       {% endif %}
