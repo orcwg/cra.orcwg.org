@@ -9,7 +9,7 @@
   - open: whether the item should display as open
 #}
 
-<details class="faq-accordion-item" name="faq-accordion" {% if open %}{{ "open" }}{% endif %}>
+<details class="faq-accordion-item" {% if open %}{{ "open" }}{% endif %}>
   <summary>
     <span class="question-text">
       {% if faq.questionNumber and list.showQuestionNumbers %}
