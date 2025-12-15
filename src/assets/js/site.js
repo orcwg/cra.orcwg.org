@@ -38,8 +38,134 @@ if (adminModeValue === '1') {
     applyAdminMode(true);
 }
 
-// Accordion collapse animation
-document.addEventListener('click', function(e) {
+// Accordion animation utilities
+const ANIMATION_DURATION = 300;
+
+// Easing function: Smooth cubic ease-in-out
+// ============================================
+// Standard cubic bezier easing that transitions smoothly at the midpoint
+// First half uses cubic ease-in, second half uses cubic ease-out
+// Formula is continuous and smooth throughout
+
+function easeInOutCubic(t) {
+    if (t < 0.5) {
+        // First half: accelerate in
+        return 4 * t * t * t;
+    } else {
+        // Second half: decelerate out
+        const p = 2 * t - 2;
+        return 0.5 * p * p * p + 1;
+    }
+}
+
+function animateAccordionOpen(details) {
+    const article = details.querySelector('article');
+    const summary = details.querySelector('summary');
+    if (!article) return Promise.resolve();
+
+    return new Promise(resolve => {
+        // Set initial state
+        article.style.overflow = 'hidden';
+        article.style.height = '0px';
+        article.style.paddingTop = '0px';
+        article.style.paddingBottom = '0px';
+        details.open = true;
+
+        // Measure final height with CSS padding applied
+        article.style.paddingTop = '';
+        article.style.paddingBottom = '';
+        const finalHeight = article.scrollHeight;
+
+        // Reset to animation start state
+        article.style.paddingTop = '0px';
+        article.style.paddingBottom = '0px';
+
+        const startTime = Date.now();
+
+        function frame() {
+            const elapsed = Date.now() - startTime;
+            const rawProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
+            const progress = easeInOutCubic(rawProgress);
+
+            // Animate height and padding
+            article.style.height = (finalHeight * progress) + 'px';
+            article.style.paddingTop = (20 * progress) + 'px';
+            article.style.paddingBottom = (20 * progress) + 'px';
+
+            // Rotate caret from 0° to -180°
+            if (summary) {
+                const caretRotation = -180 * progress;
+                summary.style.setProperty('--caret-rotation', caretRotation + 'deg');
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                // Complete state - clear all animation styles
+                article.style.height = '';
+                article.style.paddingTop = '';
+                article.style.paddingBottom = '';
+                article.style.overflow = '';
+                if (summary) {
+                    summary.style.setProperty('--caret-rotation', '-180deg');
+                }
+                resolve();
+            }
+        }
+
+        requestAnimationFrame(frame);
+    });
+}
+
+function animateAccordionClose(details) {
+    const article = details.querySelector('article');
+    const summary = details.querySelector('summary');
+    if (!article) return Promise.resolve();
+
+    return new Promise(resolve => {
+        article.style.overflow = 'hidden';
+        // Measure current height
+        const currentHeight = article.scrollHeight;
+        const startTime = Date.now();
+
+        function frame() {
+            const elapsed = Date.now() - startTime;
+            const rawProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
+            const progress = easeInOutCubic(rawProgress);
+
+            // Animate height and padding together
+            article.style.height = (currentHeight * (1 - progress)) + 'px';
+            article.style.paddingTop = (20 * (1 - progress)) + 'px';
+            article.style.paddingBottom = (20 * (1 - progress)) + 'px';
+
+            // Rotate caret from -180° to 0°
+            if (summary) {
+                const caretRotation = -180 * (1 - progress);
+                summary.style.setProperty('--caret-rotation', caretRotation + 'deg');
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                // Complete state
+                article.style.height = '0px';
+                article.style.paddingTop = '0px';
+                article.style.paddingBottom = '0px';
+                article.style.overflow = '';
+                if (summary) {
+                    summary.style.setProperty('--caret-rotation', '0deg');
+                }
+                details.open = false;
+                resolve();
+            }
+        }
+
+        requestAnimationFrame(frame);
+    });
+}
+
+// Accordion click handler with JS-driven animations
+document.addEventListener('click', async function(e) {
     const summary = e.target.closest('summary');
     if (!summary) return;
 
@@ -52,74 +178,63 @@ document.addEventListener('click', function(e) {
 
     if (details.open) {
         // User clicked an open accordion - close it with animation
-        details.classList.add('closing');
-        setTimeout(() => {
-            details.classList.remove('closing');
-            details.open = false;
-        }, 300);
+        await animateAccordionClose(details);
     } else {
         // User clicked a closed accordion - close any open ones first with animation
-        const clickedDetailsRect = details.getBoundingClientRect();
-        const clickedDetailsY = clickedDetailsRect.top + window.scrollY;
+        const initialScrollY = window.scrollY;
 
-        const openAccordions = document.querySelectorAll('details.faq-accordion-item[open]');
+        const openAccordions = Array.from(document.querySelectorAll('details.faq-accordion-item[open]'));
 
-        // Store info about accordions we're closing
-        const closingInfo = Array.from(openAccordions).map(accordion => {
-            const article = accordion.querySelector('article');
-            const accordionY = accordion.getBoundingClientRect().top + window.scrollY;
-            const isAbove = accordionY < clickedDetailsY;
+        // Store info about accordions we're closing BEFORE we close them
+        const closingInfo = openAccordions.map(accordion => {
+            const isAbove = accordion.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING;
+            const sizeWhenOpen = accordion.offsetHeight;
 
             return {
                 accordion: accordion,
-                article: article,
                 isAbove: isAbove,
-                heightBefore: article ? article.offsetHeight : 0
+                sizeWhenOpen: sizeWhenOpen
             };
         });
 
-        openAccordions.forEach(openDetail => {
-            openDetail.classList.add('closing');
-            setTimeout(() => {
-                openDetail.classList.remove('closing');
-                openDetail.open = false;
-            }, 300);
-        });
-
-        // Then open this one
-        details.open = true;
-
-        // Compensate scroll for accordions above
-        const initialScrollY = window.scrollY;
-        const duration = 300;
+        // Close all open accordions in parallel with scroll compensation
         const startTime = Date.now();
 
-        function compensateScroll() {
+        const scrollCompensationLoop = () => {
             const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
+            const rawProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
+            const progress = easeInOutCubic(rawProgress);
 
-            // Calculate total height lost from accordions above the clicked one
+            // Calculate total height lost so far during the closing animation
             let totalHeightLostAbove = 0;
-            closingInfo.forEach(({isAbove, article, heightBefore}) => {
+            closingInfo.forEach(({isAbove, accordion, sizeWhenOpen}) => {
                 if (isAbove) {
-                    const heightAfter = article ? article.offsetHeight : 0;
-                    const heightLost = heightBefore - heightAfter;
+                    const currentSize = accordion.offsetHeight;
+                    const heightLost = sizeWhenOpen - currentSize;
                     totalHeightLostAbove += heightLost;
                 }
             });
 
-            // Set scroll position to compensate for height lost above
-            // But don't scroll past the maximum possible scroll position
+            // Compensate scroll to keep clicked element in same viewport position
             const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
             const targetScroll = Math.max(0, Math.min(initialScrollY - totalHeightLostAbove, maxScroll));
             window.scrollTo(0, targetScroll);
 
             if (progress < 1) {
-                requestAnimationFrame(compensateScroll);
+                requestAnimationFrame(scrollCompensationLoop);
             }
-        }
+        };
 
-        compensateScroll();
+        // Start the closing animations, scroll compensation, and opening animation together
+        await Promise.all([
+            ...openAccordions.map(openDetail => animateAccordionClose(openDetail)),
+            animateAccordionOpen(details),
+            new Promise(resolve => {
+                requestAnimationFrame(scrollCompensationLoop);
+                // Wait for animations to complete
+                setTimeout(resolve, ANIMATION_DURATION);
+            })
+        ]);
     }
 }, true);
 
