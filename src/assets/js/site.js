@@ -58,7 +58,7 @@ function easeInOutCubic(t) {
     }
 }
 
-function animateAccordionOpen(details) {
+function animateAccordion(details, isOpening) {
     const article = details.querySelector('article');
     const summary = details.querySelector('summary');
     if (!article) return Promise.resolve();
@@ -66,103 +66,85 @@ function animateAccordionOpen(details) {
     return new Promise(resolve => {
         // Set initial state
         article.style.overflow = 'hidden';
-        article.style.height = '0px';
-        article.style.paddingTop = '0px';
-        article.style.paddingBottom = '0px';
-        details.open = true;
 
-        // Measure final height with CSS padding applied
-        article.style.paddingTop = '';
-        article.style.paddingBottom = '';
-        const finalHeight = article.scrollHeight;
+        if (isOpening) {
+            article.style.height = '0px';
+            article.style.paddingTop = '0px';
+            article.style.paddingBottom = '0px';
+            details.open = true;
 
-        // Reset to animation start state
-        article.style.paddingTop = '0px';
-        article.style.paddingBottom = '0px';
+            // Measure final height
+            article.style.paddingTop = '';
+            article.style.paddingBottom = '';
+            const finalHeight = article.scrollHeight;
+            article.style.paddingTop = '0px';
+            article.style.paddingBottom = '0px';
 
-        const startTime = Date.now();
+            const startTime = Date.now();
+            const frame = () => {
+                const elapsed = Date.now() - startTime;
+                const rawProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
+                const progress = easeInOutCubic(rawProgress);
 
-        function frame() {
-            const elapsed = Date.now() - startTime;
-            const rawProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
-            const progress = easeInOutCubic(rawProgress);
+                article.style.height = (finalHeight * progress) + 'px';
+                article.style.paddingTop = (20 * progress) + 'px';
+                article.style.paddingBottom = (20 * progress) + 'px';
 
-            // Animate height and padding
-            article.style.height = (finalHeight * progress) + 'px';
-            article.style.paddingTop = (20 * progress) + 'px';
-            article.style.paddingBottom = (20 * progress) + 'px';
-
-            // Rotate caret from 0° to -180°
-            if (summary) {
-                const caretRotation = -180 * progress;
-                summary.style.setProperty('--caret-rotation', caretRotation + 'deg');
-            }
-
-            if (progress < 1) {
-                requestAnimationFrame(frame);
-            } else {
-                // Complete state - clear all animation styles
-                article.style.height = '';
-                article.style.paddingTop = '';
-                article.style.paddingBottom = '';
-                article.style.overflow = '';
                 if (summary) {
-                    summary.style.setProperty('--caret-rotation', '-180deg');
+                    summary.style.setProperty('--caret-rotation', (-180 * progress) + 'deg');
                 }
-                resolve();
-            }
-        }
 
-        requestAnimationFrame(frame);
+                if (progress < 1) {
+                    requestAnimationFrame(frame);
+                } else {
+                    article.style.height = '';
+                    article.style.paddingTop = '';
+                    article.style.paddingBottom = '';
+                    article.style.overflow = '';
+                    if (summary) {
+                        summary.style.setProperty('--caret-rotation', '-180deg');
+                    }
+                    resolve();
+                }
+            };
+            requestAnimationFrame(frame);
+        } else {
+            const currentHeight = article.scrollHeight;
+            const startTime = Date.now();
+            const frame = () => {
+                const elapsed = Date.now() - startTime;
+                const rawProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
+                const progress = easeInOutCubic(rawProgress);
+
+                article.style.height = (currentHeight * (1 - progress)) + 'px';
+                article.style.paddingTop = (20 * (1 - progress)) + 'px';
+                article.style.paddingBottom = (20 * (1 - progress)) + 'px';
+
+                if (summary) {
+                    summary.style.setProperty('--caret-rotation', (-180 * (1 - progress)) + 'deg');
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(frame);
+                } else {
+                    article.style.height = '0px';
+                    article.style.paddingTop = '0px';
+                    article.style.paddingBottom = '0px';
+                    article.style.overflow = '';
+                    if (summary) {
+                        summary.style.setProperty('--caret-rotation', '0deg');
+                    }
+                    details.open = false;
+                    resolve();
+                }
+            };
+            requestAnimationFrame(frame);
+        }
     });
 }
 
-function animateAccordionClose(details) {
-    const article = details.querySelector('article');
-    const summary = details.querySelector('summary');
-    if (!article) return Promise.resolve();
-
-    return new Promise(resolve => {
-        article.style.overflow = 'hidden';
-        // Measure current height
-        const currentHeight = article.scrollHeight;
-        const startTime = Date.now();
-
-        function frame() {
-            const elapsed = Date.now() - startTime;
-            const rawProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
-            const progress = easeInOutCubic(rawProgress);
-
-            // Animate height and padding together
-            article.style.height = (currentHeight * (1 - progress)) + 'px';
-            article.style.paddingTop = (20 * (1 - progress)) + 'px';
-            article.style.paddingBottom = (20 * (1 - progress)) + 'px';
-
-            // Rotate caret from -180° to 0°
-            if (summary) {
-                const caretRotation = -180 * (1 - progress);
-                summary.style.setProperty('--caret-rotation', caretRotation + 'deg');
-            }
-
-            if (progress < 1) {
-                requestAnimationFrame(frame);
-            } else {
-                // Complete state
-                article.style.height = '0px';
-                article.style.paddingTop = '0px';
-                article.style.paddingBottom = '0px';
-                article.style.overflow = '';
-                if (summary) {
-                    summary.style.setProperty('--caret-rotation', '0deg');
-                }
-                details.open = false;
-                resolve();
-            }
-        }
-
-        requestAnimationFrame(frame);
-    });
-}
+// Track if an animation is currently running to prevent concurrent animations
+let isAnimating = false;
 
 // Accordion click handler with JS-driven animations
 document.addEventListener('click', async function(e) {
@@ -172,14 +154,20 @@ document.addEventListener('click', async function(e) {
     const details = summary.closest('details.faq-accordion-item');
     if (!details) return;
 
+    // Prevent concurrent animations
+    if (isAnimating) return;
+
     // Always prevent default to control opening/closing ourselves
     e.preventDefault();
     e.stopPropagation();
 
-    if (details.open) {
-        // User clicked an open accordion - close it with animation
-        await animateAccordionClose(details);
-    } else {
+    isAnimating = true;
+
+    try {
+        if (details.open) {
+            // User clicked an open accordion - close it with animation
+            await animateAccordion(details, false);
+        } else {
         // User clicked a closed accordion - close any open ones first with animation
         const initialScrollY = window.scrollY;
 
@@ -227,14 +215,17 @@ document.addEventListener('click', async function(e) {
 
         // Start the closing animations, scroll compensation, and opening animation together
         await Promise.all([
-            ...openAccordions.map(openDetail => animateAccordionClose(openDetail)),
-            animateAccordionOpen(details),
+            ...openAccordions.map(openDetail => animateAccordion(openDetail, false)),
+            animateAccordion(details, true),
             new Promise(resolve => {
                 requestAnimationFrame(scrollCompensationLoop);
                 // Wait for animations to complete
                 setTimeout(resolve, ANIMATION_DURATION);
             })
         ]);
+        }
+    } finally {
+        isAnimating = false;
     }
 }, true);
 
