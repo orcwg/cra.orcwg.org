@@ -27,7 +27,7 @@
       <li>
         <a href="{{ faq.permalink }}">
           <span class="question-text">
-            {% if faq.questionNumber and currentList.showQuestionNumbers %}
+            {% if faq.questionNumber and currentList._showQuestionNumbers %}
               {{ faq.questionNumber }}
             {% endif %}
             {{ faq.question | markdownInline | safe }}

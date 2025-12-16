@@ -4,6 +4,7 @@
   "description": "Eleventy website for the CRA Hub located at cra.orcwg.org",
   "main": "index.js",
   "scripts": {
+    "test": "node --test tests/**/*.test.js",
     "update-cache": "node update-cache.js",
     "build": "eleventy",
     "serve": "eleventy --serve",

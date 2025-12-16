@@ -9,12 +9,12 @@ pagination:
   alias: faq
 permalink: "{{ faq.permalink }}"
 eleventyComputed:
-  title: "{{ faq.pageTitle }}"
+  title: "{{ faq._pageTitle }}"
 ---
 
 <article class="section-card">
-  <h1 class="section-header">{{ faq.question | markdownInline | safe }}</h1>
-  {{ faq.answer | markdown | safe }}
+  <h1 class="section-header">{{ faq.questionHtml | safe }}</h1>
+  {{ faq.answerHtml | safe }}
 
   {% include "components/faq/faq-warning.njk" %}
 

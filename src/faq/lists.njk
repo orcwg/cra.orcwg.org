@@ -10,7 +10,7 @@ pagination:
   addAllPagesToCollections: true
 permalink: "{{ list.permalink }}"
 eleventyComputed:
-  title: "{{ list.pageTitle }}"
+  title: "{{ list._pageTitle }}"
 ---
 
 {% if list.isRoot %}

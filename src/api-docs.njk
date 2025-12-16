@@ -1,0 +1,388 @@
+---
+layout: layout.njk
+title: API Documentation
+permalink: /api/docs/
+eleventyExcludeFromCollections: true
+---
+
+<main>
+  <article class="section-card">
+    <h1>JSON API Documentation</h1>
+
+    <section class="section-intro">
+      <p>The CRA FAQ website provides a JSON:API v1.1 compliant REST API for programmatic access to all FAQ content, lists, and guidance requests. All endpoints return a JSON payload with full licensing and source attribution.</p>
+    </section>
+
+    <section>
+      <h2>Base URL</h2>
+      <pre><code>https://cra.orcwg.org/api/v0/</code></pre>
+      <aside class="warning">
+        <p><strong>⚠️ Version 0 (v0) is unstable and may change.</strong> This API version is experimental and breaking changes may occur without notice. A stable v1 API will be released in the future.</p>
+      </aside>
+    </section>
+
+    <section>
+      <h2>Specification</h2>
+      <p>This API follows the <a href="https://jsonapi.org/format/">JSON:API v1.1 specification</a>. All responses include:</p>
+      <ul>
+        <li><code>jsonapi.version</code> - JSON:API version ("1.1")</li>
+        <li><code>data</code> - The primary resource(s)</li>
+        <li><code>links</code> - URLs related to the response</li>
+        <li><code>meta</code> - Metadata including licensing and timestamps</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Authentication</h2>
+      <p><strong>None required.</strong> This is a public, read-only API. All endpoints are freely accessible.</p>
+    </section>
+
+    <section>
+      <h2>Rate Limiting</h2>
+      <p><strong>None.</strong> The API serves pre-generated static JSON files via GitHub Pages CDN. No server-side processing occurs.</p>
+    </section>
+
+    <section>
+      <h2>Endpoints</h2>
+
+      <h3>Discovery</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code><a href="/api/v0/index.json">GET /api/v0/index.json</a></code></td>
+            <td>API index with links to all collections and statistics</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>FAQs</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code><a href="/api/v0/faqs.json">GET /api/v0/faqs.json</a></code></td>
+            <td>Collection of all FAQs</td>
+          </tr>
+          <tr>
+            <td><code>GET /api/v0/faqs/{category}/{slug}.json</code></td>
+            <td>Individual FAQ resource</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>Example:</strong> <code><a href="/api/v0/faqs/cra-itself/cra.json">/api/v0/faqs/cra-itself/cra.json</a></code></p>
+
+      <h3>Lists</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code><a href="/api/v0/lists.json">GET /api/v0/lists.json</a></code></td>
+            <td>Collection of all lists/categories</td>
+          </tr>
+          <tr>
+            <td><code>GET /api/v0/lists/{list-id}.json</code></td>
+            <td>Individual list resource with relationships to FAQs and sublists</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>Example:</strong> <code><a href="/api/v0/lists/cra-itself.json">/api/v0/lists/cra-itself.json</a></code></p>
+
+      <h3>Guidance Requests</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code><a href="/api/v0/guidance-requests.json">GET /api/v0/guidance-requests.json</a></code></td>
+            <td>Collection of all guidance requests</td>
+          </tr>
+          <tr>
+            <td><code>GET /api/v0/guidance-requests/{slug}.json</code></td>
+            <td>Individual guidance request resource</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>Example:</strong> <code><a href="/api/v0/guidance-requests/csirt-identification.json">/api/v0/guidance-requests/csirt-identification.json</a></code></p>
+    </section>
+
+    <section>
+      <h2>Resource Types</h2>
+
+      <aside class="info">
+        <p><strong>💡 Markdown and HTML versions:</strong> Content fields are provided in both markdown (<code>answer</code>, <code>body</code>) and pre-rendered HTML (<code>answerHtml</code>, <code>bodyHtml</code>) formats. The markdown version contains the source with resolved internal links, while the HTML version is ready for direct display. Both include GitHub-flavored markdown alerts.</p>
+      </aside>
+
+      <h3>FAQ Resource</h3>
+      <p>Represents a single Frequently Asked Question. Includes comprehensive metadata, cross-references to related guidance, and bidirectional links to parent lists.</p>
+
+      <h4>Attributes</h4>
+      <ul>
+        <li><code>question</code> - The FAQ question in markdown format</li>
+        <li><code>questionHtml</code> - The question rendered as HTML</li>
+        <li><code>answer</code> - The answer in markdown with resolved internal links</li>
+        <li><code>answerHtml</code> - The answer rendered as HTML</li>
+        <li><code>answerMissing</code> - Boolean indicating if answer is empty</li>
+        <li><code>status</code> - Draft, approved, official, etc.</li>
+        <li><code>category</code> - FAQ category/folder name</li>
+        <li><code>createdAt</code> - ISO 8601 timestamp of creation</li>
+        <li><code>lastUpdatedAt</code> - ISO 8601 timestamp of last update</li>
+        <li><code>listed</code> - Boolean indicating if FAQ is in curated lists</li>
+        <li><code>relatedIssues</code> - Array of GitHub issue references with url and number</li>
+        <li><code>author</code> - Content author attribution</li>
+        <li><code>authorUrl</code> - URL to author/contributor page</li>
+        <li><code>license</code> - License designation (CC BY 4.0)</li>
+        <li><code>licenseUrl</code> - URL to license terms</li>
+        <li><code>srcUrl</code> - Link to source in GitHub repository</li>
+        <li><code>editOnGithubUrl</code> - Direct edit link to GitHub</li>
+        <li><code>guidanceId</code> - Reference to related guidance request (if any)</li>
+      </ul>
+
+      <h4>Relationships</h4>
+      <ul>
+        <li><code>parents</code> - Array of parent lists (categories) this FAQ belongs to</li>
+        <li><code>relatedGuidanceRequest</code> - Single related guidance request (if guidanceId is set)</li>
+      </ul>
+
+      <h4>Example</h4>
+      <pre><code>{
+  "type": "faq",
+  "id": "cra-itself/cra",
+  "attributes": {
+    "question": "What is the Cyber Resilience Act (CRA)?",
+    "questionHtml": "What is the Cyber Resilience Act (CRA)?",
+    "answer": "The Cyber Resilience Act is...",
+    "answerHtml": "&lt;p&gt;The Cyber Resilience Act is...&lt;/p&gt;",
+    "status": "approved",
+    "category": "cra-itself",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "lastUpdatedAt": "2024-02-20T14:45:00Z",
+    "answerMissing": false,
+    "listed": true,
+    "relatedIssues": [
+      { "url": "https://github.com/orcwg/cra-hub/issues/159", "number": "159" }
+    ],
+    "author": "ORC WG Authors",
+    "authorUrl": "https://cra.orcwg.org/acknowledgements/",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://github.com/orcwg/cra-hub/tree/main/LICENSE.md",
+    "srcUrl": "https://github.com/orcwg/cra-hub/tree/main/faq/cra-itself/cra.md",
+    "editOnGithubUrl": "https://github.com/orcwg/cra-hub/edit/main/faq/cra-itself/cra.md"
+  },
+  "relationships": {
+    "parents": {
+      "data": [
+        { "type": "list", "id": "cra-itself" }
+      ]
+    },
+    "relatedGuidanceRequest": {
+      "data": { "type": "guidance-request", "id": "csirt-identification" }
+    }
+  },
+  "links": {
+    "self": "/api/v0/faqs/cra-itself/cra.json",
+    "html": "/faq/cra-itself/cra/",
+    "edit": "https://github.com/orcwg/cra-hub/edit/main/faq/cra-itself/cra.md"
+  },
+  "meta": {
+    "license": {
+      "name": "CC-BY-4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "spdx": "CC-BY-4.0"
+    },
+    "copyright": "ORC WG Contributors"
+  }
+}</code></pre>
+
+      <h3>List Resource</h3>
+      <p>Represents a curated list/category of FAQs.</p>
+      <pre><code>{
+  "type": "list",
+  "id": "cra-itself",
+  "attributes": {
+    "title": "The Cyber Resilience Act (CRA) itself",
+    "description": "Essential information about the CRA regulation...",
+    "icon": "🛡️",
+    "faqCount": 8,
+    "listCount": 1,
+    "countText": "8 FAQs organised in 1 list"
+  },
+  "relationships": {
+    "faqs": {
+      "data": [
+        { "type": "faq", "id": "cra-itself/cra" },
+        { "type": "faq", "id": "cra-itself/scope" }
+      ]
+    }
+  },
+  "links": {
+    "self": "/api/v0/lists/cra-itself.json",
+    "html": "/lists/cra-itself/"
+  },
+  "meta": { /* licensing info */ }
+}</code></pre>
+
+      <h3>Guidance Request Resource</h3>
+      <p>Represents a pending guidance request requiring European Commission clarification. Links to related FAQs that provide temporary solutions or context.</p>
+
+      <h4>Attributes</h4>
+      <ul>
+        <li><code>title</code> - The guidance request title in markdown format</li>
+        <li><code>titleHtml</code> - The title rendered as HTML</li>
+        <li><code>body</code> - The guidance request details in markdown</li>
+        <li><code>bodyHtml</code> - The body rendered as HTML</li>
+        <li><code>guidanceText</code> - Plain text summary of guidance needed</li>
+        <li><code>status</code> - Status of the guidance request (e.g., pending)</li>
+        <li><code>createdAt</code> - ISO 8601 timestamp of creation</li>
+        <li><code>lastUpdatedAt</code> - ISO 8601 timestamp of last update</li>
+        <li><code>author</code> - Content author attribution</li>
+        <li><code>authorUrl</code> - URL to author/contributor page</li>
+        <li><code>license</code> - License designation (CC BY 4.0)</li>
+        <li><code>licenseUrl</code> - URL to license terms</li>
+        <li><code>srcUrl</code> - Link to source in GitHub repository</li>
+        <li><code>editOnGithubUrl</code> - Direct edit link to GitHub</li>
+      </ul>
+
+      <h4>Relationships</h4>
+      <ul>
+        <li><code>relatedFaqs</code> - Array of FAQ resources that provide context or temporary solutions</li>
+      </ul>
+
+      <h4>Example</h4>
+      <pre><code>{
+  "type": "guidance-request",
+  "id": "csirt-identification",
+  "attributes": {
+    "title": "CSIRT Identification",
+    "titleHtml": "CSIRT Identification",
+    "body": "The guidance needed...",
+    "bodyHtml": "&lt;p&gt;The guidance needed...&lt;/p&gt;",
+    "guidanceText": "Plain text summary of what guidance is needed",
+    "status": "pending",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "lastUpdatedAt": "2024-02-20T14:45:00Z",
+    "author": "ORC WG Authors",
+    "authorUrl": "https://cra.orcwg.org/acknowledgements/",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://github.com/orcwg/cra-hub/tree/main/LICENSE.md",
+    "srcUrl": "https://github.com/orcwg/cra-hub/tree/main/faq/pending-guidance/csirt-identification.md",
+    "editOnGithubUrl": "https://github.com/orcwg/cra-hub/edit/main/faq/pending-guidance/csirt-identification.md"
+  },
+  "relationships": {
+    "relatedFaqs": {
+      "data": [
+        { "type": "faq", "id": "vulnerability-handling/csirt" }
+      ]
+    }
+  },
+  "links": {
+    "self": "/api/v0/guidance-requests/csirt-identification.json",
+    "html": "/pending-guidance/csirt-identification/"
+  },
+  "meta": {
+    "license": {
+      "name": "CC-BY-4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "spdx": "CC-BY-4.0"
+    },
+    "copyright": "ORC WG Contributors"
+  }
+}</code></pre>
+    </section>
+
+    <section>
+      <h2>Licensing & Attribution</h2>
+      <p>Every API response includes licensing and source information in the <code>meta</code> field:</p>
+      <ul>
+        <li><strong>Content License:</strong> <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a></li>
+        <li><strong>Copyright:</strong> ORC WG Contributors</li>
+        <li><strong>Source Repository:</strong> <a href="https://github.com/orcwg/cra-hub">orcwg/cra-hub</a></li>
+      </ul>
+      <p>where available, resources includes direct links to edit the source content on GitHub.</p>
+    </section>
+
+    <section>
+      <h2>CORS & Access</h2>
+      <p>All API endpoints support CORS and can be accessed from any origin. The API is served as static files via GitHub Pages CDN.</p>
+    </section>
+
+    <section>
+      <h2>Data Freshness</h2>
+      <p>The API is regenerated automatically whenever:</p>
+      <ul>
+        <li>Content is updated in the <a href="https://github.com/orcwg/cra-hub">orcwg/cra-hub</a> repository</li>
+        <li>The website code is updated in the <a href="https://github.com/orcwg/cra.orcwg.org">orcwg/cra.orcwg.org</a> repository</li>
+      </ul>
+      <p>Each response includes a <code>meta.generatedAt</code> timestamp indicating when the API was last built.</p>
+    </section>
+
+    <section>
+      <h2>Example Usage</h2>
+
+      <h3>JavaScript (Fetch API)</h3>
+      <pre><code>// Get all FAQs
+const response = await fetch('https://cra.orcwg.org/api/v0/faqs.json');
+const { data, meta } = await response.json();
+
+console.log(`Found ${meta.count} FAQs`);
+data.forEach(faq => {
+  console.log(`${faq.attributes.question} - ${faq.links.html}`);
+});
+
+// Get a specific FAQ
+const faqResponse = await fetch('https://cra.orcwg.org/api/v0/faqs/cra-itself/cra.json');
+const { data: faq } = await faqResponse.json();
+
+// Use markdown source or pre-rendered HTML
+console.log(faq.attributes.answer);  // Markdown version
+document.getElementById('content').innerHTML = faq.attributes.answerHtml;  // HTML version</code></pre>
+
+      <h3>Python (requests)</h3>
+      <pre><code>import requests
+
+# Get all lists
+response = requests.get('https://cra.orcwg.org/api/v0/lists.json')
+data = response.json()
+
+print(f"Found {data['meta']['count']} lists")
+for list_item in data['data']:
+    print(f"{list_item['attributes']['icon']} {list_item['attributes']['title']}")
+    print(f"  {list_item['attributes']['countText']}")</code></pre>
+
+      <h3>cURL</h3>
+      <pre><code># Get API index
+curl https://cra.orcwg.org/api/v0/index.json | jq
+
+# Get a specific guidance request
+curl https://cra.orcwg.org/api/v0/guidance-requests/csirt-identification.json | jq '.data.attributes.title'</code></pre>
+    </section>
+
+    <section>
+      <h2>Support</h2>
+      <p>For questions, bug reports, or feature requests:</p>
+      <ul>
+        <li>Content issues: <a href="https://github.com/orcwg/cra-hub/issues">orcwg/cra-hub issues</a></li>
+        <li>API/website issues: <a href="https://github.com/orcwg/cra.orcwg.org/issues">orcwg/cra.orcwg.org issues</a></li>
+      </ul>
+    </section>
+  </article>
+</main>

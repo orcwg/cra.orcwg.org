@@ -1,0 +1,36 @@
+{
+  "API_CONFIG": {
+    "domain": "https://cra.orcwg.org",
+    "base": "/api/v0",
+    "index": {
+      "type": "api-index",
+      "id": "v0",
+      "attributes": {
+        "apiVersion": "v0",
+        "description": "CRA FAQ content API (v0 - unstable)"
+      }
+    },
+    "metadata": {
+      "license": {
+        "name": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "spdx": "CC-BY-4.0"
+      },
+      "copyright": "ORC WG Contributors"
+    }
+  },
+  "RESOURCES": {
+    "FAQ": {
+      "type": "faq",
+      "collectionName": "faqs"
+    },
+    "GUIDANCE_REQUEST": {
+      "type": "guidance-request",
+      "collectionName": "guidance-requests"
+    },
+    "LIST": {
+      "type": "list",
+      "collectionName": "lists"
+    }
+  }
+}

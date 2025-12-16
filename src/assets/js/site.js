@@ -39,9 +39,9 @@ if (adminModeValue === '1') {
 }
 
 // Mermaid diagram initialization
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const mermaidBlocks = document.querySelectorAll('code.language-mermaid');
-    mermaidBlocks.forEach(function(block) {
+    mermaidBlocks.forEach(function (block) {
         const mermaidDiv = document.createElement('div');
         mermaidDiv.className = 'mermaid';
         mermaidDiv.textContent = block.textContent;
@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Copy link functionality
-    document.querySelectorAll('.action-button[data-permalink]').forEach(function(button) {
-        button.addEventListener('click', function(e) {
+    document.querySelectorAll('.action-button[data-permalink]').forEach(function (button) {
+        button.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
 
@@ -73,19 +73,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const fullUrl = window.location.origin + permalink;
             const textSpan = button.querySelector('span');
 
-            navigator.clipboard.writeText(fullUrl).then(function() {
+            navigator.clipboard.writeText(fullUrl).then(function () {
                 // Visual feedback
                 textSpan.textContent = 'Copied!';
                 button.classList.add('copied');
 
-                setTimeout(function() {
+                setTimeout(function () {
                     textSpan.textContent = 'Copy link';
                     button.classList.remove('copied');
                 }, 2000);
-            }).catch(function(err) {
+            }).catch(function (err) {
                 console.error('Failed to copy: ', err);
                 textSpan.textContent = 'Failed';
-                setTimeout(function() {
+                setTimeout(function () {
                     textSpan.textContent = 'Copy link';
                 }, 2000);
             });

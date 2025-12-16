@@ -5,7 +5,7 @@
 
   Parameters (passed via `item` variable):
   - item.type: String
-  - item.editOnGithubUrl: String
+  - item._editOnGithubUrl: String
   - item.relatedIssues: Array of { url, number } (optional)
   - item.permalink: String (optional)
   - page.url: String (optional)
@@ -27,8 +27,8 @@
   </div>
 
   <div class="regular-actions">
-    {% if item.editOnGithubUrl %}
-      <a href="{{ item.editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit this {{ type }} on GitHub">
+    {% if item._editOnGithubUrl %}
+      <a href="{{ item._editOnGithubUrl }}" class="action-button" target="_blank" rel="noopener" title="Edit this {{ type }} on GitHub">
         {% include "icons/edit.svg" %}
         <span>Edit on GitHub</span>
       </a>

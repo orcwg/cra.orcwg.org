@@ -1,7 +1,16 @@
 const fs = require('fs');
 const path = require('path');
-const { isNew, recentlyUpdated } = require('./utils/timestamp-helpers.js');
-const { parseRelatedIssues } = require('./utils/issue-parser.js');
+const markdownIt = require("markdown-it");
+const {isNew, recentlyUpdated} = require('./utils/timestamp-helpers.js');
+const {parseRelatedIssues} = require('./utils/issue-parser.js');
+
+// Initialize markdown parser for rendering inline markdown
+const mdInline = new markdownIt({html: true});
+
+function renderInlineMarkdown(content) {
+  if (!content) return "";
+  return mdInline.renderInline(content);
+}
 
 // Load configuration for list metadata
 const craConfigPath = path.join(__dirname, 'official-faqs-config-lists.json');
@@ -50,23 +59,23 @@ const LIST = "list";
 let regularFontName;
 
 function identifyContentType(item, previous, pageNum) {
-    if (item.str.trim() === "" + pageNum && item.transform[5] == BOTTOM_MARGIN) return _PAGE_NUM;
-    if (item.str == "") return _EMPTY;
-    if (item.str == " ") return _WHITE_SPACE;
-    if (item.str.trim() == LIST_BULLET) return _LIST_ITEM_START;
-    if (item.height == TITLE_SIZE) return _TITLE;
-    if (item.height == SUB_TITLE_1_SIZE) return _TITLE;
-    if (item.height == SUB_TITLE_2_SIZE) return _TITLE;
-    if (item.height == BODY_TEXT_SIZE) {
-      if (!regularFontName) {
-        regularFontName = item.fontName;
-      }
-      return item.fontName == regularFontName ? _BODY_TEXT : _BODY_TEXT_ITALIC;
+  if (item.str.trim() === "" + pageNum && item.transform[5] == BOTTOM_MARGIN) return _PAGE_NUM;
+  if (item.str == "") return _EMPTY;
+  if (item.str == " ") return _WHITE_SPACE;
+  if (item.str.trim() == LIST_BULLET) return _LIST_ITEM_START;
+  if (item.height == TITLE_SIZE) return _TITLE;
+  if (item.height == SUB_TITLE_1_SIZE) return _TITLE;
+  if (item.height == SUB_TITLE_2_SIZE) return _TITLE;
+  if (item.height == BODY_TEXT_SIZE) {
+    if (!regularFontName) {
+      regularFontName = item.fontName;
     }
-    if (item.height == FOOTNOTE_SUP_TEXT_SIZE) return _FOOTNOTE_INDEX;
-    if (item.height == FOOTNOTE_TEXT_SIZE) return _FOOTNOTE_CONTENT;
-    if (item.height == BODY_SUP_TEXT_SIZE) return _FOOTNOTE;
-    return 'UNKNOWN ' + item.height + " " + item.fontName;
+    return item.fontName == regularFontName ? _BODY_TEXT : _BODY_TEXT_ITALIC;
+  }
+  if (item.height == FOOTNOTE_SUP_TEXT_SIZE) return _FOOTNOTE_INDEX;
+  if (item.height == FOOTNOTE_TEXT_SIZE) return _FOOTNOTE_CONTENT;
+  if (item.height == BODY_SUP_TEXT_SIZE) return _FOOTNOTE;
+  return 'UNKNOWN ' + item.height + " " + item.fontName;
 }
 
 // Parse PDF timestamps (D:YYYYMMDDHHmmSS format)
@@ -87,8 +96,8 @@ async function parsePDFFAQs(pdfPath = path.join(__dirname, '../../FAQs_on_the_CR
 
   // Load the PDF document
   const loadingTask = pdfjsLib.getDocument({
-      data: uint8Array,
-      useSystemFonts: true
+    data: uint8Array,
+    useSystemFonts: true
   });
 
   const pdf = await loadingTask.promise;
@@ -97,7 +106,7 @@ async function parsePDFFAQs(pdfPath = path.join(__dirname, '../../FAQs_on_the_CR
   const creationDate = parsePDFDate(metadata.info.CreationDate);
   const modificationDate = parsePDFDate(metadata.info.ModDate);
 
-  const { blocks, footnotes } = await parse(pdf);
+  const {blocks, footnotes} = await parse(pdf);
   const result = buildTree(blocks, footnotes, creationDate, modificationDate);
 
   return result;
@@ -112,7 +121,7 @@ async function parse(pdf) {
   let IN_LIST = false;
   let IN_ITALICS = false;
   let IN_BODY_TEXT = false;
-  
+
   function getCurrent() {
     return currentFootnoteBlock || currentBlock;
   }
@@ -120,42 +129,42 @@ async function parse(pdf) {
   function handleLineBreak(lineBreak) {
     const current = getCurrent();
     if (lineBreak && current && !(/\-$/).test(current.text)) {
-        current.text = current.text.trim() + " ";
+      current.text = current.text.trim() + " ";
     }
   }
-  
+
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     let previousPos = null;
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
-    
+
     function flush(source) {
       // console.log("flush", source)
       if (currentBlock) {
         if (IN_ITALICS) {
           currentBlock.text = currentBlock.text.trim() + "_";
         }
-        currentBlock.pageEnd = pageNum;
+        currentBlock._pageEnd = pageNum;
         blocks.push(currentBlock);
         currentBlock = null;
       }
       IN_ITALICS = false;
       flushFootnote(source);
     }
-    
+
     function flushFootnote(source) {
       // console.log("flush footnote", source)
       if (currentFootnoteBlock) {
-        currentFootnoteBlock.pageEnd = pageNum;
+        currentFootnoteBlock._pageEnd = pageNum;
         footnotes[currentFootnoteBlock.number] = currentFootnoteBlock;
         currentFootnoteBlock = null;
       }
     }
-    
+
     function Block(type, text = "") {
       return {
-        pageStart: pageNum,
-        pageEnd: null,
+        _pageStart: pageNum,
+        _pageEnd: null,
         type,
         text
       }
@@ -166,7 +175,7 @@ async function parse(pdf) {
       const blockBreak = (previousPos && previousPos - i.transform[5] > BLOCK_BREAK_SIZE) || (!previousPos && !IN_BODY_TEXT);
       const type = identifyContentType(i, previous, pageNum);
       //console.log(type, previousPos, "in body:", IN_BODY_TEXT, JSON.stringify(i))
-      
+
       if (IN_LIST && i.transform[4] == LINE_START) {
         IN_LIST = false;
         flush(LINE_START);
@@ -271,7 +280,7 @@ async function parse(pdf) {
   }
   flush("END");
   regularFontName = null;
-  return { blocks, footnotes };
+  return {blocks, footnotes};
 }
 
 // Helper function to build hierarchical list ID
@@ -288,11 +297,11 @@ function buildListId(number) {
   return pathParts.join('/');
 }
 
-function formatPageSource(pageStart, pageEnd) {
-  const pageRange = pageStart === pageEnd
-    ? pageStart
-    : `${ pageStart }–${ pageEnd }`;
-  return `“FAQs on the Cyber Resilience Act” p.${ pageRange } (PDF)`;
+function formatPageSource(_pageStart, _pageEnd) {
+  const pageRange = _pageStart === _pageEnd
+    ? _pageStart
+    : `${_pageStart}–${_pageEnd}`;
+  return `“FAQs on the Cyber Resilience Act” p.${pageRange} (PDF)`;
 }
 
 function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
@@ -309,46 +318,48 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
     id: "official",
     type: LIST,
     title: rootConfig.title,
-    pageTitle: rootConfig.title,
+    _pageTitle: rootConfig.title,
     icon: rootConfig.icon,
-    description: "**Message from the European Commission**: _“" + paragraphs[1].text.trim() + "”_",
+    description: "**Message from the European Commission**: _\"" + paragraphs[1].text.trim() + "\"_",
     permalink: `/faq/${rootConfig.slug}/`,
+    license: "CC-BY-4.0",
+    licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
+    author: "European Union",
     children: [],
     parents: [],
     faqCount: 0,
     listCount: 0,
     countText: "",
-    level: 0,
-    showQuestionNumbers: true,
+    _showQuestionNumbers: true,
     createdAt,
     lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+    _isNew: isNew(createdAt),
+    _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
   };
 
   lists.push(pdfParentList);
 
   // Collect all numbered titles and determine types
   const sections = blocks.map(block => {
-      if (block.type !== _TITLE) return null;
-      const match = block.text.match(/^(\d+(?:\.\d+)*)\s*(.*)$/);
-      if (!match) return null;
+    if (block.type !== _TITLE) return null;
+    const match = block.text.match(/^(\d+(?:\.\d+)*)\s*(.*)$/);
+    if (!match) return null;
 
-      const number = match[1];
-      const title = match[2].trim();
-      const level = number.split('.').length;
+    const number = match[1];
+    const title = match[2].trim();
+    const level = number.split('.').length;
 
-      const section = {
-        block,
-        number,
-        title,
-        level,
-        type: null // Will be determined
-      };
+    const section = {
+      block,
+      number,
+      title,
+      level,
+      type: null // Will be determined
+    };
 
-      block.section = section;
-      return section;
-    })
+    block.section = section;
+    return section;
+  })
     .filter(Boolean);
 
   // Determine types: leaf (FAQ) vs branch (list) based on whether there are deeper children
@@ -370,8 +381,8 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
   function finalizeCurrentFaq() {
     if (!currentFaq) return;
 
-    // Set source with page numbering
-    currentFaq.source = formatPageSource(currentFaq.pageStart, currentFaq.pageEnd);
+    // Set source with page numbering using tracked page range
+    currentFaq.source = formatPageSource(currentFaq._pageStart, currentFaq._pageEnd);
 
     const parentList = itemStack[itemStack.length - 1];
     parentList.children.push(currentFaq);
@@ -385,7 +396,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
     if (block.type === _TITLE) {
       if (!block.section) return; // Skip non-numbered titles
       const section = block.section;
-      const { text, pageStart } = section.block;
+      const {text, _pageStart} = section.block;
 
       // Finalize previous FAQ if exists
       finalizeCurrentFaq();
@@ -404,21 +415,23 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
           id: listId,
           type: LIST,
           title: text,
-          pageTitle: section.title,
+          _pageTitle: section.title,
           icon: config.icon,
           description: config.description,
           permalink: `/faq/${listId}/`,
+          license: "CC-BY-4.0",
+          licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
+          author: "European Union",
           children: [],
           parents: [],
           faqCount: 0,
           listCount: 0,
           countText: "",
-          level: section.level,
-          showQuestionNumbers: true, // Official FAQs should show numbers in lists
+          _showQuestionNumbers: true, // Official FAQs should show numbers in lists
           createdAt,
           lastUpdatedAt,
-          isNew: isNew(createdAt),
-          recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+          _isNew: isNew(createdAt),
+          _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
         };
 
         // Add to parent
@@ -431,38 +444,39 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
         // Create FAQ item
         const faqNumber = section.number.replace(/\./g, '-');
         const faqId = `official/faq_${faqNumber}`;
-        const faqPermalink = `/faq/${ faqId }/`;
+        const faqPermalink = `/faq/${faqId}/`;
 
         // Get FAQ config for related issues
         const currentFaqConfig = faqConfig[section.number];
         const relatedIssues = currentFaqConfig && currentFaqConfig.relatedIssues.join(', ') || "";
         currentFaq = {
           id: faqId,
-          category,
+          _linkResolutionContext: category,
           type: FAQ,
           status: "official",
-          pageTitle: section.title,
+          _pageTitle: section.title,
           question: section.title, // Use title without number as default
           questionNumber: section.number,
           answer: "",
           parents: [],
-          listed: true,
+          _listed: true,
           permalink: faqPermalink,
           author: "European Union",
-          license: "CC-BY 4.0",
+          license: "CC-BY-4.0",
           licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
           srcUrl: "https://ec.europa.eu/newsroom/dae/redirection/document/122331",
           source: null, // Will be set after page range is determined
           disclaimer: disclaimer, // Add disclaimer to all EU FAQs
+          disclaimerHtml: renderInlineMarkdown(disclaimer),
           relatedIssues: parseRelatedIssues(relatedIssues),
           guidanceId: false,
           footnotes: [],
-          pageStart,
-          pageEnd: null, // Will be set when content is processed
+          _pageStart,
+          _pageEnd: null, // Will be set when content is processed
           createdAt,
           lastUpdatedAt,
-          isNew: isNew(createdAt),
-          recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+          _isNew: isNew(createdAt),
+          _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
         };
       }
     } else if (block.type === _PARAGRAPH && currentFaq) {
@@ -473,13 +487,13 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
       if (block.footnotes) {
         currentFaq.footnotes.push(...block.footnotes);
       }
-      currentFaq.pageEnd = block.pageEnd;
+      currentFaq._pageEnd = block._pageEnd;
     } else if (block.type === _LIST_ITEM && currentFaq) {
       currentFaq.answer += block.text + "\n";
       if (block.footnotes) {
         currentFaq.footnotes.push(...block.footnotes);
       }
-      currentFaq.pageEnd = block.pageEnd;
+      currentFaq._pageEnd = block._pageEnd;
     }
   });
 
@@ -504,10 +518,9 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
     }
   });
 
-
-  return { lists, faqs, rootList: pdfParentList };
+  return {lists, faqs, rootList: pdfParentList};
 }
 
 
 // Export for use in other scripts
-module.exports = { parsePDFFAQs };
+module.exports = {parsePDFFAQs};

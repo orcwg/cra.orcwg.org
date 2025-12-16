@@ -1,24 +1,24 @@
 ---
 layout: layout.njk
 pagination:
-  data: data.guidance
+  data: data.guidanceRequests
   size: 1
   alias: item
 permalink: "{{ item.permalink }}"
 eleventyComputed:
-  title: "{{ item.pageTitle }}"
+  title: "{{ item._pageTitle }}"
 ---
 
 <article class="section-card">
   <h1 class="section-header">{{ item.title or 'Pending Guidance' }}</h1>
 
-  {{ item.body | markdown | safe }}
+  {{ item.bodyHtml | safe }}
 
   {% if item.relatedFaqs and item.relatedFaqs.length > 0 %}
   <h2>Related FAQs</h2>
   <ul>
     {% for faq in item.relatedFaqs %}
-    <li><a href="{{ faq.permalink }}">{{ faq.question | markdownInline | safe }}</a></li>
+    <li><a href="{{ faq.permalink }}">{{ faq.questionHtml | safe }}</a></li>
     {% endfor %}
   </ul>
 

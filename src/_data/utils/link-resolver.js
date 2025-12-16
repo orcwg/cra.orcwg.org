@@ -4,8 +4,8 @@
  * Converts custom wiki-style markdown syntax to standard markdown links.
  * This module handles:
  * - [[Article 17]] → CRA legislation links
- * - [[category/filename]] → Internal FAQ links
- * - [[category]] → List links
+ * - [[linkResolutionContext/filename]] → Internal FAQ links
+ * - [[linkResolutionContext]] → List links
  * - ../relative/path.md → Relative markdown links
  */
 
@@ -26,12 +26,12 @@ function mdLink(text, url, title) {
  * Resolve all custom link syntax in markdown content
  *
  * @param {string} markdown - Raw markdown content with custom syntax
- * @param {string} category - Category for resolving relative links
+ * @param {string} linkResolutionContext - Context path for resolving relative markdown links
  * @param {Object} internalLinks - Index of internal FAQ/list links
  * @param {Object} craReferences - CRA article/annex/recital titles
  * @returns {string} Markdown with resolved standard links
  */
-function resolveLinks(markdown, category, internalLinks, craReferences, caller) {
+function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferences, caller) {
   if (!markdown) return markdown;
 
   let result = markdown;
@@ -55,7 +55,7 @@ function resolveLinks(markdown, category, internalLinks, craReferences, caller) 
     return match;
   });
 
-  if (category === 'official') {
+  if (linkResolutionContext === 'official') {
 
     // Convert _4.5.1 Question title?_ patterns (Official EU FAQ cross-references)
     result = result.replace(/_(\d+(?:\.\d+)*)\s+([^_]+)_/g, (match, number, title) => {
@@ -63,11 +63,11 @@ function resolveLinks(markdown, category, internalLinks, craReferences, caller) 
       const faqId = `official/faq_${number.replace(/\./g, '-')}`;
       const faq = internalLinks?.[faqId];
       if (faq) {
-        return mdLink(`_${number} ${title}_`, faq.permalink, `🇪🇺 Official European Commission FAQ: ${ faq.pageTitle }`);
+        return mdLink(`_${number} ${title}_`, faq.permalink, `🇪🇺 Official European Commission FAQ: ${faq._pageTitle}`);
       }
       return match; // Return original if not found
     });
-    
+
     // Convert parenthetical references to wiki-style syntax, then let existing patterns handle them
 
     // Natural language legal references (only for official EU FAQs) - BEFORE wiki patterns
@@ -106,19 +106,19 @@ function resolveLinks(markdown, category, internalLinks, craReferences, caller) 
     return mdLink(`Recital ${num}`, `${CRA_BASE_URL}#rct_${num}`, `⚖️ Recital ${num}`);
   });
 
-  // 4. Convert [[category/filename]] patterns (FAQ references)
+  // 4. Convert [[linkResolutionContext/filename]] patterns (FAQ references)
   result = result.replace(/\[\[([a-z0-9-]+\/[a-z0-9-]+)\]\]/gi, (match, faqId) => {
     const faq = internalLinks?.[faqId];
     if (faq) {
-      return mdLink(faq.pageTitle, faq.permalink, `💬 FAQ: ${faq.pageTitle}`);
+      return mdLink(faq._pageTitle, faq.permalink, `💬 FAQ: ${faq._pageTitle}`);
     }
     return match;
   });
 
 
-  // 5. Convert [[category]] patterns (list references)
-  result = result.replace(/\[\[([a-z0-9-]+)\]\]/gi, (match, categoryName) => {
-    const listId = `lists/${categoryName}`;
+  // 5. Convert [[linkResolutionContext]] patterns (list references)
+  result = result.replace(/\[\[([a-z0-9-]+)\]\]/gi, (match, linkResolutionContext) => {
+    const listId = `lists/${linkResolutionContext}`;
     const list = internalLinks?.[listId];
     if (list) {
       const icon = list.icon ? `${list.icon} ` : '';
@@ -129,9 +129,9 @@ function resolveLinks(markdown, category, internalLinks, craReferences, caller) 
   });
 
   // 6. Convert relative links to files (*.md or other extensions, inline style)
-  if (category) {
+  if (linkResolutionContext) {
     result = result.replace(/\[([^\]]+)\]\((\.\.?\/[^)]+)\)/g, (match, linkText, href) => {
-      const currentPath = `faq/${category}`;
+      const currentPath = `faq/${linkResolutionContext}`;
       const resolvedPath = path.posix.resolve('/', currentPath, href);
 
       const pathMatch = resolvedPath.match(/^\/faq\/([^/]+)\/(.+)\.(md|yml)$/);
@@ -148,8 +148,8 @@ function resolveLinks(markdown, category, internalLinks, craReferences, caller) 
         if (targetId) {
           const item = internalLinks?.[targetId];
           if (item) {
-            if (item.pageTitle) {
-              return mdLink(linkText, item.permalink, `💬 FAQ: ${item.pageTitle}`);
+            if (item._pageTitle) {
+              return mdLink(linkText, item.permalink, `💬 FAQ: ${item._pageTitle}`);
             } else if (item.title) {
               return mdLink(linkText, item.permalink, `💬 FAQ list: ${item.title}`);
             }
@@ -166,7 +166,7 @@ function resolveLinks(markdown, category, internalLinks, craReferences, caller) 
 
     // Match: ^[label]: ./path
     result = result.replace(/^\[([^\]]+)\]:\s*(\.\.?\/[^\s]+)(\s|$)/gim, (match, label, href, _whitespace) => {
-      const currentPath = `faq/${category}`;
+      const currentPath = `faq/${linkResolutionContext}`;
       const resolvedPath = path.posix.resolve('/', currentPath, href);
 
       // Only process .md and .yml files (FAQs, guidance requests and Lists)
@@ -187,8 +187,8 @@ function resolveLinks(markdown, category, internalLinks, craReferences, caller) 
             // Store for later replacement
             refDefinitions.set(label.toLowerCase(), {
               url: item.permalink,
-              title: item.pageTitle || item.title,
-              isPage: !!item.pageTitle
+              title: item._pageTitle || item.title,
+              isPage: !!item._pageTitle
             });
             return ''; // Remove definition line
           }
