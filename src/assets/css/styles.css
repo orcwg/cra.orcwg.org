@@ -638,11 +638,12 @@ a.action-button {
 }
 
 .faq-accordion-item article {
-    padding: 20px;
+    /* No padding - let the inner div handle it */
 }
 
 .faq-accordion-item article>div {
     overflow: hidden;
+    padding: 20px;
 }
 
 .faq-accordion-item article p:first-child {
