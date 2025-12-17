@@ -89,7 +89,7 @@ function extractAttributesAndRelationships(obj, apiBase, domain) {
 
   for (const [key, value] of Object.entries(obj)) {
     // Skip internal/API-specific fields (prefixed with _)
-    if (key.startsWith('_')) continue;
+    if (key.startsWith("_")) continue;
     // Skip top-level type and id (handled at resource level)
     if (key === 'type' || key === 'id') continue;
     // Skip fields handled in links object
