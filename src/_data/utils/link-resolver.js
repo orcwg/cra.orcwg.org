@@ -60,7 +60,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
     // Convert _4.5.1 Question title?_ patterns (Official EU FAQ cross-references)
     result = result.replace(/_(\d+(?:\.\d+)*)\s+([^_]+)_/g, (match, number, title) => {
       // Look for FAQ with matching question number
-      const faqId = `official/faq_${number.replace(/\./g, '-')}`;
+      const faqId = `official/faq_${number.replace(/\./g, "-")}`;
       const faq = internalLinks?.[faqId];
       if (faq) {
         return mdLink(`_${number} ${title}_`, faq.permalink, `🇪🇺 Official European Commission FAQ: ${faq._pageTitle}`);
@@ -132,7 +132,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
   if (linkResolutionContext) {
     result = result.replace(/\[([^\]]+)\]\((\.\.?\/[^)]+)\)/g, (match, linkText, href) => {
       const currentPath = `faq/${linkResolutionContext}`;
-      const resolvedPath = path.posix.resolve('/', currentPath, href);
+      const resolvedPath = path.posix.resolve("/", currentPath, href);
 
       const pathMatch = resolvedPath.match(/^\/faq\/([^/]+)\/(.+)\.(md|yml)$/);
       if (pathMatch) {
@@ -167,7 +167,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
     // Match: ^[label]: ./path
     result = result.replace(/^\[([^\]]+)\]:\s*(\.\.?\/[^\s]+)(\s|$)/gim, (match, label, href, _whitespace) => {
       const currentPath = `faq/${linkResolutionContext}`;
-      const resolvedPath = path.posix.resolve('/', currentPath, href);
+      const resolvedPath = path.posix.resolve("/", currentPath, href);
 
       // Only process .md and .yml files (FAQs, guidance requests and Lists)
       const pathMatch = resolvedPath.match(/^\/faq\/([^/]+)\/(.+)\.(md|yml)$/);

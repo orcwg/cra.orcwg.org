@@ -285,16 +285,16 @@ async function parse(pdf) {
 
 // Helper function to build hierarchical list ID
 function buildListId(number) {
-  const parts = number.split('.');
+  const parts = number.split(".");
   const pathParts = [craConfig[""].slug]; // Start with root
 
   for (let i = 1; i <= parts.length; i++) {
-    const partialSection = parts.slice(0, i).join('.');
+    const partialSection = parts.slice(0, i).join(".");
     const config = craConfig[partialSection];
     pathParts.push(config.slug);
   }
 
-  return pathParts.join('/');
+  return pathParts.join("/");
 }
 
 function formatPageSource(_pageStart, _pageEnd) {
@@ -347,7 +347,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
 
     const number = match[1];
     const title = match[2].trim();
-    const level = number.split('.').length;
+    const level = number.split(".").length;
 
     const section = {
       block,
@@ -366,7 +366,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
   sections.forEach((section, index) => {
     const hasDeepChildren = sections.slice(index + 1).some(nextSection =>
       nextSection.level > section.level &&
-      nextSection.number.startsWith(section.number + '.')
+      nextSection.number.startsWith(section.number + ".")
     );
 
     section.type = hasDeepChildren ? LIST : FAQ;
@@ -442,7 +442,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
         itemStack.push(newList);
       } else {
         // Create FAQ item
-        const faqNumber = section.number.replace(/\./g, '-');
+        const faqNumber = section.number.replace(/\./g, "-");
         const faqId = `official/faq_${faqNumber}`;
         const faqPermalink = `/faq/${faqId}/`;
 

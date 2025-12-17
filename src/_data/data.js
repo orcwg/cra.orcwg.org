@@ -8,14 +8,14 @@ const markdownIt = require("markdown-it");
 const plainTextPlugin = require("markdown-it-plain-text");
 const markdownItFootnote = require("markdown-it-footnote");
 const yaml = require("js-yaml");
-const { resolveLinks } = require("./utils/link-resolver.js");
-const { isNew, recentlyUpdated, NEW_CONTENT_THRESHOLD, RECENTLY_UPDATED_THRESHOLD } = require("./utils/timestamp-helpers.js");
-const { parseRelatedIssues } = require("./utils/issue-parser.js");
+const {resolveLinks} = require("./utils/link-resolver.js");
+const {isNew, recentlyUpdated, NEW_CONTENT_THRESHOLD, RECENTLY_UPDATED_THRESHOLD} = require("./utils/timestamp-helpers.js");
+const {parseRelatedIssues} = require("./utils/issue-parser.js");
 const craReferences = require("./craReferences.json");
-const { execSync } = require("child_process");
-const { parsePDFFAQs } = require("./parse-official-faqs-pdf.js");
+const {execSync} = require("child_process");
+const {parsePDFFAQs} = require("./parse-official-faqs-pdf.js");
 const apiFormatter = require("./utils/api-formatter.js");
-const { API_CONFIG, RESOURCES } = require("./api.json");
+const {API_CONFIG, RESOURCES} = require("./api.json");
 
 // ============================================================================
 // Constants
@@ -83,7 +83,7 @@ function renderInlineMarkdown(content) {
  * Loads markdown plugins before rendering
  */
 async function resolveLinksThenRenderMarkdown(items, sourceField, targetField, internalLinkIndex) {
-  const { default: markdownItGitHubAlerts } = await import("markdown-it-github-alerts");
+  const {default: markdownItGitHubAlerts} = await import("markdown-it-github-alerts");
   md = md.use(markdownItGitHubAlerts);
 
   for (const item of items) {
@@ -126,7 +126,7 @@ function extractGuidanceText(content) {
     .slice(guidanceStart + 1, endIndex)
     .filter(line => line);
 
-  const rawText = guidanceLines.join(' ');
+  const rawText = guidanceLines.join(" ");
   return markdownToPlainText(rawText).trim();
 }
 
@@ -156,7 +156,7 @@ function generateTimestamps(faqs) {
     createdAt = new Date(Math.max(...faqs.map(faq => faq.createdAt.getTime())));
     lastUpdatedAt = new Date(Math.max(...faqs.map(faq => faq.lastUpdatedAt.getTime())));
   }
-  return { createdAt, lastUpdatedAt };
+  return {createdAt, lastUpdatedAt};
 }
 
 // ============================================================================
@@ -177,15 +177,15 @@ const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
 
   // Process in reverse order to get creation dates (oldest first)
   for (const line of lines.reverse()) {
-    if (line.includes('|')) {
+    if (line.includes("|")) {
       // This is a date line
-      currentDate = new Date(line.split('|')[0]);
+      currentDate = new Date(line.split("|")[0]);
     } else if (line && currentDate) {
       // This is a file path
       const existing = timestampMap.get(line);
       if (!existing) {
         // First time seeing this file (creation)
-        timestampMap.set(line, { createdAt: currentDate, lastUpdatedAt: currentDate });
+        timestampMap.set(line, {createdAt: currentDate, lastUpdatedAt: currentDate});
       } else {
         // Update last modified date
         existing.lastUpdatedAt = currentDate;
@@ -207,7 +207,7 @@ async function getFile(file) {
   const rawContent = await fs.readFile(fullPath, "utf-8");
   const relativePath = path.relative(CACHE_DIR, fullPath);
   const posixPath = toPosixPath(relativePath);
-  const { createdAt, lastUpdatedAt } = getTimestampsForObj(posixPath);
+  const {createdAt, lastUpdatedAt} = getTimestampsForObj(posixPath);
 
   return {
     // Internal fields (prefixed with _)
@@ -361,7 +361,7 @@ function createGuidanceRequest(file) {
 
 function normalizeReferenceIds(relativeIds = [], listId) {
   return relativeIds.map(id => {
-    if (!listId || id.includes('/')) {
+    if (!listId || id.includes("/")) {
       return id;
     }
     return `${listId}/${id}`;
@@ -421,7 +421,7 @@ async function processAcknowledgements(authorsPath, contribPath) {
   const faqAuthors = extractNames(content);
   content = await fetchAcknowledgementsFile(contribPath);
   const websiteContributors = extractNames(content);
-  return { faqAuthors, websiteContributors };
+  return {faqAuthors, websiteContributors};
 }
 
 function extractNames(content) {
@@ -482,7 +482,7 @@ const DYNAMIC_LISTS = [
   {
     id: 'new',
     title: 'New FAQs',
-    icon: '🌟',
+    icon: "🌟",
     description: `FAQs added within the last ${NEW_CONTENT_THRESHOLD} days`,
     emptyMsg: "It seems there aren't any newly created FAQs",
     insertAt: 'top',
@@ -494,7 +494,7 @@ const DYNAMIC_LISTS = [
   {
     id: 'recently-updated',
     title: 'Recently Updated FAQs',
-    icon: '💫',
+    icon: "💫",
     description: `FAQs updated within the last ${RECENTLY_UPDATED_THRESHOLD} days`,
     emptyMsg: "It seems there aren't any recently updated FAQs",
     insertAt: 'top',
@@ -518,7 +518,7 @@ const DYNAMIC_LISTS = [
   {
     id: 'unlisted',
     title: 'Unlisted FAQs',
-    icon: '❌',
+    icon: "❌",
     description: 'FAQs not yet assigned to any list',
     emptyMsg: 'Great news! All FAQs are properly assigned to lists. There are currently no unlisted FAQs.',
     insertAt: 'bottom',
@@ -569,7 +569,7 @@ function createAndInsertDynamicLists(lists, rootList, faqs) {
     }
 
     // Calculate metadata from children
-    const { createdAt, lastUpdatedAt } = generateTimestamps(list.children);
+    const {createdAt, lastUpdatedAt} = generateTimestamps(list.children);
     list.createdAt = createdAt;
     list.lastUpdatedAt = lastUpdatedAt;
     list._isNew = isNew(createdAt);
@@ -618,14 +618,14 @@ function countListChildElementsRecursively(list) {
     }
   });
 
-  return { faqCount, listCount };
+  return {faqCount, listCount};
 }
 
 // Format count text for display
 function createCountText(faqCount, listCount) {
-  const faqText = `${faqCount} FAQ${faqCount !== 1 ? 's' : ''}`;
+  const faqText = `${faqCount} FAQ${faqCount !== 1 ? "s" : ''}`;
   if (listCount > 0) {
-    const listText = `${listCount} list${listCount !== 1 ? 's' : ''}`;
+    const listText = `${listCount} list${listCount !== 1 ? "s" : ''}`;
     return `${faqText} organised in ${listText}`;
   }
   return faqText;
@@ -736,7 +736,7 @@ async function fetchOfficialFAQs(faqs, lists, rootList) {
 
 // Orchestrate the complete data processing pipeline
 async function processAllContent() {
-  const entries = await fs.readdir(FAQ_DIR, { withFileTypes: true, recursive: true });
+  const entries = await fs.readdir(FAQ_DIR, {withFileTypes: true, recursive: true});
 
   let rootList;
 
@@ -753,7 +753,7 @@ async function processAllContent() {
       const file = await getREADME(entry);
       const list = createList(file);
       lists.push(list);
-      if (list.id === ROOT_LIST_ID) { rootList = list; }
+      if (list.id === ROOT_LIST_ID) {rootList = list;}
     }
   }
 
@@ -787,9 +787,9 @@ async function processAllContent() {
   // Generate API documents using configuration from api.js
   const api = apiFormatter.generateApiDocuments(
     {
-      FAQ: { ...RESOURCES.FAQ, data: faqs },
-      GUIDANCE_REQUEST: { ...RESOURCES.GUIDANCE_REQUEST, data: guidanceRequests },
-      LIST: { ...RESOURCES.LIST, data: lists }
+      FAQ: {...RESOURCES.FAQ, data: faqs},
+      GUIDANCE_REQUEST: {...RESOURCES.GUIDANCE_REQUEST, data: guidanceRequests},
+      LIST: {...RESOURCES.LIST, data: lists}
     },
     API_CONFIG
   );
