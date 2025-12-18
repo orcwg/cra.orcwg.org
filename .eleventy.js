@@ -34,6 +34,11 @@ module.exports = async function (eleventyConfig) {
     return md.renderInline(content || "");
   });
 
+  // Add JSON stringification filter for API responses
+  eleventyConfig.addFilter("toJson", (data) => {
+    return JSON.stringify(data, null, 4);
+  });
+
   // Add build timestamp in website footer
   eleventyConfig.addGlobalData("build", () => {
     const now = new Date();

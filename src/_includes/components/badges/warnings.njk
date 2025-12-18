@@ -1,8 +1,8 @@
-{% if faq.needsRefactoring %}
+{% if faq._needsRefactoring %}
   <data class="badge warning" data-emoji="🚧" value="refactor-needed">Needs Refactoring</data>
 {% endif %}
 
-{% if faq.answerMissing %}
+{% if faq._answerMissing %}
   <data class="badge danger" data-emoji="❌" value="missing-answer">Missing Answer</data>
 {% endif %}
 

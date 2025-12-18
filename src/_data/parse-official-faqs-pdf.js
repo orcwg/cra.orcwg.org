@@ -1,7 +1,16 @@
 const fs = require('fs');
 const path = require('path');
+const markdownIt = require("markdown-it");
 const { isNew, recentlyUpdated } = require('./utils/timestamp-helpers.js');
 const { parseRelatedIssues } = require('./utils/issue-parser.js');
+
+// Initialize markdown parser for rendering inline markdown
+const mdInline = new markdownIt({html: true});
+
+function renderInlineMarkdown(content) {
+  if (!content) return "";
+  return mdInline.renderInline(content);
+}
 
 // Load configuration for list metadata
 const craConfigPath = path.join(__dirname, 'official-faqs-config-lists.json');
@@ -135,7 +144,7 @@ async function parse(pdf) {
         if (IN_ITALICS) {
           currentBlock.text = currentBlock.text.trim() + "_";
         }
-        currentBlock.pageEnd = pageNum;
+        currentBlock._pageEnd = pageNum;
         blocks.push(currentBlock);
         currentBlock = null;
       }
@@ -146,7 +155,7 @@ async function parse(pdf) {
     function flushFootnote(source) {
       // console.log("flush footnote", source)
       if (currentFootnoteBlock) {
-        currentFootnoteBlock.pageEnd = pageNum;
+        currentFootnoteBlock._pageEnd = pageNum;
         footnotes[currentFootnoteBlock.number] = currentFootnoteBlock;
         currentFootnoteBlock = null;
       }
@@ -154,8 +163,8 @@ async function parse(pdf) {
     
     function Block(type, text = "") {
       return {
-        pageStart: pageNum,
-        pageEnd: null,
+        _pageStart: pageNum,
+        _pageEnd: null,
         type,
         text
       }
@@ -288,17 +297,16 @@ function buildListId(number) {
   return pathParts.join('/');
 }
 
-function formatPageSource(pageStart, pageEnd) {
-  const pageRange = pageStart === pageEnd
-    ? pageStart
-    : `${ pageStart }–${ pageEnd }`;
+function formatPageSource(_pageStart, _pageEnd) {
+  const pageRange = _pageStart === _pageEnd
+    ? _pageStart
+    : `${ _pageStart }–${ _pageEnd }`;
   return `“FAQs on the Cyber Resilience Act” p.${ pageRange } (PDF)`;
 }
 
 function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
   const lists = [];
   const faqs = [];
-  const category = "official";
 
   const paragraphs = blocks.filter(block => block.type === _PARAGRAPH);
   const disclaimer = paragraphs[2].text;
@@ -309,21 +317,22 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
     id: "official",
     type: LIST,
     title: rootConfig.title,
-    pageTitle: rootConfig.title,
+    _pageTitle: rootConfig.title,
     icon: rootConfig.icon,
-    description: "**Message from the European Commission**: _“" + paragraphs[1].text.trim() + "”_",
+    description: "**Message from the European Commission**: _\"" + paragraphs[1].text.trim() + "\"_",
+    descriptionHtml: "",
     permalink: `/faq/${rootConfig.slug}/`,
     children: [],
     parents: [],
     faqCount: 0,
     listCount: 0,
     countText: "",
-    level: 0,
-    showQuestionNumbers: true,
+    _level: 0,
+    _showQuestionNumbers: true,
     createdAt,
     lastUpdatedAt,
-    isNew: isNew(createdAt),
-    recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+    _isNew: isNew(createdAt),
+    _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
   };
 
   lists.push(pdfParentList);
@@ -336,13 +345,13 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
 
       const number = match[1];
       const title = match[2].trim();
-      const level = number.split('.').length;
+      const _level = number.split('.').length;
 
       const section = {
         block,
         number,
         title,
-        level,
+        _level,
         type: null // Will be determined
       };
 
@@ -354,7 +363,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
   // Determine types: leaf (FAQ) vs branch (list) based on whether there are deeper children
   sections.forEach((section, index) => {
     const hasDeepChildren = sections.slice(index + 1).some(nextSection =>
-      nextSection.level > section.level &&
+      nextSection._level > section._level &&
       nextSection.number.startsWith(section.number + '.')
     );
 
@@ -371,7 +380,7 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
     if (!currentFaq) return;
 
     // Set source with page numbering
-    currentFaq.source = formatPageSource(currentFaq.pageStart, currentFaq.pageEnd);
+    currentFaq.source = formatPageSource(currentFaq._pageStart, currentFaq._pageEnd);
 
     const parentList = itemStack[itemStack.length - 1];
     parentList.children.push(currentFaq);
@@ -385,13 +394,13 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
     if (block.type === _TITLE) {
       if (!block.section) return; // Skip non-numbered titles
       const section = block.section;
-      const { text, pageStart } = section.block;
+      const { text, _pageStart } = section.block;
 
       // Finalize previous FAQ if exists
       finalizeCurrentFaq();
 
       // Adjust stack to current level (account for PDF parent at level 0)
-      while (itemStack.length > section.level) {
+      while (itemStack.length > section._level) {
         itemStack.pop();
       }
 
@@ -404,21 +413,22 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
           id: listId,
           type: LIST,
           title: text,
-          pageTitle: section.title,
+          _pageTitle: section.title,
           icon: config.icon,
           description: config.description,
+          descriptionHtml: "",
           permalink: `/faq/${listId}/`,
           children: [],
           parents: [],
           faqCount: 0,
           listCount: 0,
           countText: "",
-          level: section.level,
-          showQuestionNumbers: true, // Official FAQs should show numbers in lists
+          _level: section._level,
+          _showQuestionNumbers: true, // Official FAQs should show numbers in lists
           createdAt,
           lastUpdatedAt,
-          isNew: isNew(createdAt),
-          recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+          _isNew: isNew(createdAt),
+          _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
         };
 
         // Add to parent
@@ -438,31 +448,34 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
         const relatedIssues = currentFaqConfig && currentFaqConfig.relatedIssues.join(', ') || "";
         currentFaq = {
           id: faqId,
-          category,
           type: FAQ,
           status: "official",
-          pageTitle: section.title,
-          question: section.title, // Use title without number as default
+          _pageTitle: section.title,
+          question: section.title,
+          questionHtml: renderInlineMarkdown(section.title),
           questionNumber: section.number,
           answer: "",
+          answerHtml: "",
           parents: [],
-          listed: true,
+          _listed: true,
           permalink: faqPermalink,
+          _linkResolutionContext: 'official',
           author: "European Union",
-          license: "CC-BY 4.0",
+          license: "CC-BY-4.0",
           licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
           srcUrl: "https://ec.europa.eu/newsroom/dae/redirection/document/122331",
-          source: null, // Will be set after page range is determined
-          disclaimer: disclaimer, // Add disclaimer to all EU FAQs
+          source: null,
+          disclaimer: disclaimer,
+          disclaimerHtml: renderInlineMarkdown(disclaimer),
           relatedIssues: parseRelatedIssues(relatedIssues),
           guidanceId: false,
           footnotes: [],
-          pageStart,
-          pageEnd: null, // Will be set when content is processed
+          _pageStart,
+          _pageEnd: null,
           createdAt,
           lastUpdatedAt,
-          isNew: isNew(createdAt),
-          recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+          _isNew: isNew(createdAt),
+          _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
         };
       }
     } else if (block.type === _PARAGRAPH && currentFaq) {
@@ -473,13 +486,13 @@ function buildTree(blocks, footnotes, createdAt, lastUpdatedAt) {
       if (block.footnotes) {
         currentFaq.footnotes.push(...block.footnotes);
       }
-      currentFaq.pageEnd = block.pageEnd;
+      currentFaq._pageEnd = block._pageEnd;
     } else if (block.type === _LIST_ITEM && currentFaq) {
       currentFaq.answer += block.text + "\n";
       if (block.footnotes) {
         currentFaq.footnotes.push(...block.footnotes);
       }
-      currentFaq.pageEnd = block.pageEnd;
+      currentFaq._pageEnd = block._pageEnd;
     }
   });
 
