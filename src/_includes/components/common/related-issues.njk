@@ -13,8 +13,8 @@
   <span>Related issues:</span>
   <div class="issue-pills">
     {% for issue in relatedIssues %}
-    <a href="{{ issue.url }}" class="issue-pill" target="_blank" rel="noopener" title="View related issue #{{ issue.number }}">
-      #{{ issue.number }}
+    <a href="{{ issue.url }}" class="issue-pill" target="_blank" rel="noopener" title="View related issue #{{ issue.id }}">
+      #{{ issue.id }}
     </a>
     {% endfor %}
   </div>

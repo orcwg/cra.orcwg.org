@@ -18,8 +18,9 @@ function parseRelatedIssues(relatedIssues) {
   // Transform URLs to objects with url and number
 
   return issueUrls.map(url => ({
+    type: "github",
     url: url,
-    number: extractIssueNumber(url)
+    id: extractIssueNumber(url)
   }));
 }
 

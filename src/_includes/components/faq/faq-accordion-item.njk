@@ -12,16 +12,16 @@
 <details class="faq-accordion-item" {% if open %}{{ "open" }}{% endif %}>
   <summary>
     <span class="question-text">
-      {% if faq.questionNumber and list.showQuestionNumbers %}
+      {% if faq.questionNumber and list._showQuestionNumbers %}
         {{ faq.questionNumber }}
       {% endif %}
-      {{ faq.question | markdownInline | safe }}
+      {{ faq.questionHtml | safe }}
     </span>
   </summary>
 
   <article>
     <div>
-      {{ faq.answer | markdown | safe }}
+      {{ faq.answerHtml | safe }}
 
       {% set item = faq %}
       {% include "components/faq/faq-attribution.njk" %}

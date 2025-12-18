@@ -10,10 +10,10 @@ pagination:
   addAllPagesToCollections: true
 permalink: "{{ list.permalink }}"
 eleventyComputed:
-  title: "{{ list.pageTitle }}"
+  title: "{{ list._pageTitle }}"
 ---
 
-{% if list.isRoot %}
+{% if list._isRoot %}
   {# Root list - show items directly without context header #}
   {% include "components/faq/list-flat-items.njk" %}
 {% else %}
