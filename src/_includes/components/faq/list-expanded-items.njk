@@ -27,10 +27,10 @@
       <li>
         <a href="{{ faq.permalink }}">
           <span class="question-text">
-            {% if faq.questionNumber and currentList.showQuestionNumbers %}
+            {% if faq.questionNumber and currentList._showQuestionNumbers %}
               {{ faq.questionNumber }}
             {% endif %}
-            {{ faq.question | markdownInline | safe }}
+            {{ faq.questionHtml | safe }}
           </span>
           <span class="badges" hidden>{% include "components/faq/faq-badges.njk" %}</span>
         </a>

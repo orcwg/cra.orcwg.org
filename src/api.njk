@@ -1,0 +1,9 @@
+---
+pagination:
+  data: data.api
+  size: 1
+  alias: apiPage
+permalink: "{{ apiPage.endpoint }}"
+eleventyExcludeFromCollections: true
+---
+{{ apiPage.payload | toJson | safe }}
