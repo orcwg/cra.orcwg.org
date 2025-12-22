@@ -56,73 +56,39 @@ function attachAdminToggle() {
 // ACCORDION ANIMATION SYSTEM
 // ============================================================================
 
-// Animation timing and easing constants
-const ANIMATION_DURATION = 300;        // Duration in milliseconds
-const CARET_ROTATION = 180;            // Caret rotation in degrees
-
-// Easing function constants (cubic ease-in-out)
-const EASE_MIDPOINT = 0.8;             // Toggle point between ease-in and ease-out
-const EASE_IN_SPEED = 2;               // Cubic acceleration multiplier (4 * t^3)
-const EASE_OUT_SCALE = 0.5;            // Ease-out deceleration multiplier (0.5 * p^3 + 1)
-
-// Easing function: Smooth cubic ease-in-out
-// ============================================
-// Standard cubic bezier easing that transitions smoothly at the midpoint
-// First half uses cubic ease-in, second half uses cubic ease-out
-// Formula is continuous and smooth throughout
-
-function easeInOutCubic(t) {
-    if (t < EASE_MIDPOINT) {
-        // First half: accelerate in
-        return EASE_IN_SPEED * t * t * t;
-    } else {
-        // Second half: decelerate out
-        const p = 2 * t - 2;
-        return EASE_OUT_SCALE * p * p * p + 1;
-    }
-}
+// Custom easing function for the accordion animation, slow start and snappy end
+const easeInOutCubic = t => t < 0.8 ? 2 * t ** 3 : 0.5 * (2 * t - 2) ** 3 + 1;
 
 function animateAccordion(details, isOpening) {
     const article = details.querySelector('article');
     const summary = details.querySelector('summary');
     if (!article) return Promise.resolve();
 
-    article.style.overflow = 'hidden';
+    const startHeight = isOpening ? 0 : article.scrollHeight;
+    const endHeight = isOpening ? article.scrollHeight : 0;
+    const startTime = Date.now();
 
+    article.style.overflow = 'hidden';
     if (isOpening) {
         article.style.height = '0px';
         details.open = true;
     }
 
-    const startHeight = isOpening ? 0 : article.scrollHeight;
-    const endHeight = isOpening ? article.scrollHeight : 0;
-    const startTime = Date.now();
-
     return new Promise(resolve => {
         const frame = () => {
-            const elapsed = Date.now() - startTime;
-            const rawProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
-            const progress = easeInOutCubic(rawProgress);
+            const t = Math.min((Date.now() - startTime) / 300, 1);
+            const progress = t < 0.8 ? 2 * t ** 3 : 0.5 * (2 * t - 2) ** 3 + 1;
 
-            const currentHeight = startHeight + (endHeight - startHeight) * progress;
-            article.style.height = currentHeight + 'px';
-
-            if (summary) {
-                const rotation = isOpening ? -CARET_ROTATION * progress : -CARET_ROTATION * (1 - progress);
-                summary.style.setProperty('--caret-rotation', rotation + 'deg');
-            }
+            article.style.height = (startHeight + (endHeight - startHeight) * progress) + 'px';
+            summary?.style.setProperty('--caret-rotation', (isOpening ? -180 * progress : -180 * (1 - progress)) + 'deg');
 
             if (progress < 1) {
                 requestAnimationFrame(frame);
             } else {
                 article.style.height = endHeight === 0 ? '0px' : '';
                 article.style.overflow = '';
-                if (summary) {
-                    summary.style.setProperty('--caret-rotation', isOpening ? (-CARET_ROTATION) + 'deg' : '0deg');
-                }
-                if (!isOpening) {
-                    details.open = false;
-                }
+                summary?.style.setProperty('--caret-rotation', (isOpening ? -180 : 0) + 'deg');
+                if (!isOpening) details.open = false;
                 resolve();
             }
         };
@@ -200,78 +166,43 @@ function initializeCopyLink() {
 function attachAccordionClickHandler() {
     document.addEventListener('click', async function(e) {
         const summary = e.target.closest('summary');
-        if (!summary) return;
+        const details = summary?.closest('details.faq-accordion-item');
+        if (!details || isAnimating) return;
 
-        const details = summary.closest('details.faq-accordion-item');
-        if (!details) return;
-
-        // Prevent concurrent animations
-        if (isAnimating) return;
-
-        // Always prevent default to control opening/closing ourselves
         e.preventDefault();
         e.stopPropagation();
-
         isAnimating = true;
 
         try {
             if (details.open) {
-                // User clicked an open accordion - close it with animation
                 await animateAccordion(details, false);
             } else {
-                // User clicked a closed accordion - close any open ones first with animation
-                const initialScrollY = window.scrollY;
-
                 const openAccordions = Array.from(document.querySelectorAll('details.faq-accordion-item[open]'));
+                const closingInfo = openAccordions.map(a => ({
+                    accordion: a,
+                    isAbove: a.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING,
+                    sizeWhenOpen: a.offsetHeight
+                }));
 
-                // Store info about accordions we're closing BEFORE we close them
-                const closingInfo = openAccordions.map(accordion => {
-                    const isAbove = accordion.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING;
-                    const sizeWhenOpen = accordion.offsetHeight;
-
-                    return {
-                        accordion: accordion,
-                        isAbove: isAbove,
-                        sizeWhenOpen: sizeWhenOpen
-                    };
-                });
-
-                // Close all open accordions in parallel with scroll compensation
+                const initialScrollY = window.scrollY;
                 const startTime = Date.now();
 
-                const scrollCompensationLoop = () => {
-                    const elapsed = Date.now() - startTime;
-                    const rawProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
-                    const progress = easeInOutCubic(rawProgress);
-
-                    // Calculate total height lost so far during the closing animation
-                    let totalHeightLostAbove = 0;
-                    closingInfo.forEach(({isAbove, accordion, sizeWhenOpen}) => {
-                        if (isAbove) {
-                            const currentSize = accordion.offsetHeight;
-                            const heightLost = sizeWhenOpen - currentSize;
-                            totalHeightLostAbove += heightLost;
-                        }
-                    });
-
-                    // Compensate scroll to keep clicked element in same viewport position
+                const compensateScroll = () => {
+                    const progress = easeInOutCubic(Math.min((Date.now() - startTime) / 300, 1));
+                    const heightLost = closingInfo.reduce((sum, {isAbove, accordion, sizeWhenOpen}) =>
+                        sum + (isAbove ? sizeWhenOpen - accordion.offsetHeight : 0), 0);
                     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-                    const targetScroll = Math.max(0, Math.min(initialScrollY - totalHeightLostAbove, maxScroll));
-                    window.scrollTo(0, targetScroll);
+                    window.scrollTo(0, Math.max(0, Math.min(initialScrollY - heightLost, maxScroll)));
 
-                    if (progress < 1) {
-                        requestAnimationFrame(scrollCompensationLoop);
-                    }
+                    if (progress < 1) requestAnimationFrame(compensateScroll);
                 };
 
-                // Start the closing animations, scroll compensation, and opening animation together
                 await Promise.all([
-                    ...openAccordions.map(openDetail => animateAccordion(openDetail, false)),
+                    ...openAccordions.map(a => animateAccordion(a, false)),
                     animateAccordion(details, true),
                     new Promise(resolve => {
-                        requestAnimationFrame(scrollCompensationLoop);
-                        // Wait for animations to complete
-                        setTimeout(resolve, ANIMATION_DURATION);
+                        requestAnimationFrame(compensateScroll);
+                        setTimeout(resolve, 300);
                     })
                 ]);
             }
