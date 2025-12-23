@@ -99,6 +99,62 @@ function animateAccordion(details, isOpening) {
 // Track if an animation is currently running to prevent concurrent animations
 let isAnimating = false;
 
+async function closeAndCompensateScroll(openAccordion, details, sizeWhenOpen) {
+    const initialScrollY = window.scrollY;
+    const startTime = Date.now();
+
+    const compensateScroll = () => {
+        const progress = easeInOutCubic(Math.min((Date.now() - startTime) / 300, 1));
+        const heightLost = sizeWhenOpen - openAccordion.offsetHeight;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        window.scrollTo(0, Math.max(0, Math.min(initialScrollY - heightLost, maxScroll)));
+
+        if (progress < 1) requestAnimationFrame(compensateScroll);
+    };
+
+    await Promise.all([
+        animateAccordion(openAccordion, false),
+        animateAccordion(details, true),
+        new Promise(resolve => {
+            requestAnimationFrame(compensateScroll);
+            setTimeout(resolve, 300);
+        })
+    ]);
+}
+
+function attachAccordionClickHandler() {
+    document.addEventListener('click', async function(e) {
+        const summary = e.target.closest('summary');
+        const details = summary?.closest('details.faq-accordion-item');
+        if (isAnimating) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        isAnimating = true;
+
+        try {
+            if (details.open) { // Closes the clicked accordion if it's already open
+                await animateAccordion(details, false);
+            } else {
+                const openAccordion = document.querySelector('details.faq-accordion-item[open]');
+                if (openAccordion) {
+                    if (openAccordion.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING) { // If there is an open accordion above, close it and compensate scroll.
+                        await closeAndCompensateScroll(openAccordion, details, openAccordion.offsetHeight);
+                    } else { // If the clicked accordion is below the open one, simply close it while opening the clicked accordion.
+                        await Promise.all([
+                            animateAccordion(openAccordion, false),
+                            animateAccordion(details, true)
+                        ]);
+                    }
+                } else { // If there is no open accordion, just open the clicked one.
+                    await animateAccordion(details, true);
+                }
+            }
+        } finally {
+            isAnimating = false;
+        }
+    }, true);
+}
 
 // ============================================================================
 // MERMAID DIAGRAM INITIALIZATION
@@ -163,54 +219,7 @@ function initializeCopyLink() {
 // ACCORDION CLICK HANDLER & SCROLL COMPENSATION
 // ============================================================================
 
-function attachAccordionClickHandler() {
-    document.addEventListener('click', async function(e) {
-        const summary = e.target.closest('summary');
-        const details = summary?.closest('details.faq-accordion-item');
-        if (!details || isAnimating) return;
 
-        e.preventDefault();
-        e.stopPropagation();
-        isAnimating = true;
-
-        try {
-            if (details.open) {
-                await animateAccordion(details, false);
-            } else {
-                const openAccordions = Array.from(document.querySelectorAll('details.faq-accordion-item[open]'));
-                const closingInfo = openAccordions.map(a => ({
-                    accordion: a,
-                    isAbove: a.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING,
-                    sizeWhenOpen: a.offsetHeight
-                }));
-
-                const initialScrollY = window.scrollY;
-                const startTime = Date.now();
-
-                const compensateScroll = () => {
-                    const progress = easeInOutCubic(Math.min((Date.now() - startTime) / 300, 1));
-                    const heightLost = closingInfo.reduce((sum, {isAbove, accordion, sizeWhenOpen}) =>
-                        sum + (isAbove ? sizeWhenOpen - accordion.offsetHeight : 0), 0);
-                    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-                    window.scrollTo(0, Math.max(0, Math.min(initialScrollY - heightLost, maxScroll)));
-
-                    if (progress < 1) requestAnimationFrame(compensateScroll);
-                };
-
-                await Promise.all([
-                    ...openAccordions.map(a => animateAccordion(a, false)),
-                    animateAccordion(details, true),
-                    new Promise(resolve => {
-                        requestAnimationFrame(compensateScroll);
-                        setTimeout(resolve, 300);
-                    })
-                ]);
-            }
-        } finally {
-            isAnimating = false;
-        }
-    }, true);
-}
 
 
 // ============================================================================
