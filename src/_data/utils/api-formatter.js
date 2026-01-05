@@ -137,6 +137,7 @@ function createApiPage(item, collectionName) {
 function createApiArray(dataSources) {
   const apiPages = [];
 
+  // create individual item endpoints
   for (const [collectionName, items] of Object.entries(dataSources)) {
     const pages = items.map(item => createApiPage(item, collectionName));
     apiPages.push(...pages);
@@ -157,6 +158,21 @@ function createApiArray(dataSources) {
       }
     });
   }
+
+  // Create root API endpoint
+  const rootLinks = {};
+  const selfLink = `${API_BASE_URL}/api/${API_VERSION}/index.json`;
+  rootLinks['self'] = selfLink;
+  for (const collectionName of Object.keys(dataSources)) {
+    rootLinks[collectionName] = `${API_BASE_URL}/api/${API_VERSION}/${collectionName}.json`;
+  }
+  apiPages.push({
+    endpoint: `/api/${API_VERSION}/index.json`,
+    payload: {
+      links: rootLinks,
+      data: {}
+    }
+  });
 
   return apiPages;
 }
