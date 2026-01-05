@@ -126,6 +126,9 @@ function attachAccordionClickHandler() {
     document.addEventListener('click', async function(e) {
         const summary = e.target.closest('summary');
         const details = summary?.closest('details.faq-accordion-item');
+
+        // Only handle accordion interactions
+        if (!summary || !details) return;
         if (isAnimating) return;
 
         e.preventDefault();
