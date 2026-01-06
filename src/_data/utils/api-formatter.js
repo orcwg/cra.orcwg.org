@@ -10,8 +10,9 @@ const API_BASE_URL = "https://cra.orcwg.org";
 const API_VERSION = "v0";
 
 // Fields that should be used to build API links (extracted and not included in data)
+// See https://www.iana.org/assignments/link-relations/link-relations.xhtml
 const LINK_FIELDS = {
-  srcUrl: "source",
+  srcUrl: "via",
   licenseUrl: "license",
   authorUrl: "author",
   editOnGithubUrl: "edit"
@@ -44,7 +45,7 @@ function toCollectionItem(item) {
 
   // Add title/question with proper key name based on type
   if (item.type === 'faq') {
-    result.question = item.question || item.title;
+    result.question = item.question;
   } else {
     result.title = item.title;
   }
@@ -67,7 +68,7 @@ function serializeItem(item) {
 
   for (const [key, value] of Object.entries(item)) {
     // Skip undefined and internal fields
-    if (value === undefined || key.startsWith('_')) {
+    if (key.startsWith('_')) {
       continue;
     }
 
