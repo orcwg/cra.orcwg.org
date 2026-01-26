@@ -598,7 +598,10 @@ function calculateListCounts(lists) {
 // Resolve links and render markdown in a single pass
 async function resolveLinksThenRenderMarkdown(items, sourceField, targetField, internalLinkIndex) {
   const { default: markdownItGitHubAlerts } = await import("markdown-it-github-alerts");
-  md = md.use(markdownItGitHubAlerts);
+  md = md.use(markdownItGitHubAlerts, {
+    markers: ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION", "ORC_REC"],
+    titles: { "orc_rec": "ORC WG Recommendation" }
+  });
 
   for (const item of items) {
     if (item[sourceField]) {
