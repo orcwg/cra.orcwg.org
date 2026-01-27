@@ -57,16 +57,23 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 
   if (linkResolutionContext === 'official') {
 
-    // Convert _4.5.1 Question title?_ patterns (Official EU FAQ cross-references)
-    result = result.replace(/_(\d+(?:\.\d+)*)\s+([^_]+)_/g, (match, number, title) => {
+    // Convert _4.5.1 Question title?_ or *4.5.1 Question title?* patterns (Official EU FAQ cross-references)
+    // Handles both underscore and asterisk italic delimiters
+    const convertOfficialFaqRef = (match, delimiter, number, title) => {
       // Look for FAQ with matching question number
       const faqId = `official/faq_${number.replace(/\./g, '-')}`;
       const faq = internalLinks?.[faqId];
       if (faq) {
-        return mdLink(`_${number} ${title}_`, faq.permalink, `🇪🇺 Official European Commission FAQ: ${ faq._pageTitle }`);
+        return mdLink(`${delimiter}${number} ${title}${delimiter}`, faq.permalink, `🇪🇺 Official European Commission FAQ: ${ faq._pageTitle }`);
       }
       return match; // Return original if not found
-    });
+    };
+
+    // Match underscore-delimited patterns
+    result = result.replace(/(_)(\d+(?:\.\d+)*)\s+([^_]+)_/g, convertOfficialFaqRef);
+
+    // Match asterisk-delimited patterns
+    result = result.replace(/(\*)(\d+(?:\.\d+)*)\s+([^*]+)\*/g, convertOfficialFaqRef);
     
     // Convert parenthetical references to wiki-style syntax, then let existing patterns handle them
 

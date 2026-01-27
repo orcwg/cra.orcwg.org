@@ -13,7 +13,7 @@ const { isNew, recentlyUpdated, NEW_CONTENT_THRESHOLD, RECENTLY_UPDATED_THRESHOL
 const { parseRelatedIssues } = require("./utils/issue-parser.js");
 const craReferences = require("./craReferences.json");
 const { execSync } = require("child_process");
-const { parsePDFFAQs } = require("./parse-official-faqs-pdf.js");
+const { parseOfficialFAQs } = require("./parse-official-faqs.js");
 const { createApiArray } = require("./utils/api-formatter.js");
 
 // ============================================================================
@@ -692,7 +692,7 @@ async function fetchAndAddECFaqs(faqs) {
 }
 
 async function fetchOfficialFAQs(faqs, lists, rootList) {
-  const result = await parsePDFFAQs();
+  const result = await parseOfficialFAQs();
   faqs.push(...result.faqs);
   lists.push(...result.lists);
   result.rootList.parents.push(rootList);

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "update-cache": "node update-cache.js",
+    "fetch-cra-text": "node scripts/fetch-cra-text.js",
     "build": "eleventy",
     "serve": "eleventy --serve",
     "watch": "eleventy --watch"
@@ -20,7 +21,6 @@
     "markdown-it": "^14.1.0",
     "markdown-it-footnote": "^4.0.0",
     "markdown-it-github-alerts": "^1.0.0",
-    "markdown-it-plain-text": "^0.3.0",
-    "pdfjs-dist": "^5.4.449"
+    "markdown-it-plain-text": "^0.3.0"
   }
 }
