@@ -39,11 +39,11 @@ function buildListId(number) {
   return pathParts.join('/');
 }
 
-// Parse version table to extract dates
+// Parse version table to extract dates and version info
 function parseVersionTable(content) {
   const versionTableMatch = content.match(/\| FAQ Version \| Date\s*\| Changes\s*\|[\s\S]*?\n(?=\n[^|])/);
   if (!versionTableMatch) {
-    return { createdAt: new Date(), lastUpdatedAt: new Date() };
+    return { createdAt: new Date(), lastUpdatedAt: new Date(), latestVersion: null };
   }
 
   const tableContent = versionTableMatch[0];
@@ -51,7 +51,7 @@ function parseVersionTable(content) {
 
   // Skip header row, process data rows
   const dataRows = rows.slice(1);
-  const dates = [];
+  const versions = [];
 
   for (const row of dataRows) {
     const cells = row.split('|').map(c => c.trim()).filter(c => c);
@@ -60,20 +60,26 @@ function parseVersionTable(content) {
       const dateMatch = cells[1].match(/(\d{2})\/(\d{2})\/(\d{4})/);
       if (dateMatch) {
         const [, day, month, year] = dateMatch;
-        dates.push(new Date(`${year}-${month}-${day}`));
+        versions.push({
+          version: cells[0],
+          date: new Date(`${year}-${month}-${day}`),
+          changes: cells[2] || ''
+        });
       }
     }
   }
 
-  if (dates.length === 0) {
-    return { createdAt: new Date(), lastUpdatedAt: new Date() };
+  if (versions.length === 0) {
+    return { createdAt: new Date(), lastUpdatedAt: new Date(), latestVersion: null };
   }
 
-  // Sort dates - earliest is createdAt, latest is lastUpdatedAt
-  dates.sort((a, b) => a - b);
+  // Sort by date
+  versions.sort((a, b) => a.date - b.date);
+
   return {
-    createdAt: dates[0],
-    lastUpdatedAt: dates[dates.length - 1]
+    createdAt: versions[0].date,
+    lastUpdatedAt: versions[versions.length - 1].date,
+    latestVersion: versions[versions.length - 1]
   };
 }
 
@@ -108,9 +114,16 @@ function extractIntroText(content) {
 async function parseOfficialFAQs(mdPath = path.join(__dirname, 'FAQs_on_the_CRA__v12_AnSi0bxqu0pJAFLWayO5WfIULZM_123307.md')) {
   const content = fs.readFileSync(mdPath, 'utf8');
 
-  const { createdAt, lastUpdatedAt } = parseVersionTable(content);
+  const { createdAt, lastUpdatedAt, latestVersion } = parseVersionTable(content);
   const disclaimer = extractDisclaimer(content);
   const introText = extractIntroText(content);
+
+  // Format version info for description
+  let versionInfo = '';
+  if (latestVersion) {
+    const dateStr = latestVersion.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    versionInfo = `\n\n**Current version**: ${latestVersion.version} (${dateStr})`;
+  }
 
   // Split content into lines for processing
   const lines = content.split('\n');
@@ -222,7 +235,7 @@ async function parseOfficialFAQs(mdPath = path.join(__dirname, 'FAQs_on_the_CRA_
     title: rootConfig.title,
     _pageTitle: rootConfig.title,
     icon: rootConfig.icon,
-    description: "**Message from the European Commission**: _\"" + introText + "\"_",
+    description: "**Message from the European Commission**: _\"" + introText + "\"_" + versionInfo,
     descriptionHtml: "",
     permalink: `/faq/${rootConfig.slug}/`,
     children: [],
