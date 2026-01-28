@@ -27,7 +27,7 @@
     "relatedIssues": []
   },
   "2.1.1": {
-    "relatedIssues": []
+    "relatedIssues": ["https://github.com/orcwg/cra-hub/issues/146"]
   },
   "2.2.1": {
     "relatedIssues": []
@@ -159,7 +159,7 @@
     "relatedIssues": []
   },
   "4.4.4": {
-    "relatedIssues": []
+    "relatedIssues": ["https://github.com/orcwg/cra-hub/issues/106"]
   },
   "4.5.1": {
     "relatedIssues": []
@@ -183,7 +183,7 @@
     "relatedIssues": []
   },
   "5.4": {
-    "relatedIssues": []
+    "relatedIssues": ["https://github.com/orcwg/cra-hub/issues/106"]
   },
   "6.1": {
     "relatedIssues": []
@@ -213,7 +213,7 @@
     "relatedIssues": []
   },
   "6.10": {
-    "relatedIssues": []
+    "relatedIssues": ["https://github.com/orcwg/cra-hub/issues/163", "https://github.com/orcwg/cra-hub/issues/56"]
   },
   "7.1": {
     "relatedIssues": []
