@@ -125,10 +125,11 @@ async function closeAndCompensateScroll(openAccordion, details, sizeWhenOpen) {
 function attachAccordionClickHandler() {
     document.addEventListener('click', async function(e) {
         const summary = e.target.closest('summary');
-        const details = summary?.closest('details.faq-accordion-item');
+        if (!summary) return;
 
-        // Only handle accordion interactions
-        if (!summary || !details) return;
+        // Find the details element, but only if it's directly the FAQ accordion
+        const details = summary.parentElement?.closest('details.faq-accordion-item');
+        if (!details || summary.parentElement !== details) return;
         if (isAnimating) return;
 
         e.preventDefault();
