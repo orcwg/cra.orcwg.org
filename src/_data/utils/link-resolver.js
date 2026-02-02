@@ -101,11 +101,12 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
     return mdLink(displayText, `${CRA_BASE_URL}#art_${num}`, `⚖️ Article ${num} - ${title}`);
   });
 
-  // 2. Convert [[Annex X]] patterns
-  result = result.replace(/\[\[ANNEX\s+([IVX]+)\]\]/gi, (match, num) => {
-    num = num.toUpperCase();
-    const title = craReferences?.annexTitles?.[num] || "Unknown annex";
-    return mdLink(`Annex ${num}`, `${CRA_BASE_URL}#anx_${num}`, `⚖️ Annex ${num} - ${title}`);
+  // 2. Convert [[Annex X]] patterns, including extended syntax like [[Annex I, Part I]]
+  result = result.replace(/\[\[ANNEX\s+([IVX]+)(?:,?\s+Part\s+([IVX]+))?\]\]/gi, (match, annexNum, partNum) => {
+    annexNum = annexNum.toUpperCase();
+    const displayText = partNum ? `Annex ${annexNum}, Part ${partNum.toUpperCase()}` : `Annex ${annexNum}`;
+    const title = craReferences?.annexTitles?.[annexNum] || "Unknown annex";
+    return mdLink(displayText, `${CRA_BASE_URL}#anx_${annexNum}`, `⚖️ Annex ${annexNum} - ${title}`);
   });
 
   // 3. Convert [[Recital X]] patterns
@@ -114,7 +115,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
   });
 
   // 4. Convert [[category/filename]] patterns (FAQ references)
-  result = result.replace(/\[\[([a-z0-9-]+\/[a-z0-9-]+)\]\]/gi, (match, faqId) => {
+  result = result.replace(/\[\[([a-z0-9_-]+\/[a-z0-9_-]+)\]\]/gi, (match, faqId) => {
     const faq = internalLinks?.[faqId];
     if (faq) {
       return mdLink(faq._pageTitle, faq.permalink, `💬 FAQ: ${faq._pageTitle}`);
