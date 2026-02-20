@@ -4,6 +4,8 @@
    =================================================================== */
 
 /* CSS Custom Properties */
+@import 'https://orcwg.org/public/css/styles.css';
+
 :root {
     /* Brand Colors */
     --primary-color: #1cb1d1;
