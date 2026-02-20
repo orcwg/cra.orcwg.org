@@ -42,14 +42,17 @@
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Inter', sans-serif;
     line-height: 1.6;
-    max-width: 900px;
     margin: 0 auto;
-    padding: 40px 20px;
     color: var(--text-color);
     background: #fff;
     font-weight: 400;
+}
+
+main {
+    margin: 0 auto;
+    max-width: 900px;
 }
 
 /* Typography */
