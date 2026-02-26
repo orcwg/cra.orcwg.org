@@ -659,56 +659,6 @@ a.action-button {
     margin-bottom: 0;
 }
 
-/* Footer */
-footer {
-    background: white;
-    color: var(--text-color);
-    margin-top: 60px;
-    padding: 40px 0 30px 0;
-    border-top: 1px solid var(--border-color);
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-}
-
-footer section h4 {
-    color: var(--secondary-color);
-    font-size: 0.8em;
-    font-weight: 600;
-    margin: 0 0 8px 0;
-    letter-spacing: -0.01em;
-}
-
-footer section p {
-    margin: 0 0 6px 0;
-    line-height: 1.4;
-    color: var(--text-light);
-    font-size: 0.7em;
-}
-
-footer section ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-footer section li {
-    margin-bottom: 4px;
-    font-size: 0.7em;
-    color: var(--text-light);
-}
-
-footer section a,
-footer section button {
-    color: var(--text-light);
-}
-
-/* Footer link hover: color change only */
-footer section a:hover,
-footer section button:hover {
-    color: var(--link-hover-color);
-}
-
 .footnotes {
     font-size: 0.7em;
     color: var(--text-light);

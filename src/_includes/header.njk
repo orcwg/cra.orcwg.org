@@ -5,57 +5,25 @@
                 <div class="header-navbar-brand"><a class="logo-wrapper" href="/" title="Open Regulatory Compliance Working Group"><img src="https://orcwg.org/images/orc-logo.png" alt="" width="120"></a></div>
                 <nav class="header-navbar-nav">
                     <ul class="header-navbar-nav-links">
+                        {% for nav in site.navigation %} 
                         <li class="navbar-nav-links-item">
-                            <div class="dropdown">
-                                <button class="btn-link link-unstyled" id="about" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                About
-                                <i class="fa fa-caret-down" aria-hidden="true"></i></button>
-                                <ul class="dropdown-menu" aria-labelledby="about">
-                                    <li><a class="link-unstyled" href="https://orcwg.org/about/">ORC Working Group</a></li>
-                                    <li><a class="link-unstyled" href="https://orcwg.org/special-interest-groups/cyber-resilience/">Cyber Resilience SIG</a></li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="navbar-nav-links-item">
-                            <div class="dropdown">
-                                <button class="btn-link link-unstyled" id="membership" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Membership
-                                <i class="fa fa-caret-down" aria-hidden="true"></i></button>
-                                <ul class="dropdown-menu" aria-labelledby="membership">
-                                    <li><a class="link-unstyled" href="https://orcwg.org/membership/">Our Members</a></li>
-                                    <li><a class="link-unstyled" href="https://orcwg.org/membership/become-a-member/">Become a Member</a></li>
-                                    <li><a class="link-unstyled" href="https://orcwg.org/about/participation-and-membership-faq/">Participation and Membership FAQ</a></li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="navbar-nav-links-item">
+                        {% if nav.children %}
                             <div class="dropdown">
                                 <button class="btn-link link-unstyled" id="cra" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Cyber Resilience Act
-                                <i class="fa fa-caret-down" aria-hidden="true"></i></button>
+                                    {{ nav.title }}
+                                    <i class="fa fa-caret-down" aria-hidden="true"></i>
+                                </button>
                                 <ul class="dropdown-menu" aria-labelledby="cra">
-                                    <li><a class="link-unstyled" href="https://orcwg.org/cra/about">About CRA</a></li>
-                                    <li><a class="link-unstyled" href="/">CRA FAQ</a></li>
-                                    <li><a class="link-unstyled" href="https://orcwg.org/cra/resources">CRA Resources</a></li>
-                                    <li><a class="link-unstyled" href="https://github.com/orcwg/cra-hub">CRA Hub on GitHub</a></li>
+                                {% for child in nav.children %}
+                                    <li><a class="link-unstyled" title="{{ child.description }}" href="{{ child.url }}">{{ child.title }}</a></li>
+                                {% endfor %}
                                 </ul>
                             </div>
+                        {% else %}
+                        <li><a class="link-unstyled" title="{{ nav.description }}" href="{{ nav.url }}">{{ nav.title }}</a></li>
+                        {% endif %}
                         </li>
-                        <li class="navbar-nav-links-item">
-                            <div class="dropdown">
-                                <button class="btn-link link-unstyled" id="resources" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Resources
-                                <i class="fa fa-caret-down" aria-hidden="true"></i></button>
-                                <ul class="dropdown-menu" aria-labelledby="resources">
-                                    <li><a class="link-unstyled" href="https://orcwg.org/events/">Events</a></li>
-                                    <li><a class="link-unstyled" href="https://orcwg.org/resources/calendar/">Community Calendar</a></li>
-                                    <li><a class="link-unstyled" href="https://orcwg.org/blog/">Blog</a></li>
-                                    <li><a class="link-unstyled" href="https://orcwg.org/resources/videos/">Videos</a></li>
-                                    <li><a class="link-unstyled" href="https://orcwg.org/resources/marketing-resources/">Marketing Resources</a></li>
-                                    <li><a class="link-unstyled" href="https://eclipse-foundation.store/collections/open-regulatory-compliance-orc">ORC Store</a></li>
-                                </ul>
-                            </div>
-                        </li>
+                        {% endfor %}
                     </ul>
                 </nav>
                 <div class="header-navbar-end"><a class="header-navbar-end-download-btn btn btn-primary" href="/participate/"><i class="fa" aria-hidden="true"></i>
