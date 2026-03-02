@@ -55,6 +55,11 @@ main {
     max-width: 900px;
 }
 
+/* Reset orcwg.org's styles */
+a:hover {
+    text-decoration: none;
+}
+
 /* Typography */
 h1 {
     font-size: 2.5em;
