@@ -1,27 +1,134 @@
 {
   "title": "CRA FAQ",
-  "navigation": [
-    {
-      "url": "/faq/all/",
-      "title": "All FAQs",
-      "description": "Browse all FAQs in one single list"
-    },
-    {
-      "url": "/faq/official/",
-      "title": "🇪🇺 Official FAQs",
-      "description": "Browse the official FAQs of the EU Commission"
-    },
-    {
-      "url": "/faq/",
-      "title": "Topics",
-      "description": "FAQs organized by topic and/or audience"
-    },
-    {
-      "url": "/pending-guidance/",
-      "title": "Pending Guidance",
-      "description": "Topics requiring additional clarification by the European Commission"
-    }
-  ],
+  "navigation": {
+    "main": [
+      {
+        "title": "About",
+        "url": null,
+        "description": "About the organization",
+        "children": [
+          {
+            "title": "ORC Working Group",
+            "url": "/about/",
+            "description": "Learn about the ORC Working Group"
+          },
+          {
+            "title": "Cyber Resilience SIG",
+            "url": "/special-interest-groups/cyber-resilience/",
+            "description": "Explore the Cyber Resilience Special Interest Group"
+          }
+        ]
+      },
+      {
+        "title": "Membership",
+        "url": null,
+        "description": "Membership information",
+        "children": [
+          {
+            "title": "Our Members",
+            "url": "/membership/",
+            "description": "See the list of members"
+          },
+          {
+            "title": "Become a Member",
+            "url": "/membership/become-a-member/",
+            "description": "Information on joining the group"
+          },
+          {
+            "title": "Participation and Membership FAQ",
+            "url": "/about/participation-and-membership-faq/",
+            "description": "FAQs on participation and membership"
+          }
+        ]
+      },
+      {
+        "title": "Cyber Resilience Act",
+        "url": "/cra/",
+        "description": "Overview of the Cyber Resilience Act",
+        "children": [
+          {
+            "title": "About CRA",
+            "url": "/cra/about",
+            "description": "Information about the CRA"
+          },
+          {
+            "title": "CRA FAQ",
+            "url": "https://cra.orcwg.org/",
+            "description": "Frequently Asked Questions on CRA"
+          },
+          {
+            "title": "CRA Resources",
+            "url": "/cra/resources",
+            "description": "Resources related to the CRA"
+          },
+          {
+            "title": "CRA Hub on GitHub",
+            "url": "https://github.com/orcwg/cra-hub",
+            "description": "CRA Hub source and resources on GitHub"
+          }
+        ]
+      },
+      {
+        "title": "Resources",
+        "url": null,
+        "description": "General resources",
+        "children": [
+          {
+            "title": "Events",
+            "url": "/events/",
+            "description": "Upcoming events"
+          },
+          {
+            "title": "Community Calendar",
+            "url": "/resources/calendar/",
+            "description": "Check the community calendar"
+          },
+          {
+            "title": "Blog",
+            "url": "/blog/",
+            "description": "Latest posts from the ORC community"
+          },
+          {
+            "title": "Videos",
+            "url": "/resources/videos/",
+            "description": "Video resources"
+          },
+          {
+            "title": "Marketing Resources",
+            "url": "/resources/marketing-resources/",
+            "description": "Marketing and promotional materials"
+          },
+          {
+            "title": "ORC Store",
+            "url": "https://eclipse-foundation.store/collections/open-regulatory-compliance-orc",
+            "description": "Shop ORC-related materials and resources"
+          }
+        ]
+      }
+    ],
+    "sub": [
+      {
+        "url": "/faq/all/",
+        "title": "All FAQs",
+        "description": "Browse all FAQs in one single list"
+      },
+      {
+        "url": "/faq/official/",
+        "title": "🇪🇺 Official FAQs",
+        "description": "Browse the official FAQs of the EU Commission"
+      },
+      {
+        "url": "/faq/",
+        "title": "Topics",
+        "description": "FAQs organized by topic and/or audience"
+      },
+      {
+        "url": "/pending-guidance/",
+        "title": "Pending Guidance",
+        "description": "Topics requiring additional clarification by the European Commission"
+      }
+    ]
+  },
   "footer": {
     "sections": [
       {
