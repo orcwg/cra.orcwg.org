@@ -102,53 +102,50 @@ a:hover {
 }
 
 /* Header Layout */
-.site-header {
-    margin: 20px 0 30px 0;
+.submenu {
+    padding: 2rem 0;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color)); 
+    margin-bottom: 2rem;
+}
+
+.submenu ul {
+    list-style: none;
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.site-header>a {
-    white-space: nowrap;
-}
-
-.site-header>a h1 {
+    flex-direction: column;
+    padding: 0;
     margin: 0;
-}
-
-.site-header>a:hover h1 {
-    color: var(--link-hover-color);
-}
-
-.site-nav {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
 }
 
-.site-nav a {
-    color: var(--primary-dark);
-    font-weight: 500;
-    padding: 8px 12px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    font-size: 0.9em;
+.submenu li {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.75rem 0;
+    margin-bottom: 0;
 }
 
-.site-nav a:hover,
-.site-nav a[aria-current="page"] {
-    background: var(--background-light);
-    color: var(--primary-color);
+.submenu a {
+    color: #fff;
 }
 
-.site-header>img {
-    width: 90px;
-    height: auto;
-    align-self: center;
+.submenu li:last-child {
+    border-bottom: none;
+}
+
+@media (min-width: 768px) {
+    .submenu {
+        text-align: center;
+    }
+
+    .submenu ul {
+        gap: 8rem;
+        flex-direction: row;
+    }
+
+    .submenu li {
+        border-bottom: none;
+        padding: 0;
+    }
 }
 
 /* Main Content Area */
@@ -1094,21 +1091,6 @@ aside h3 {
         padding: 20px 15px;
     }
 
-    /* Mobile header layout: Title and Logo on first line, Nav on second line */
-    .site-header {
-        align-items: center;
-    }
-
-    .site-nav {
-        order: 1;
-        flex-basis: 100%;
-    }
-
-    footer {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 30px;
-    }
-
     /* Remove section boxing on mobile to save space */
     .section-card {
         background: transparent;
@@ -1159,12 +1141,6 @@ aside h3 {
 
     .markdown-alert-orc_rec::after {
         right: -100px;
-    }
-}
-
-@media (max-width: 480px) {
-    footer {
-        grid-template-columns: 1fr;
     }
 }
 

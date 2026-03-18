@@ -8,7 +8,7 @@ permalink: "/"
 </section>
 
 <nav class="card-grid half-width">
-  {% for nav in site.navigation %}
+  {% for nav in site.navigation.sub %}
   <a href="{{ nav.url }}" class="card">
     <h2>{{ nav.title }}</h2>
     <p>{{ nav.description }}</p>

@@ -2,14 +2,14 @@
     <div class="header-navbar-wrapper">
         <div class="container">
             <div class="header-navbar">
-                <div class="header-navbar-brand"><a class="logo-wrapper" href="/" title="Open Regulatory Compliance Working Group"><img src="https://orcwg.org/images/orc-logo.png" alt="" width="120"></a></div>
+                <div class="header-navbar-brand"><a class="logo-wrapper" href="https://orcwg.org" title="Open Regulatory Compliance Working Group"><img src="https://orcwg.org/images/orc-logo.png" alt="" width="120"></a></div>
                 <nav class="header-navbar-nav">
                     <ul class="header-navbar-nav-links">
                         {% for nav in site.navigation.main %} 
                         <li class="navbar-nav-links-item">
                         {% if nav.children %}
                             <div class="dropdown">
-                                <button class="btn-link link-unstyled" id="cra" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <button class="btn-link link-unstyled" id="{{ nav.id }}" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     {{ nav.title }}
                                     <i class="fa fa-caret-down" aria-hidden="true"></i>
                                 </button>
@@ -36,147 +36,32 @@
     </div>
     <nav class="mobile-menu hidden" aria-expanded="false">
         <ul>
+            {% for nav in site.navigation.main %}
+            {% if nav.children %}
             <li class="mobile-menu-dropdown">
-                <a class="mobile-menu-item mobile-menu-dropdown-toggle" data-target="about-menu"><span>About</span>
+                <a class="mobile-menu-item mobile-menu-dropdown-toggle" data-target="{{ nav.id }}-menu"><span>{{ nav.title }}</span>
                 <i class="fa fa-chevron-down" aria-hidden="true"></i></a>
                 <div class="mobile-menu-sub-menu-wrapper">
-                    <ul class="mobile-menu-sub-menu mobile-menu-links-menu hidden" id="about-menu">
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/about/">ORC Working Group</a></li>
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/special-interest-groups/cyber-resilience/">Cyber Resilience SIG</a></li>
+                    <ul class="mobile-menu-sub-menu mobile-menu-links-menu hidden" id="{{ nav.id }}-menu">
+                        {% for child in nav.children %}
+                            <li><a class="mobile-menu-item" href="{{ child.url }}">{{ child.title }}</a></li>
+                        {% endfor %}
                     </ul>
                 </div>
             </li>
-            <li class="mobile-menu-dropdown">
-                <a class="mobile-menu-item mobile-menu-dropdown-toggle" data-target="membership-menu"><span>Membership</span>
-                <i class="fa fa-chevron-down" aria-hidden="true"></i></a>
-                <div class="mobile-menu-sub-menu-wrapper">
-                    <ul class="mobile-menu-sub-menu mobile-menu-links-menu hidden" id="membership-menu">
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/membership/">Our Members</a></li>
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/membership/become-a-member/">Become a Member</a></li>
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/about/participation-and-membership-faq/">Participation and Membership FAQ</a></li>
-                    </ul>
-                </div>
-            </li>
-            <li class="mobile-menu-dropdown">
-                <a class="mobile-menu-item mobile-menu-dropdown-toggle" data-target="cra-menu"><span>Cyber Resilience Act</span>
-                <i class="fa fa-chevron-down" aria-hidden="true"></i></a>
-                <div class="mobile-menu-sub-menu-wrapper">
-                    <ul class="mobile-menu-sub-menu mobile-menu-links-menu hidden" id="cra-menu">
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/cra/about">About CRA</a></li>
-                        <li><a class="mobile-menu-item" href="/">CRA FAQ</a></li>
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/cra/resources">CRA Resources</a></li>
-                        <li><a class="mobile-menu-item" href="https://github.com/orcwg/cra-hub">CRA Hub on GitHub</a></li>
-                    </ul>
-                </div>
-            </li>
-            <li class="mobile-menu-dropdown">
-                <a class="mobile-menu-item mobile-menu-dropdown-toggle" data-target="resources-menu"><span>Resources</span>
-                <i class="fa fa-chevron-down" aria-hidden="true"></i></a>
-                <div class="mobile-menu-sub-menu-wrapper">
-                    <ul class="mobile-menu-sub-menu mobile-menu-links-menu hidden" id="resources-menu">
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/events/">Events</a></li>
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/resources/calendar/">Community Calendar</a></li>
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/blog/">Blog</a></li>
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/resources/videos/">Videos</a></li>
-                        <li><a class="mobile-menu-item" href="https://orcwg.org/resources/marketing-resources/">Marketing Resources</a></li>
-                        <li><a class="mobile-menu-item" href="https://eclipse-foundation.store/collections/open-regulatory-compliance-orc">ORC Store</a></li>
-                    </ul>
-                </div>
-            </li>
+            {% else %}
+            <li><a class="mobile-menu-item" href="{{ nav.url }}">{{ child.title }}</a></li>
+            {% endif %}
+            {% endfor %}
         </ul>
     </nav>
-    <div class="eclipsefdn-mega-menu">
-        <div class="mega-menu-submenu container hidden" data-menu-id="about-menu">
-            <div class="mega-menu-submenu-featured-story"></div>
-            <div class="mega-menu-submenu-links-section">
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">ORC Working Group</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">Cyber Resilience SIG</p>
-                    <ul></ul>
-                </div>
-            </div>
-            <div class="mega-menu-submenu-ad-wrapper">
-                <div class="eclipsefdn-mega-menu-promo-content mega-menu-promo-content" data-ad-format="ads_square" data-ad-publish-to="eclipse_org_home"></div>
-            </div>
-        </div>
-        <div class="mega-menu-submenu container hidden" data-menu-id="membership-menu">
-            <div class="mega-menu-submenu-featured-story"></div>
-            <div class="mega-menu-submenu-links-section">
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">Our Members</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">Become a Member</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">Participation and Membership FAQ</p>
-                    <ul></ul>
-                </div>
-            </div>
-            <div class="mega-menu-submenu-ad-wrapper">
-                <div class="eclipsefdn-mega-menu-promo-content mega-menu-promo-content" data-ad-format="ads_square" data-ad-publish-to="eclipse_org_home"></div>
-            </div>
-        </div>
-        <div class="mega-menu-submenu container hidden" data-menu-id="cra-menu">
-            <div class="mega-menu-submenu-featured-story"></div>
-            <div class="mega-menu-submenu-links-section">
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">About CRA</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">CRA FAQ</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">CRA Resources</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">CRA Hub on GitHub</p>
-                    <ul></ul>
-                </div>
-            </div>
-            <div class="mega-menu-submenu-ad-wrapper">
-                <div class="eclipsefdn-mega-menu-promo-content mega-menu-promo-content" data-ad-format="ads_square" data-ad-publish-to="eclipse_org_home"></div>
-            </div>
-        </div>
-        <div class="mega-menu-submenu container hidden" data-menu-id="resources-menu">
-            <div class="mega-menu-submenu-featured-story"></div>
-            <div class="mega-menu-submenu-links-section">
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">Events</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">Community Calendar</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">Blog</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">Videos</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">Marketing Resources</p>
-                    <ul></ul>
-                </div>
-                <div class="mega-menu-submenu-links">
-                    <p class="menu-heading">ORC Store</p>
-                    <ul></ul>
-                </div>
-            </div>
-            <div class="mega-menu-submenu-ad-wrapper">
-                <div class="eclipsefdn-mega-menu-promo-content mega-menu-promo-content" data-ad-format="ads_square" data-ad-publish-to="eclipse_org_home"></div>
-            </div>
-        </div>
+    <div class="submenu">
+        <nav class="container">
+            <ul>
+                {% for nav in site.navigation.sub %} 
+                <li><a href="{{nav.url}}">{{ nav.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
     </div>
 </header>

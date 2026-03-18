@@ -3,62 +3,65 @@
   "navigation": {
     "main": [
       {
+        "id": "about",
         "title": "About",
         "url": null,
         "description": "About the organization",
         "children": [
           {
             "title": "ORC Working Group",
-            "url": "/about/",
+            "url": "https://orcwg.org/about/",
             "description": "Learn about the ORC Working Group"
           },
           {
             "title": "Cyber Resilience SIG",
-            "url": "/special-interest-groups/cyber-resilience/",
+            "url": "https://orcwg.org/special-interest-groups/cyber-resilience/",
             "description": "Explore the Cyber Resilience Special Interest Group"
           }
         ]
       },
       {
+        "id": "membership",
         "title": "Membership",
         "url": null,
         "description": "Membership information",
         "children": [
           {
             "title": "Our Members",
-            "url": "/membership/",
+            "url": "https://orcwg.org/membership/",
             "description": "See the list of members"
           },
           {
             "title": "Become a Member",
-            "url": "/membership/become-a-member/",
+            "url": "https://orcwg.org/membership/become-a-member/",
             "description": "Information on joining the group"
           },
           {
             "title": "Participation and Membership FAQ",
-            "url": "/about/participation-and-membership-faq/",
+            "url": "https://orcwg.org/about/participation-and-membership-faq/",
             "description": "FAQs on participation and membership"
           }
         ]
       },
       {
+        "id": "cra",
         "title": "Cyber Resilience Act",
-        "url": "/cra/",
+        "url": "https://orcwg.org/cra/",
         "description": "Overview of the Cyber Resilience Act",
         "children": [
           {
             "title": "About CRA",
-            "url": "/cra/about",
+            "url": "https://orcwg.org/cra/about",
             "description": "Information about the CRA"
           },
           {
             "title": "CRA FAQ",
-            "url": "https://cra.orcwg.org/",
+            "url": "",
             "description": "Frequently Asked Questions on CRA"
           },
           {
             "title": "CRA Resources",
-            "url": "/cra/resources",
+            "url": "https://orcwg.org/cra/resources",
             "description": "Resources related to the CRA"
           },
           {
@@ -69,33 +72,34 @@
         ]
       },
       {
+        "id": "resources",
         "title": "Resources",
         "url": null,
         "description": "General resources",
         "children": [
           {
             "title": "Events",
-            "url": "/events/",
+            "url": "https://orcwg.org/events/",
             "description": "Upcoming events"
           },
           {
             "title": "Community Calendar",
-            "url": "/resources/calendar/",
+            "url": "https://orcwg.org/resources/calendar/",
             "description": "Check the community calendar"
           },
           {
             "title": "Blog",
-            "url": "/blog/",
+            "url": "https://orcwg.org/blog/",
             "description": "Latest posts from the ORC community"
           },
           {
             "title": "Videos",
-            "url": "/resources/videos/",
+            "url": "https://orcwg.org/resources/videos/",
             "description": "Video resources"
           },
           {
             "title": "Marketing Resources",
-            "url": "/resources/marketing-resources/",
+            "url": "https://orcwg.org/resources/marketing-resources/",
             "description": "Marketing and promotional materials"
           },
           {
@@ -126,36 +130,6 @@
         "url": "/pending-guidance/",
         "title": "Pending Guidance",
         "description": "Topics requiring additional clarification by the European Commission"
-      }
-    ]
-  },
-  "footer": {
-    "sections": [
-      {
-        "title": "About",
-        "content": "The CRA Hub is a community resource of the [Open Regulatory Compliance (ORC) Working Group](https://orcwg.org). It is built by [UnlockOpen](https://unlockopen.com) with direct funding from the [Eclipse Foundation](https://eclipse.org)."
-      },
-      {
-        "title": "Privacy",
-        "content": "This website does not collect any personal information beyond what is [collected by GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages#data-collection) for hosting purposes and [Fathom Analytics](https://usefathom.com/legal/compliance) for privacy-first [website analytics](https://app.usefathom.com/share/fwabmjvu/cra.orcwg.org)."
-      },
-      {
-        "title": "Licenses & Trademarks",
-        "list": [
-          "Source code: [Apache License 2.0](https://github.com/orcwg/cra.orcwg.org/blob/main/LICENSE).",
-          "ORC WG logo and Orc Mascot are trademarks of the Eclipse Foundation (see [policy](https://www.eclipse.org/legal/logo-guidelines/))."
-        ]
-      },
-      {
-        "title": "Community Resources",
-        "list": [
-          "[CRA FAQ GitHub Repository](https://github.com/orcwg/cra-hub/)",
-          "[FAQ Task Force](https://github.com/orcwg/orcwg/tree/main/cyber-resilience-sig/task-forces/faq-tf)",
-          "[Website source code](https://github.com/orcwg/cra.orcwg.org/)",
-          "[Website Style Guide](/style-guide/)",
-          "[Open Regulatory Compliance WG](https://orcwg.org)",
-          "[Acknowledgements](/acknowledgements/)"
-        ]
       }
     ]
   }
