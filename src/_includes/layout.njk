@@ -19,15 +19,7 @@
     <!-- /Fathom -->
 </head>
 <body>
-    <header class="site-header">
-        <a href="/"><h1>{{ site.title }}</h1></a>
-        <nav class="site-nav">
-            {% for nav in site.navigation %}
-            <a href="{{ nav.url }}" title="{{ nav.description }}"{% if page.url == nav.url %} aria-current="page"{% endif %}>{{ nav.title }}</a>
-            {% endfor %}
-        </nav>
-        <img src="/assets/images/orcwg_orc.png" alt="Open Regulatory Compliance Working Group Orc mascott">
-    </header>
+    {% include "header.njk" %}
 
     <main>
         {{ content | safe }}
@@ -35,6 +27,7 @@
 
     {% include "footer.njk" %}
 
+    <script src="https://orcwg.org/public/js/main.js?v={{ build.timestamp }}"></script>
     <script src="/assets/js/site.js?v={{ build.timestamp }}"></script>
 </body>
 </html>

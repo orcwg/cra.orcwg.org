@@ -1,30 +1,91 @@
-<footer>
-    {% for section in site.footer.sections %}
-    <section>
-        <h4>{{ section.title }}</h4>
-        {% if section.content %}
-            {{ section.content | markdown | safe }}
-        {% endif %}
-        {% if section.title == "About" %}
-            <p>Website last updated on <time datetime="{{ build.iso }}">{{ build.formatted }}</time>.</p>
-        {% endif %}
-        {% if section.list %}
-            <ul>
-            {% for item in section.list %}
-                <li>{{ item | markdownInline | safe }}</li>
-            {% endfor %}
-            {% if section.title == "Community Resources" %}
-                <li>
-                    <button class="admin-toggle" title="Toggle admin mode" aria-label="Toggle admin mode">
-                        Admin info
-                        <span class="toggle-switch">
-                            <span class="toggle-slider"></span>
-                        </span>
-                    </button>
-                </li>
-            {% endif %}
-            </ul>
-        {% endif %}
-    </section>
-    {% endfor %}
+<footer class="footer footer-working-group" id="footer">
+    <div class="container">
+        <div class="footer-end-social-container margin-bottom-30">
+            <div class="footer-end-social">
+                <p class="footer-end-social-text hidden-xs">Follow Us:</p>
+                <ul class="footer-end-social-links list-unstyled">
+                    <li><a class="link-unstyled" href="https://www.linkedin.com/showcase/open-regulatory-compliance/" title="LinkedIn account"><span class="fa-stack"><i class="fa-solid fa-circle fa-stack-2x" aria-hidden="true"></i>
+                        <i class="fa-brands fa-linkedin-in fa-stack-1x fa-inverse" aria-hidden="true"></i>
+                        <span class="sr-only">LinkedIn account</span></span></a>
+                    </li>
+                    <li><a class="link-unstyled" href="https://youtube.com/playlist?list=PLy7t4z5SYNaQEyXv253SI6PDdPjbYXcNV&amp;si=wLNnW7iG3ruKSEvb" title="YouTube account"><span class="fa-stack"><i class="fa-solid fa-circle fa-stack-2x" aria-hidden="true"></i>
+                        <i class="fa-brands fa-youtube fa-stack-1x fa-inverse" aria-hidden="true"></i>
+                        <span class="sr-only">YouTube account</span></span></a>
+                    </li>
+                    <li><a class="link-unstyled" href="https://bsky.app/profile/orcwg.org" title="Bluesky account"><span class="fa-stack"><i class="fa-solid fa-circle fa-stack-2x" aria-hidden="true"></i>
+                        <i class="fa-brands fa-bluesky fa-stack-1x fa-inverse" aria-hidden="true"></i>
+                        <span class="sr-only">Bluesky account</span></span></a>
+                    </li>
+                    <li><a class="link-unstyled" href="https://fosstodon.org/@orcwg" title="Mastodon account"><span class="fa-stack"><i class="fa-solid fa-circle fa-stack-2x" aria-hidden="true"></i>
+                        <i class="fa-brands fa-mastodon fa-stack-1x fa-inverse" aria-hidden="true"></i>
+                        <span class="sr-only">Mastodon account</span></span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center margin-bottom-40">
+            <img class="img-responsive margin-x-auto margin-bottom-30" src="https://www.eclipse.org/eclipse.org-common/themes/solstice/public/images/logo/eclipse-foundation-grey-orange.svg" width="150" aria-labelledby="footer-working-group-ef">
+            <div class="footer-working-group-sponsor">
+                <div class="footer-working-group-circle-group">
+                    <div class="footer-working-group-circle"></div>
+                    <div class="footer-working-group-circle"></div>
+                    <div class="footer-working-group-circle hidden-xs"></div>
+                    <div class="footer-working-group-circle hidden-xs"></div>
+                </div>
+                <p class="fw-500" id="footer-working-group-ef">An Eclipse Foundation Working Group</p>
+                <div class="footer-working-group-circle-group">
+                    <div class="footer-working-group-circle"></div>
+                    <div class="footer-working-group-circle hidden-xs"></div>
+                    <div class="footer-working-group-circle hidden-xs"></div>
+                    <div class="footer-working-group-circle"></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-sections row equal-height-md font-bold">
+            <div class="col-sm-20 col-sm-offset-4 col-xs-24">
+                <section id="footer-eclipse-foundation" class="footer-section col-sm-8">
+                    <div class="menu-heading">Eclipse Foundation</div>
+                    <ul class="nav">
+                        <li><a href="https://www.eclipse.org/org/">About</a></li>
+                        <li><a href="https://projects.eclipse.org/">Projects</a></li>
+                        <li><a href="https://www.eclipse.org/collaborations/">Collaborations</a></li>
+                        <li><a href="https://www.eclipse.org/membership/">Membership</a></li>
+                        <li><a href="https://www.eclipse.org/sponsor/">Sponsor</a></li>
+                    </ul>
+                </section>
+                <section id="footer-legal" class="footer-section col-sm-8">
+                    <div class="menu-heading">Legal</div>
+                    <ul class="nav">
+                        <li><a href="https://www.eclipse.org/legal/privacy/">Privacy Policy</a></li>
+                        <li><a href="https://www.eclipse.org/legal/terms-of-use/">Terms of Use</a></li>
+                        <li><a href="https://www.eclipse.org/legal/compliance/">Compliance</a></li>
+                        <li><a href="https://www.eclipse.org/org/documents/Community_Code_of_Conduct.php">Code of Conduct</a></li>
+                        <li><a href="https://www.eclipse.org/legal/">Legal Resources</a></li>
+                        <li><a class="toolbar-manage-cookies" href="#" onclick="event.preventDefault()">Manage Cookies</a></li>
+                    </ul>
+                </section>
+                <section id="footer-more" class="footer-section col-sm-8">
+                    <div class="menu-heading">More</div>
+                    <ul class="nav">
+                        <li><a href="https://www.eclipse.org/security/">Report a Vulnerability</a></li>
+                        <li><a href="https://status.eclipse.org/">Service Status</a></li>
+                        <li><a href="https://www.eclipse.org/org/foundation/contact.php">Contact Us</a></li>
+                        <li><a href="https://www.eclipse.org/projects/support/">Support</a></li>
+                    </ul>
+                </section>
+            </div>
+            <div id="footer-end" class="footer-section col-md-8 col-md-offset-1 col-sm-24"></div>
+        </div>
+        <div class="text-center">
+            <div class="col-sm-24 margin-top-20">
+                <div class="row">
+                    <p class="text-muted"><small>Built by UnlockOpen with direct funding from the Eclipse Foundation.</small></p>
+                    <div id="copyright">
+                        <p id="copyright-text">Copyright © Eclipse Foundation AISBL. All Rights Reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="#" class="scrollup" style="display: inline;">Back to the top</a>
+    </div>
 </footer>

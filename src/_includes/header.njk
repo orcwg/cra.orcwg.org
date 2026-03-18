@@ -1,0 +1,67 @@
+<header class="header-wrapper header-wrapper" id="header">
+    <div class="header-navbar-wrapper">
+        <div class="container">
+            <div class="header-navbar">
+                <div class="header-navbar-brand"><a class="logo-wrapper" href="https://orcwg.org" title="Open Regulatory Compliance Working Group"><img src="https://orcwg.org/images/orc-logo.png" alt="" width="120"></a></div>
+                <nav class="header-navbar-nav">
+                    <ul class="header-navbar-nav-links">
+                        {% for nav in site.navigation.main %} 
+                        <li class="navbar-nav-links-item">
+                        {% if nav.children %}
+                            <div class="dropdown">
+                                <button class="btn-link link-unstyled" id="{{ nav.id }}" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    {{ nav.title }}
+                                    <i class="fa fa-caret-down" aria-hidden="true"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="cra">
+                                {% for child in nav.children %}
+                                    <li><a class="link-unstyled" title="{{ child.description }}" href="{{ child.url }}">{{ child.title }}</a></li>
+                                {% endfor %}
+                                </ul>
+                            </div>
+                        {% else %}
+                        <li><a class="link-unstyled" title="{{ nav.description }}" href="{{ nav.url }}">{{ nav.title }}</a></li>
+                        {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+                <div class="header-navbar-end"><a class="header-navbar-end-download-btn btn btn-primary" href="/participate/"><i class="fa" aria-hidden="true"></i>
+                    Get involved
+                    </a><button class="mobile-menu-btn" aria-label="Toggle mobile navigation menu" aria-expanded="false">
+                    <i class="fa fa-bars fa-xl"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <nav class="mobile-menu hidden" aria-expanded="false">
+        <ul>
+            {% for nav in site.navigation.main %}
+            {% if nav.children %}
+            <li class="mobile-menu-dropdown">
+                <a class="mobile-menu-item mobile-menu-dropdown-toggle" data-target="{{ nav.id }}-menu"><span>{{ nav.title }}</span>
+                <i class="fa fa-chevron-down" aria-hidden="true"></i></a>
+                <div class="mobile-menu-sub-menu-wrapper">
+                    <ul class="mobile-menu-sub-menu mobile-menu-links-menu hidden" id="{{ nav.id }}-menu">
+                        {% for child in nav.children %}
+                            <li><a class="mobile-menu-item" href="{{ child.url }}">{{ child.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </li>
+            {% else %}
+            <li><a class="mobile-menu-item" href="{{ nav.url }}">{{ child.title }}</a></li>
+            {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    <div class="submenu">
+        <nav class="container">
+            <ul>
+                {% for nav in site.navigation.sub %} 
+                <li><a href="{{nav.url}}">{{ nav.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+</header>
