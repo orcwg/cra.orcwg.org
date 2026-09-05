@@ -111,7 +111,7 @@ function extractIntroText(content) {
 }
 
 // Parse markdown file and build FAQ structure
-async function parseOfficialFAQs(mdPath = path.join(__dirname, 'FAQs_on_the_CRA__v12_AnSi0bxqu0pJAFLWayO5WfIULZM_123307.md')) {
+async function parseOfficialFAQs(mdPath = path.join(__dirname, 'FAQs_on_the_CRA__v14_NBetxUGiUQm9skmnHZ7ig2xOG4_123307.md')) {
   const content = fs.readFileSync(mdPath, 'utf8');
 
   const { createdAt, lastUpdatedAt, latestVersion } = parseVersionTable(content);
