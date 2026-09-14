@@ -20,6 +20,12 @@
       "url": "/pending-guidance/",
       "title": "Pending Guidance",
       "description": "Topics requiring additional clarification by the European Commission"
+    },
+    {
+      "url": "/faq/srp/",
+      "title": "🚨 Single Reporting Platform (SRP)",
+      "description": "Browse ENISA's FAQs on reporting vulnerabilities and incidents through the Single Reporting Platform",
+      "hideFromNav": true
     }
   ],
   "footer": {

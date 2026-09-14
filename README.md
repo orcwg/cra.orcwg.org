@@ -195,7 +195,7 @@ Components follow a consistent data pattern:
 ### Site Configuration
 
 - Global site settings in `src/_data/site.json`
-- Navigation menu configuration (used in header, homepage cards, and footer)
+- Navigation menu configuration (used in header, homepage cards, and footer); entries with `hideFromNav: true` are shown on the homepage only
 - List ordering controlled via `listOrder` array
 - Footer content structured as sections with titles and lists
 

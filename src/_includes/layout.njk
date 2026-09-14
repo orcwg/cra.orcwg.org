@@ -23,7 +23,9 @@
         <a href="/"><h1>{{ site.title }}</h1></a>
         <nav class="site-nav">
             {% for nav in site.navigation %}
+            {% if not nav.hideFromNav %}
             <a href="{{ nav.url }}" title="{{ nav.description }}"{% if page.url == nav.url %} aria-current="page"{% endif %}>{{ nav.title }}</a>
+            {% endif %}
             {% endfor %}
         </nav>
         <img src="/assets/images/orcwg_orc.png" alt="Open Regulatory Compliance Working Group Orc mascott">
