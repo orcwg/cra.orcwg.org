@@ -15,7 +15,7 @@ const craReferences = require("./craReferences.json");
 const { execSync } = require("child_process");
 const { parseOfficialFAQs } = require("./parse-official-faqs.js");
 const { EC_QANDA_API_URL, parseEcQandaDocument } = require("./utils/ec-qanda-parser.js");
-const { SRP_FAQ_URL, parseSrpFaqPage } = require("./utils/srp-faq-parser.js");
+const { SRP_FAQ_URL, parseSrpFaqPage, linkSrpCrossReferences } = require("./utils/srp-faq-parser.js");
 const { createApiArray } = require("./utils/api-formatter.js");
 
 // ============================================================================
@@ -620,7 +620,9 @@ async function resolveLinksThenRenderMarkdown(items, sourceField, targetField, i
 
   for (const item of items) {
     if (item[sourceField]) {
-      const resolved = resolveLinks(item[sourceField], item._linkResolutionContext, internalLinkIndex, craReferences, item);
+      // Source-specific links (e.g. cross-references between ENISA's SRP FAQs) are added by the item's own preprocessor
+      const source = item._linkPreprocessor ? item._linkPreprocessor(item[sourceField], internalLinkIndex) : item[sourceField];
+      const resolved = resolveLinks(source, item._linkResolutionContext, internalLinkIndex, craReferences, item);
       item[targetField] = md.render(resolved);
     }
   }
@@ -717,6 +719,7 @@ async function fetchAndAddSrpFaqs(faqs) {
       _listed: true,
       permalink: `/faq/${id}/`,
       _linkResolutionContext,
+      _linkPreprocessor: linkSrpCrossReferences,  // "FAQ 21", "subsection 5.1"
       createdAt,
       lastUpdatedAt,
       _isNew: isNew(createdAt),

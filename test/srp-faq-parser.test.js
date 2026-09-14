@@ -1,8 +1,8 @@
-const { test } = require("node:test");
+const { test, describe } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const { SRP_FAQ_URL, parseSrpFaqPage } = require("../src/_data/utils/srp-faq-parser.js");
+const { SRP_FAQ_URL, parseSrpFaqPage, linkSrpCrossReferences } = require("../src/_data/utils/srp-faq-parser.js");
 
 const fixture = fs.readFileSync(path.join(__dirname, "fixtures", "enisa-srp-faq.html"), "utf8");
 const { lastUpdatedAt, items } = parseSrpFaqPage(fixture, SRP_FAQ_URL);
@@ -77,4 +77,69 @@ test("throws when the FAQ list is missing", () => {
 
 test("throws when the FAQ list is empty", () => {
   assert.throws(() => parseSrpFaqPage('<dl class="ckeditor-accordion"></dl>'), /No FAQs found/);
+});
+
+describe("linkSrpCrossReferences", () => {
+  // Minimal internal link index, as built by createInternalLinkIndex in data.js
+  const internalLinks = {
+    "srp/faq_21": { permalink: "/faq/srp/faq_21/", _pageTitle: "Can the dissemination of a report be delayed or withheld?" },
+    "official/faq_5-1": { permalink: "/faq/official/faq_5-1/", _pageTitle: "How can a manufacturer become aware of an actively exploited vulnerability or a severe incident?" },
+    "official/faq_5-3": { permalink: "/faq/official/faq_5-3/", _pageTitle: "Does the reporting obligation apply to products placed on the market before 11 December 2027?" },
+    "official/faq_5-4": { permalink: "/faq/official/faq_5-4/", _pageTitle: "Actively exploited vulnerability contained in a third-party component" }
+  };
+
+  const link = (markdown) => linkSrpCrossReferences(markdown, internalLinks);
+
+  // Extract [text](url) pairs from Markdown, ignoring link titles
+  const links = (markdown) => [...markdown.matchAll(/\[([^\]]+)\]\((\S+)(?: "[^"]*")?\)/g)].map(([, text, url]) => ({ text, url }));
+
+  test("links references to other SRP FAQs", () => {
+    const result = link("More detailed information is provided in FAQ 21.");
+    assert.equal(
+      result,
+      'More detailed information is provided in [FAQ 21](/faq/srp/faq_21/ "📨 ENISA SRP FAQ: Can the dissemination of a report be delayed or withheld?").'
+    );
+  });
+
+  test("leaves references to unknown SRP FAQs unchanged", () => {
+    assert.equal(link("See FAQ 99 for details."), "See FAQ 99 for details.");
+  });
+
+  test("links references to sections of the Commission's FAQ", () => {
+    assert.deepEqual(links(link("See Section 5.4 of the Commission's FAQ.")), [{ text: "5.4", url: "/faq/official/faq_5-4/" }]);
+  });
+
+  test("links both sections in 'subsections 5.1 & 5.3'", () => {
+    const result = link("before 11 September 2026 (subsections 5.1 & 5.3).");
+    assert.deepEqual(links(result), [
+      { text: "5.1", url: "/faq/official/faq_5-1/" },
+      { text: "5.3", url: "/faq/official/faq_5-3/" }
+    ]);
+    assert.match(result, /^before 11 September 2026 \(subsections \[5\.1\]\([^)]+\) & \[5\.3\]\([^)]+\)\)\.$/);
+  });
+
+  test("leaves references to unknown Commission FAQ sections unchanged", () => {
+    assert.equal(link("Section 9.1 provides detailed guidance."), "Section 9.1 provides detailed guidance.");
+  });
+
+  test("does not insert links inside existing links", () => {
+    const markdown = "See [FAQ 21 on ENISA's website](https://www.enisa.europa.eu/faq#21) and [Section 5.4](https://example.org/5-4).";
+    assert.equal(link(markdown), markdown);
+  });
+
+  test("handles empty answers", () => {
+    assert.equal(link(""), "");
+  });
+
+  test("links the cross-references of the fixture page", () => {
+    const answers = Object.fromEntries(items.map(item => [item.questionNumber, link(item.answer)]));
+    assert.deepEqual(links(answers["8"]).filter(l => l.url.startsWith("/")), [{ text: "FAQ 21", url: "/faq/srp/faq_21/" }]);
+    assert.deepEqual(links(answers["13"]).filter(l => l.url.startsWith("/")).map(l => l.url), ["/faq/official/faq_5-1/", "/faq/official/faq_5-3/"]);
+  });
+
+  test("is not part of the shared link resolver", () => {
+    const { resolveLinks } = require("../src/_data/utils/link-resolver.js");
+    const markdown = "See FAQ 21 and subsection 5.1.";
+    assert.equal(resolveLinks(markdown, "srp", internalLinks, {}), markdown);
+  });
 });

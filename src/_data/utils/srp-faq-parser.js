@@ -8,9 +8,13 @@
  *
  * Questions are numbered by ENISA ("4. When will ..."); the number is returned
  * separately from the question text. Answers are converted to Markdown.
+ *
+ * Also links the cross-references that are specific to ENISA's answers
+ * ("FAQ 21", "subsection 5.1"), see linkSrpCrossReferences.
  */
 
 const { htmlToMarkdown, htmlToText, absolutizeLinks } = require("./html-to-markdown.js");
+const { replaceOutsideLinks } = require("./link-resolver.js");
 
 const SRP_FAQ_URL = "https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/frequently-asked-questions";
 
@@ -57,7 +61,47 @@ function parseSrpFaqPage(html, baseUrl = SRP_FAQ_URL) {
   return { lastUpdatedAt, items };
 }
 
+function markdownLink(text, url, title) {
+  return `[${text}](${url} "${title.replace(/"/g, "&quot;")}")`;
+}
+
+/**
+ * Link cross-references found in ENISA's SRP FAQ answers
+ *
+ * - "FAQ 21" links to the SRP FAQ with that number (srp/faq_21)
+ * - "Section 5.4", "subsection 5.1" or "subsections 5.1 & 5.3" link to the
+ *   corresponding European Commission FAQs (official/faq_5-4, ...), which
+ *   ENISA's answers refer to
+ *
+ * References to FAQs that don't exist, and text already inside a link, are
+ * left unchanged. Run before the shared link resolver.
+ *
+ * @param {string} markdown - Answer in Markdown
+ * @param {Object} internalLinks - Index of internal FAQs by id (see createInternalLinkIndex in data.js)
+ * @returns {string} Markdown with cross-references linked
+ */
+function linkSrpCrossReferences(markdown, internalLinks) {
+  if (!markdown) return markdown;
+
+  let result = replaceOutsideLinks(markdown, /\bFAQ\s+(\d+)\b/g, (match, number) => {
+    const faq = internalLinks[`srp/faq_${number}`];
+    return faq ? markdownLink(match, faq.permalink, `📨 ENISA SRP FAQ: ${faq._pageTitle}`) : match;
+  });
+
+  const linkCommissionFaq = (number) => {
+    const faq = internalLinks[`official/faq_${number.replace(/\./g, "-")}`];
+    return faq ? markdownLink(number, faq.permalink, `🇪🇺 Official European Commission FAQ: ${faq._pageTitle}`) : number;
+  };
+
+  result = replaceOutsideLinks(result, /\b((?:[Ss]ub)?[Ss]ections?\s+)(\d+\.\d+)(\s*&\s*)?(\d+\.\d+)?/g, (match, prefix, first, separator, second) => {
+    return prefix + linkCommissionFaq(first) + (second ? separator + linkCommissionFaq(second) : "");
+  });
+
+  return result;
+}
+
 module.exports = {
   SRP_FAQ_URL,
-  parseSrpFaqPage
+  parseSrpFaqPage,
+  linkSrpCrossReferences
 };

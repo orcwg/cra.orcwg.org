@@ -73,7 +73,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
     return match;
   });
 
-  if (linkResolutionContext === 'official' || linkResolutionContext === 'srp') {
+  if (linkResolutionContext === 'official') {
 
     // Convert _4.5.1 Question title?_ or *4.5.1 Question title?* patterns (Official EU FAQ cross-references)
     // Handles both underscore and asterisk italic delimiters
@@ -109,25 +109,6 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
     // Convert (Recital 35) -> ([[Recital 35]])
     result = result.replace(/\(Recital\s+(\d+)\)/g, (match, num) => {
       return `([[Recital ${num}]])`;
-    });
-  }
-
-  if (linkResolutionContext === 'srp') {
-    // ENISA SRP FAQ cross-references: "FAQ 21" -> link to srp/faq_21
-    result = replaceOutsideLinks(result, /\bFAQ\s+(\d+)\b/g, (match, num) => {
-      const faq = internalLinks?.[`srp/faq_${num}`];
-      return faq ? mdLink(match, faq.permalink, `📨 ENISA SRP FAQ: ${faq._pageTitle}`) : match;
-    });
-
-    // References to the Commission's FAQ sections: "subsection 5.1", "Section 5.4", "subsections 5.1 & 5.3"
-    const linkCommissionFaq = (text, num) => {
-      const faq = internalLinks?.[`official/faq_${num.replace(/\./g, '-')}`];
-      return faq ? mdLink(text, faq.permalink, `🇪🇺 Official European Commission FAQ: ${faq._pageTitle}`) : text;
-    };
-    result = replaceOutsideLinks(result, /\b((?:[Ss]ub)?[Ss]ections?\s+)(\d+\.\d+)(\s*&\s*)?(\d+\.\d+)?/g, (match, prefix, first, sep, second) => {
-      let out = prefix + linkCommissionFaq(first, first);
-      if (second) out += sep + linkCommissionFaq(second, second);
-      return out;
     });
   }
 
