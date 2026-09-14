@@ -8,7 +8,8 @@
     "fetch-cra-text": "node scripts/fetch-cra-text.js",
     "build": "eleventy",
     "serve": "eleventy --serve",
-    "watch": "eleventy --watch"
+    "watch": "eleventy --watch",
+    "test": "node --test \"test/**/*.test.js\""
   },
   "author": "UnlockOpen, LLC",
   "license": "Apache-2.0",
@@ -21,6 +22,7 @@
     "markdown-it": "^14.1.0",
     "markdown-it-footnote": "^4.0.0",
     "markdown-it-github-alerts": "^1.0.0",
-    "markdown-it-plain-text": "^0.3.0"
+    "markdown-it-plain-text": "^0.3.0",
+    "turndown": "^7.2.4"
   }
 }

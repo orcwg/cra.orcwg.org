@@ -14,6 +14,8 @@ const { parseRelatedIssues } = require("./utils/issue-parser.js");
 const craReferences = require("./craReferences.json");
 const { execSync } = require("child_process");
 const { parseOfficialFAQs } = require("./parse-official-faqs.js");
+const { EC_QANDA_API_URL, parseEcQandaDocument } = require("./utils/ec-qanda-parser.js");
+const { SRP_FAQ_URL, parseSrpFaqPage, linkSrpCrossReferences } = require("./utils/srp-faq-parser.js");
 const { createApiArray } = require("./utils/api-formatter.js");
 
 // ============================================================================
@@ -474,6 +476,19 @@ const DYNAMIC_LISTS = [
     hideInTopics: HIDE_IF_EMPTY
   },
   {
+    id: 'srp',
+    title: 'Single Reporting Platform (SRP)',
+    icon: '🚨',
+    description: 'Official questions and answers from ENISA about the CRA Single Reporting Platform (SRP)',  // Replaced by the page's intro when available
+    emptyMsg: 'ENISA content is currently unavailable',
+    insertAt: 'end',  // After the official FAQs
+    inclusionFilter: (faq) => faq._linkResolutionContext === 'srp',
+    sortChildren: null,  // Maintain ENISA's numbering order
+    _showQuestionNumbers: true,
+    hideInAllFaqs: HIDE_IF_EMPTY,
+    hideInTopics: HIDE_IF_EMPTY
+  },
+  {
     id: 'unlisted',
     title: 'Unlisted FAQs',
     icon: '❌',
@@ -502,9 +517,11 @@ function initializeDynamicList(config) {
 }
 
 // Create dynamic lists, populate them, and insert into root list
+// Lists to insert at the very end are returned, to be added after all other lists
 function createAndInsertDynamicLists(lists, rootList, faqs) {
   const topLists = [];
   const bottomLists = [];
+  const endLists = [];
 
   // Create and populate each dynamic list
   DYNAMIC_LISTS.forEach(config => {
@@ -539,6 +556,8 @@ function createAndInsertDynamicLists(lists, rootList, faqs) {
     // Categorize by insertion position
     if (config.insertAt === 'top') {
       topLists.push(list);
+    } else if (config.insertAt === 'end') {
+      endLists.push(list);
     } else {
       bottomLists.push(list);
     }
@@ -549,6 +568,8 @@ function createAndInsertDynamicLists(lists, rootList, faqs) {
   // Insert into root list with proper ordering
   rootList.children.unshift(...topLists);
   rootList.children.push(...bottomLists);
+
+  return endLists;
 }
 
 // ============================================================================
@@ -605,7 +626,9 @@ async function resolveLinksThenRenderMarkdown(items, sourceField, targetField, i
 
   for (const item of items) {
     if (item[sourceField]) {
-      const resolved = resolveLinks(item[sourceField], item._linkResolutionContext, internalLinkIndex, craReferences, item);
+      // Source-specific links (e.g. cross-references between ENISA's SRP FAQs) are added by the item's own preprocessor
+      const source = item._linkPreprocessor ? item._linkPreprocessor(item[sourceField], internalLinkIndex) : item[sourceField];
+      const resolved = resolveLinks(source, item._linkResolutionContext, internalLinkIndex, craReferences, item);
       item[targetField] = md.render(resolved);
     }
   }
@@ -629,66 +652,116 @@ function createSlug(text) {
 // Fetch and process EC content, adding FAQs directly to main FAQ array
 async function fetchAndAddECFaqs(faqs) {
   const _linkResolutionContext = "cra-basics";
-  const response = await fetch("https://ec.europa.eu/commission/presscorner/api/documents?reference=QANDA/22/5375&language=en&ts=1764255415176");
+  const response = await fetch(EC_QANDA_API_URL);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const ecData = await response.json();
+  const { createdAt, lastUpdatedAt, items } = parseEcQandaDocument(ecData);
 
-  // Extract update date and clean content
-  const updateMatch = ecData.docuLanguageResource.htmlContent.match(/\*Updated on (\d{2})\/(\d{2})\/(\d{4})/);
-  let updateDate = null;
-  let cleanedContent = ecData.docuLanguageResource.htmlContent;
+  for (const { question, answer } of items) {
+    const slug = createSlug(question);
+    const id = `${_linkResolutionContext}/${slug}`;
 
-  if (updateMatch) {
-    const [, day, month, year] = updateMatch;
-    updateDate = new Date(`${year}-${month}-${day}`);
-    cleanedContent = cleanedContent.replace(/<p><em>\*Updated on \d{2}\/\d{2}\/\d{4}<\/em><\/p>/, "").trim();
+    faqs.push({
+      id,
+      type: FAQ,
+      status: "official",
+      _pageTitle: question,
+      question,
+      questionHtml: renderInlineMarkdown(question),
+      answer,
+      answerHtml: "",
+      parents: [],
+      _listed: true,
+      permalink: `/faq/${id}/`,
+      _linkResolutionContext,
+      createdAt,
+      lastUpdatedAt,
+      _isNew: isNew(createdAt),
+      _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+      author: "European Union",
+      license: "CC-BY-4.0",
+      licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
+      srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375",
+      source: "\"Cyber Resilience Act - Questions and Answers\"",
+      disclaimer: "This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.",
+      disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.")
+    });
+  }
+}
+
+// Fetch and process ENISA's Single Reporting Platform (SRP) FAQs, adding them directly to main FAQ array
+// Returns the list description built from the page's intro (null if the page has none)
+// ENISA's page doesn't expose its publication date, only the date of its last update.
+// It was reported as launched on 26 February 2026:
+// https://www.lexisnexis.com/en-gb/legal/news/enisa-publishes-faq-page-on-cyber-resilience-act-single-reporting-platform
+const SRP_FAQ_PUBLISHED = new Date("2026-02-26");
+
+async function fetchAndAddSrpFaqs(faqs) {
+  const _linkResolutionContext = "srp";
+  const response = await fetch(SRP_FAQ_URL);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const html = await response.text();
+  const { lastUpdatedAt: pageUpdatedAt, intro, items } = parseSrpFaqPage(html, SRP_FAQ_URL);
+
+  const createdAt = SRP_FAQ_PUBLISHED;
+  const lastUpdatedAt = pageUpdatedAt || createdAt;  // Last update of the page as a whole
+
+  // Quote the first paragraph of ENISA's intro, like the Commission's intro on
+  // the official FAQs list (the following paragraph only points to the
+  // Commission's FAQ). Links are reduced to their text: list descriptions are
+  // displayed inside card links on the Topics page, and links can't be nested.
+  let description = null;
+  if (intro) {
+    const dateStr = lastUpdatedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const introText = intro
+      .split(/\n\s*\n/)[0]
+      .replace(/\[([^\]]*)\]\((?:\\.|[^()\\]|\([^()]*\))*\)/g, "$1")
+      .replace(/\s+/g, " ")
+      .trim();
+    description = `**Message from ENISA**: _"${introText}"_\n\n**Last updated**: ${dateStr}`;
   }
 
-  // Extract FAQs and add to main array
-  const createdAt = new Date(ecData.publishDate);
-  const lastUpdatedAt = updateDate || createdAt;
-  const sections = cleanedContent
-    .split(/<p><strong>(.*?)<\/strong><\/p>/g)
-    .map(s => s.replace("<p>&nbsp;</p>", "").trim())
-    .filter(s => s);
+  for (const { questionNumber, question, updated, answer } of items) {
+    const id = questionNumber
+      ? `${_linkResolutionContext}/faq_${questionNumber}`
+      : `${_linkResolutionContext}/${createSlug(question)}`;
 
-  for (let i = 0; i < sections.length - 1; i += 2) {
-    const question = sections[i];
-    const answer = sections[i + 1];
-
-    if (question && answer) {
-      const slug = createSlug(question);
-      const id = `${_linkResolutionContext}/${slug}`;
-
-      faqs.push({
-        id,
-        type: FAQ,
-        status: "official",
-        _pageTitle: question,
-        question,
-        questionHtml: renderInlineMarkdown(question),
-        answer,
-        answerHtml: "",
-        parents: [],
-        _listed: true,
-        permalink: `/faq/${id}/`,
-        _linkResolutionContext,
-        createdAt,
-        lastUpdatedAt,
-        _isNew: isNew(createdAt),
-        _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-        author: "European Union",
-        license: "CC-BY-4.0",
-        licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
-        srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375",
-        source: "\"Cyber Resilience Act - Questions and Answers\"",
-        disclaimer: "This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.",
-        disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.")
-      });
-    }
+    faqs.push({
+      id,
+      type: FAQ,
+      status: "official",
+      _pageTitle: question,
+      question,
+      questionHtml: renderInlineMarkdown(question),
+      questionNumber,
+      answer,
+      answerHtml: "",
+      parents: [],
+      _listed: true,
+      permalink: `/faq/${id}/`,
+      _linkResolutionContext,
+      _linkPreprocessor: linkSrpCrossReferences,  // "FAQ 21", "subsection 5.1"
+      createdAt,
+      // Only questions ENISA marked "[UPDATED]" changed in the page's last update
+      lastUpdatedAt: updated ? lastUpdatedAt : createdAt,
+      _isNew: isNew(createdAt),
+      _recentlyUpdated: recentlyUpdated(createdAt, updated ? lastUpdatedAt : createdAt),
+      author: "European Union Agency for Cybersecurity (ENISA)",
+      authorUrl: "https://www.enisa.europa.eu/",
+      license: "ENISA legal notice",
+      licenseUrl: "https://www.enisa.europa.eu/about-enisa/legal-notice",
+      srcUrl: SRP_FAQ_URL,
+      source: "\"All you need to know about the CRA SRP\"",
+      disclaimer: "This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.",
+      disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.")
+    });
   }
+
+  return { description };
 }
 
 async function fetchOfficialFAQs(faqs, lists, rootList) {
@@ -726,6 +799,9 @@ async function processAllContent() {
   // Fetch and add EC content (now handled by dynamic list system)
   await fetchAndAddECFaqs(faqs);
 
+  // Fetch and add ENISA's SRP FAQs (also handled by dynamic list system)
+  const srpFaqs = await fetchAndAddSrpFaqs(faqs);
+
   // Fetch and add CRA implementation FAQs from PDF
   const officialFaqList = await fetchOfficialFAQs(faqs, lists, rootList);
 
@@ -735,9 +811,15 @@ async function processAllContent() {
   crossReferenceListsAndFaqs(lists, faqs);
 
   // Create, populate, and insert dynamic lists
-  createAndInsertDynamicLists(lists, rootList, faqs);
+  const endDynamicLists = createAndInsertDynamicLists(lists, rootList, faqs);
 
-  rootList.children.push(officialFaqList);
+  // Describe the SRP FAQs list with the intro of ENISA's page
+  const srpList = lists.find(list => list.id === 'srp');
+  if (srpList && srpFaqs.description) {
+    srpList.description = srpFaqs.description;
+  }
+
+  rootList.children.push(officialFaqList, ...endDynamicLists);
 
   calculateListCounts(lists);
 

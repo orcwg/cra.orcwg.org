@@ -22,6 +22,7 @@ npm install
 - **`npm run serve`** - Start development server with live reload (no cache update)
 - **`npm run watch`** - Watch for file changes and rebuild (no cache update)
 - **`npm run build`** - Build the production site (no cache update)
+- **`npm test`** - Run the unit tests (Node's built-in test runner, tests in `test/`)
 - **`npm run update-cache`** - Update external content cache
 - **`npm run update-cache -- branch-name`** - Update the external content cache to use a different branch of the [`orcwg/cra-hub`][] repositiory. Great for testing the build with unmerged pull requests.
 
@@ -112,6 +113,18 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
 - Lists maintain bidirectional links with FAQs for navigation
 - Lists are displayed using native HTML `<details>` accordions for compact navigation
 
+### Official FAQs (European Commission and ENISA)
+
+Besides the community FAQs from [`orcwg/cra-hub`][], the site integrates official EU content:
+
+- **European Commission "FAQs on the Cyber Resilience Act"** (PDF) - parsed by `src/_data/parse-official-faqs.js` from a Markdown conversion of the PDF stored in `src/_data/`, and published at `/faq/official/`. Section metadata (slugs, icons, descriptions) lives in `official-faqs-config-lists.json`, per-FAQ metadata (related issues) in `official-faqs-config-faqs.json`.
+- **European Commission "Cyber Resilience Act - Questions and Answers"** (web page) - fetched at build time from the Commission's press corner API by `fetchAndAddECFaqs` in `src/_data/data.js`, parsed by `src/_data/utils/ec-qanda-parser.js`, and exposed as the `cra-basics` dynamic list.
+- **ENISA "Single Reporting Platform (SRP) - Frequently Asked Questions"** (web page) - fetched at build time from [ENISA's FAQ page](https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/frequently-asked-questions) by `fetchAndAddSrpFaqs` in `src/_data/data.js`, parsed by `src/_data/utils/srp-faq-parser.js`, and exposed as the `srp` dynamic list. The `<dl class="ckeditor-accordion">` question/answer pairs and the "Updated: ..." date are extracted from the page. Only questions ENISA marks "[UPDATED]" get that update date (the marker itself is removed from the question). The page doesn't expose its publication date, so it is set by `SRP_FAQ_PUBLISHED` in `data.js`, based on press coverage of the page's launch. FAQ ids follow ENISA's question numbers (`srp/faq_<n>`), and references to CRA articles ("Art. 14(7)"), other SRP FAQs ("FAQ 21") or sections of the Commission's FAQ ("subsection 5.1") are linked by `linkSrpCrossReferences` in the same module.
+
+Answers from both web pages are converted from HTML to Markdown (`src/_data/utils/html-to-markdown.js`, using `turndown`) before link resolution. The link resolver inserts Markdown links, which markdown-it would otherwise leave unrendered inside raw HTML blocks. The link resolver never inserts a link inside the text of an existing link.
+
+The build fails if either page cannot be fetched or its structure changes, so that a broken site is never deployed. The parsers are covered by unit tests using excerpts of both pages (`test/fixtures/`); when a page structure changes, update the fixture along with the parser.
+
 ### Dynamic Lists
 
 The system automatically generates special lists based on FAQ properties. These are configured in the `DYNAMIC_LISTS` array in `src/_data/data.js` and are automatically added to the Topics page.
@@ -119,6 +132,8 @@ The system automatically generates special lists based on FAQ properties. These 
 **Available Dynamic Lists:**
 - `new` - FAQs created within the last 30 days (sorted newest first)
 - `recently-updated` - FAQs updated within the last 14 days (sorted by update date)
+- `cra-basics` - the European Commission's "Cyber Resilience Act - Questions and Answers" (fetched at build time)
+- `srp` - ENISA's Single Reporting Platform FAQs (fetched at build time)
 - `unlisted` - FAQs not yet assigned to any curated list
 
 **Configuration Properties:**
@@ -129,7 +144,7 @@ The system automatically generates special lists based on FAQ properties. These 
 - `sortChildren` - Optional function to sort FAQs in the list
 - `hideInAllFaqsFilter` - Function controlling visibility in "All FAQs" view
 - `hideInTopicsFilter` - Function controlling visibility in topics view
-- `insertAt` - Position in root list (`'top'` or `'bottom'`)
+- `insertAt` - Position in root list (`'top'`, `'bottom'` or `'end'`)
 
 **How Dynamic Lists Work:**
 
@@ -143,6 +158,7 @@ Dynamic lists are generated at build time by the `createAndInsertDynamicLists()`
 6. Lists are inserted into the root list based on `insertAt`:
    - `'top'` lists appear at the beginning (in array order)
    - `'bottom'` lists appear at the end (in array order)
+   - `'end'` lists appear after all other lists, including the official FAQs (in array order)
 
 Dynamic lists are fully automatic and cannot be manually referenced in YAML files.
 
@@ -179,7 +195,7 @@ Components follow a consistent data pattern:
 ### Site Configuration
 
 - Global site settings in `src/_data/site.json`
-- Navigation menu configuration (used in header, homepage cards, and footer)
+- Navigation menu configuration (used in header, homepage cards, and footer); entries with `hideFromNav: true` are shown on the homepage only
 - List ordering controlled via `listOrder` array
 - Footer content structured as sections with titles and lists
 

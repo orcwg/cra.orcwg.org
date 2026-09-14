@@ -23,6 +23,36 @@ function mdLink(text, url, title) {
 }
 
 /**
+ * Markdown link to an article of the CRA on EUR-Lex
+ *
+ * @param {string} text - Link text, e.g. "Article 14(7)" or "Art. 14(7)"
+ * @param {string|number} number - Article number
+ * @param {Object} craReferences - CRA article/annex/recital titles
+ */
+function craArticleLink(text, number, craReferences) {
+  const title = craReferences?.articleTitles?.[number] || "Unknown article";
+  return mdLink(text, `${CRA_BASE_URL}#art_${number}`, `⚖️ Article ${number} - ${title}`);
+}
+
+// Existing Markdown links: [text](url "title"), allowing escaped or balanced parentheses in the url
+const MARKDOWN_LINK_PATTERN = /!?\[(?:[^\[\]]|\[[^\]]*\])*\]\((?:\\.|[^()\\]|\([^()]*\))*\)/g;
+
+/**
+ * Apply a regex replacement only outside of existing Markdown links, so that
+ * links are never inserted inside the text of another link (nested links
+ * break the outer link when rendered)
+ */
+function replaceOutsideLinks(text, pattern, replacer) {
+  let output = "";
+  let lastIndex = 0;
+  for (const link of text.matchAll(MARKDOWN_LINK_PATTERN)) {
+    output += text.slice(lastIndex, link.index).replace(pattern, replacer) + link[0];
+    lastIndex = link.index + link[0].length;
+  }
+  return output + text.slice(lastIndex).replace(pattern, replacer);
+}
+
+/**
  * Resolve all custom link syntax in markdown content
  *
  * @param {string} markdown - Raw markdown content with custom syntax
@@ -38,7 +68,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 
   // Convert EU Directive/Regulation patterns to links using a single comprehensive regex
   // Captures patterns like: "Directive 2014/53", "Regulation (EU) 2024/2847", "Implementing Regulation (EU) 748/2012", "Delegated Directive 2025/123", etc.
-  result = result.replace(/(?:Commission\s+)?(Delegated|Implementing|)\s*(Directive|Regulation)\s*(?:\(EU\)\s*)?(?:No\s+)?(\d{3,4}\/\d{2,4})/g, (match, prefix, type, yearNum) => {
+  result = replaceOutsideLinks(result, /(?:Commission\s+)?(Delegated|Implementing|)\s*(Directive|Regulation)\s*(?:\(EU\)\s*)?(?:No\s+)?(\d{3,4}\/\d{2,4})/g, (match, prefix, type, yearNum) => {
     const regData = euRegData[yearNum];
     if (regData) {
       return mdLink(match, regData.url, `⚖️ ${regData.short_name} - ${regData.description}`);
@@ -47,7 +77,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
   });
 
   // Convert "Blue Guide" references to links
-  result = result.replace(/\bBlue Guide\b/g, (match) => {
+  result = replaceOutsideLinks(result, /\bBlue Guide\b/g, (match) => {
     const blueGuideData = euRegData['52022XC0629(04)'];
     if (blueGuideData) {
       return mdLink(match, blueGuideData.url, `📘 ${blueGuideData.short_name} - ${blueGuideData.description}`);
@@ -96,9 +126,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 
   // 1. Convert [[Article X]] patterns
   result = result.replace(/\[\[(ARTICLE|ART\.)\s+(\d+)(\([^)]*\))?\]\]/gi, (match, type, num, subsection) => {
-    const displayText = `Article ${num}${subsection || ''}`;
-    const title = craReferences?.articleTitles?.[num] || "Unknown article";
-    return mdLink(displayText, `${CRA_BASE_URL}#art_${num}`, `⚖️ Article ${num} - ${title}`);
+    return craArticleLink(`Article ${num}${subsection || ''}`, num, craReferences);
   });
 
   // 2. Convert [[Annex X]] patterns, including extended syntax like [[Annex I, Part I]]
@@ -233,5 +261,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 }
 
 module.exports = {
-  resolveLinks
+  resolveLinks,
+  replaceOutsideLinks,
+  craArticleLink
 };
