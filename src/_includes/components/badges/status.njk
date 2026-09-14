@@ -5,7 +5,7 @@
 {% elif faq.status == "approved" %}
   <data class="badge success" value="{{ faq.status }}" data-emoji="✅" title="This FAQ has been reviewed and approved by the ORC WG. It represents ORC WG's informed understanding of the CRA (but doesn't constitue legal advice).">Approved</data>
 {% elif faq.status == "official" %}
-  <data class="badge info" value="{{ faq.status }}" data-emoji="🇪🇺" title="This FAQ is an official FAQ from the European Commission. Note that it might be dated and no longer fully represent the perspective of the European Commission.">Official FAQ</data>
+  <data class="badge info" value="{{ faq.status }}" data-emoji="🇪🇺" title="This FAQ is an official FAQ from the European Commission or an EU agency such as ENISA. Note that it might be dated and no longer fully represent the perspective of its author.">Official FAQ</data>
 {% else %}
   <data class="badge danger" value="unknown" data-emoji="❌" title="All FAQs should have a status. This one somehow doesn't. This means that something is wrong in our data pipeline. We're sorry.">Status not set</data>
 {% endif %}

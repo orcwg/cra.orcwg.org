@@ -112,6 +112,16 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
 - Lists maintain bidirectional links with FAQs for navigation
 - Lists are displayed using native HTML `<details>` accordions for compact navigation
 
+### Official FAQs (European Commission and ENISA)
+
+Besides the community FAQs from [`orcwg/cra-hub`][], the site integrates official EU content:
+
+- **European Commission "FAQs on the Cyber Resilience Act"** (PDF) - parsed by `src/_data/parse-official-faqs.js` from a Markdown conversion of the PDF stored in `src/_data/`, and published at `/faq/official/`. Section metadata (slugs, icons, descriptions) lives in `official-faqs-config-lists.json`, per-FAQ metadata (related issues) in `official-faqs-config-faqs.json`.
+- **European Commission "Cyber Resilience Act - Questions and Answers"** (web page) - fetched at build time from the Commission's press corner API by `fetchAndAddECFaqs` in `src/_data/data.js` and exposed as the `cra-basics` dynamic list.
+- **ENISA "Single Reporting Platform (SRP) - Frequently Asked Questions"** (web page) - fetched at build time from [ENISA's FAQ page](https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/frequently-asked-questions) by `fetchAndAddSrpFaqs` in `src/_data/data.js` and exposed as the `srp` dynamic list. The `<dl class="ckeditor-accordion">` question/answer pairs and the "Updated: ..." date are extracted from the page, and answers are converted from HTML to Markdown (with `turndown`) so that the usual link resolution applies. FAQ ids follow ENISA's question numbers (`srp/faq_<n>`), and references to other SRP FAQs ("FAQ 21") or to sections of the Commission's FAQ ("subsection 5.1") are linked automatically by `utils/link-resolver.js`.
+
+As with the Commission's Q&A, the build fails if a page cannot be fetched or its structure changes, so that a broken site is never deployed.
+
 ### Dynamic Lists
 
 The system automatically generates special lists based on FAQ properties. These are configured in the `DYNAMIC_LISTS` array in `src/_data/data.js` and are automatically added to the Topics page.
@@ -119,6 +129,8 @@ The system automatically generates special lists based on FAQ properties. These 
 **Available Dynamic Lists:**
 - `new` - FAQs created within the last 30 days (sorted newest first)
 - `recently-updated` - FAQs updated within the last 14 days (sorted by update date)
+- `cra-basics` - the European Commission's "Cyber Resilience Act - Questions and Answers" (fetched at build time)
+- `srp` - ENISA's Single Reporting Platform FAQs (fetched at build time)
 - `unlisted` - FAQs not yet assigned to any curated list
 
 **Configuration Properties:**

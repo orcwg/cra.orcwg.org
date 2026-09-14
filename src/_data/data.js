@@ -14,6 +14,7 @@ const { parseRelatedIssues } = require("./utils/issue-parser.js");
 const craReferences = require("./craReferences.json");
 const { execSync } = require("child_process");
 const { parseOfficialFAQs } = require("./parse-official-faqs.js");
+const TurndownService = require("turndown");
 const { createApiArray } = require("./utils/api-formatter.js");
 
 // ============================================================================
@@ -474,6 +475,19 @@ const DYNAMIC_LISTS = [
     hideInTopics: HIDE_IF_EMPTY
   },
   {
+    id: 'srp',
+    title: 'Single Reporting Platform (SRP) FAQs',
+    icon: '📨',
+    description: 'Official questions and answers from ENISA about the CRA Single Reporting Platform (SRP)',
+    emptyMsg: 'ENISA content is currently unavailable',
+    insertAt: 'top',
+    inclusionFilter: (faq) => faq._linkResolutionContext === 'srp',
+    sortChildren: null,  // Maintain ENISA's numbering order
+    _showQuestionNumbers: true,
+    hideInAllFaqs: HIDE_IF_EMPTY,
+    hideInTopics: HIDE_IF_EMPTY
+  },
+  {
     id: 'unlisted',
     title: 'Unlisted FAQs',
     icon: '❌',
@@ -691,6 +705,87 @@ async function fetchAndAddECFaqs(faqs) {
   }
 }
 
+// Fetch and process ENISA's Single Reporting Platform (SRP) FAQs, adding them directly to main FAQ array
+// Source page structure: an "<em>Updated: 12 September 2026</em>" line and a
+// <dl class="ckeditor-accordion"> of <dt>question</dt><dd>answer</dd> pairs
+const SRP_FAQ_URL = "https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/frequently-asked-questions";
+const SRP_FAQ_PUBLISHED = new Date("2026-09-11"); // The page only shows its last update date
+
+const htmlToMarkdown = (function initHtmlToMarkdown() {
+  const turndown = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", emDelimiter: "_", strongDelimiter: "**", br: "\\" });
+  turndown.addRule("strikethrough", { filter: ["s", "del"], replacement: (content) => `~~${content}~~` });
+  return function htmlToMarkdown(html) {
+    return turndown.turndown(html)
+      .replace(/ /g, " ")     // non-breaking spaces
+      .replace(/[ \t]+\n/g, "\n")  // trailing whitespace
+      .trim();
+  };
+})();
+
+async function fetchAndAddSrpFaqs(faqs) {
+  const _linkResolutionContext = "srp";
+  const response = await fetch(SRP_FAQ_URL);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const html = await response.text();
+
+  // Extract update date
+  const updateMatch = html.match(/<em>\s*Updated:\s*([^<]+)<\/em>/i);
+  const createdAt = SRP_FAQ_PUBLISHED;
+  const lastUpdatedAt = updateMatch && !isNaN(new Date(updateMatch[1])) ? new Date(updateMatch[1]) : createdAt;
+
+  // Extract FAQs and add to main array
+  const listMatch = html.match(/<dl class="ckeditor-accordion">([\s\S]*?)<\/dl>/);
+  if (!listMatch) {
+    throw new Error(`Could not find the FAQ list on ${SRP_FAQ_URL}`);
+  }
+  const origin = new URL(SRP_FAQ_URL).origin;
+  const itemPattern = /<dt>([\s\S]*?)<\/dt>\s*<dd>([\s\S]*?)<\/dd>/g;
+  let match;
+
+  while ((match = itemPattern.exec(listMatch[1])) !== null) {
+    const title = markdownToPlainText(htmlToMarkdown(match[1])).replace(/\s+/g, " ").trim();
+    const answer = htmlToMarkdown(match[2].replace(/href="(\/[^"]*)"/g, (m, href) => `href="${origin}${href}"`));
+
+    // "4. When will ..." → question number "4", question "When will ..."
+    const numberMatch = title.match(/^(\d+)\.\s+(.+)$/);
+    const questionNumber = numberMatch ? numberMatch[1] : null;
+    const question = numberMatch ? numberMatch[2].trim() : title;
+    const id = questionNumber ? `${_linkResolutionContext}/faq_${questionNumber}` : `${_linkResolutionContext}/${createSlug(question)}`;
+
+    if (question && answer) {
+      faqs.push({
+        id,
+        type: FAQ,
+        status: "official",
+        _pageTitle: question,
+        question,
+        questionHtml: renderInlineMarkdown(question),
+        questionNumber,
+        answer,
+        answerHtml: "",
+        parents: [],
+        _listed: true,
+        permalink: `/faq/${id}/`,
+        _linkResolutionContext,
+        createdAt,
+        lastUpdatedAt,
+        _isNew: isNew(createdAt),
+        _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+        author: "European Union Agency for Cybersecurity (ENISA)",
+        authorUrl: "https://www.enisa.europa.eu/",
+        license: "ENISA legal notice",
+        licenseUrl: "https://www.enisa.europa.eu/about-enisa/legal-notice",
+        srcUrl: SRP_FAQ_URL,
+        source: "\"Frequently Asked Questions - CRA Single Reporting Platform (SRP)\"",
+        disclaimer: "This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.",
+        disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.")
+      });
+    }
+  }
+}
+
 async function fetchOfficialFAQs(faqs, lists, rootList) {
   const result = await parseOfficialFAQs();
   faqs.push(...result.faqs);
@@ -725,6 +820,9 @@ async function processAllContent() {
 
   // Fetch and add EC content (now handled by dynamic list system)
   await fetchAndAddECFaqs(faqs);
+
+  // Fetch and add ENISA's SRP FAQs (also handled by dynamic list system)
+  await fetchAndAddSrpFaqs(faqs);
 
   // Fetch and add CRA implementation FAQs from PDF
   const officialFaqList = await fetchOfficialFAQs(faqs, lists, rootList);
