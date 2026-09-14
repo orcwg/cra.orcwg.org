@@ -8,7 +8,8 @@
     "fetch-cra-text": "node scripts/fetch-cra-text.js",
     "build": "eleventy",
     "serve": "eleventy --serve",
-    "watch": "eleventy --watch"
+    "watch": "eleventy --watch",
+    "test": "node --test \"test/**/*.test.js\""
   },
   "author": "UnlockOpen, LLC",
   "license": "Apache-2.0",

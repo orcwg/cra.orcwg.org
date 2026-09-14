@@ -14,7 +14,8 @@ const { parseRelatedIssues } = require("./utils/issue-parser.js");
 const craReferences = require("./craReferences.json");
 const { execSync } = require("child_process");
 const { parseOfficialFAQs } = require("./parse-official-faqs.js");
-const TurndownService = require("turndown");
+const { EC_QANDA_API_URL, parseEcQandaDocument } = require("./utils/ec-qanda-parser.js");
+const { SRP_FAQ_URL, parseSrpFaqPage } = require("./utils/srp-faq-parser.js");
 const { createApiArray } = require("./utils/api-formatter.js");
 
 // ============================================================================
@@ -643,84 +644,47 @@ function createSlug(text) {
 // Fetch and process EC content, adding FAQs directly to main FAQ array
 async function fetchAndAddECFaqs(faqs) {
   const _linkResolutionContext = "cra-basics";
-  const response = await fetch("https://ec.europa.eu/commission/presscorner/api/documents?reference=QANDA/22/5375&language=en&ts=1764255415176");
+  const response = await fetch(EC_QANDA_API_URL);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const ecData = await response.json();
+  const { createdAt, lastUpdatedAt, items } = parseEcQandaDocument(ecData);
 
-  // Extract update date and clean content
-  const updateMatch = ecData.docuLanguageResource.htmlContent.match(/\*Updated on (\d{2})\/(\d{2})\/(\d{4})/);
-  let updateDate = null;
-  let cleanedContent = ecData.docuLanguageResource.htmlContent;
+  for (const { question, answer } of items) {
+    const slug = createSlug(question);
+    const id = `${_linkResolutionContext}/${slug}`;
 
-  if (updateMatch) {
-    const [, day, month, year] = updateMatch;
-    updateDate = new Date(`${year}-${month}-${day}`);
-    cleanedContent = cleanedContent.replace(/<p><em>\*Updated on \d{2}\/\d{2}\/\d{4}<\/em><\/p>/, "").trim();
-  }
-
-  // Extract FAQs and add to main array
-  const createdAt = new Date(ecData.publishDate);
-  const lastUpdatedAt = updateDate || createdAt;
-  const sections = cleanedContent
-    .split(/<p><strong>(.*?)<\/strong><\/p>/g)
-    .map(s => s.replace("<p>&nbsp;</p>", "").trim())
-    .filter(s => s);
-
-  for (let i = 0; i < sections.length - 1; i += 2) {
-    const question = sections[i];
-    const answer = sections[i + 1];
-
-    if (question && answer) {
-      const slug = createSlug(question);
-      const id = `${_linkResolutionContext}/${slug}`;
-
-      faqs.push({
-        id,
-        type: FAQ,
-        status: "official",
-        _pageTitle: question,
-        question,
-        questionHtml: renderInlineMarkdown(question),
-        answer,
-        answerHtml: "",
-        parents: [],
-        _listed: true,
-        permalink: `/faq/${id}/`,
-        _linkResolutionContext,
-        createdAt,
-        lastUpdatedAt,
-        _isNew: isNew(createdAt),
-        _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-        author: "European Union",
-        license: "CC-BY-4.0",
-        licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
-        srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375",
-        source: "\"Cyber Resilience Act - Questions and Answers\"",
-        disclaimer: "This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.",
-        disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.")
-      });
-    }
+    faqs.push({
+      id,
+      type: FAQ,
+      status: "official",
+      _pageTitle: question,
+      question,
+      questionHtml: renderInlineMarkdown(question),
+      answer,
+      answerHtml: "",
+      parents: [],
+      _listed: true,
+      permalink: `/faq/${id}/`,
+      _linkResolutionContext,
+      createdAt,
+      lastUpdatedAt,
+      _isNew: isNew(createdAt),
+      _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+      author: "European Union",
+      license: "CC-BY-4.0",
+      licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
+      srcUrl: "https://ec.europa.eu/commission/presscorner/detail/en/qanda_22_5375",
+      source: "\"Cyber Resilience Act - Questions and Answers\"",
+      disclaimer: "This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.",
+      disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.")
+    });
   }
 }
 
 // Fetch and process ENISA's Single Reporting Platform (SRP) FAQs, adding them directly to main FAQ array
-// Source page structure: an "<em>Updated: 12 September 2026</em>" line and a
-// <dl class="ckeditor-accordion"> of <dt>question</dt><dd>answer</dd> pairs
-const SRP_FAQ_URL = "https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/frequently-asked-questions";
 const SRP_FAQ_PUBLISHED = new Date("2026-09-11"); // The page only shows its last update date
-
-const htmlToMarkdown = (function initHtmlToMarkdown() {
-  const turndown = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", emDelimiter: "_", strongDelimiter: "**", br: "\\" });
-  turndown.addRule("strikethrough", { filter: ["s", "del"], replacement: (content) => `~~${content}~~` });
-  return function htmlToMarkdown(html) {
-    return turndown.turndown(html)
-      .replace(/ /g, " ")     // non-breaking spaces
-      .replace(/[ \t]+\n/g, "\n")  // trailing whitespace
-      .trim();
-  };
-})();
 
 async function fetchAndAddSrpFaqs(faqs) {
   const _linkResolutionContext = "srp";
@@ -729,60 +693,43 @@ async function fetchAndAddSrpFaqs(faqs) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const html = await response.text();
+  const { lastUpdatedAt: pageUpdatedAt, items } = parseSrpFaqPage(html, SRP_FAQ_URL);
 
-  // Extract update date
-  const updateMatch = html.match(/<em>\s*Updated:\s*([^<]+)<\/em>/i);
   const createdAt = SRP_FAQ_PUBLISHED;
-  const lastUpdatedAt = updateMatch && !isNaN(new Date(updateMatch[1])) ? new Date(updateMatch[1]) : createdAt;
+  const lastUpdatedAt = pageUpdatedAt || createdAt;
 
-  // Extract FAQs and add to main array
-  const listMatch = html.match(/<dl class="ckeditor-accordion">([\s\S]*?)<\/dl>/);
-  if (!listMatch) {
-    throw new Error(`Could not find the FAQ list on ${SRP_FAQ_URL}`);
-  }
-  const origin = new URL(SRP_FAQ_URL).origin;
-  const itemPattern = /<dt>([\s\S]*?)<\/dt>\s*<dd>([\s\S]*?)<\/dd>/g;
-  let match;
+  for (const { questionNumber, question, answer } of items) {
+    const id = questionNumber
+      ? `${_linkResolutionContext}/faq_${questionNumber}`
+      : `${_linkResolutionContext}/${createSlug(question)}`;
 
-  while ((match = itemPattern.exec(listMatch[1])) !== null) {
-    const title = markdownToPlainText(htmlToMarkdown(match[1])).replace(/\s+/g, " ").trim();
-    const answer = htmlToMarkdown(match[2].replace(/href="(\/[^"]*)"/g, (m, href) => `href="${origin}${href}"`));
-
-    // "4. When will ..." → question number "4", question "When will ..."
-    const numberMatch = title.match(/^(\d+)\.\s+(.+)$/);
-    const questionNumber = numberMatch ? numberMatch[1] : null;
-    const question = numberMatch ? numberMatch[2].trim() : title;
-    const id = questionNumber ? `${_linkResolutionContext}/faq_${questionNumber}` : `${_linkResolutionContext}/${createSlug(question)}`;
-
-    if (question && answer) {
-      faqs.push({
-        id,
-        type: FAQ,
-        status: "official",
-        _pageTitle: question,
-        question,
-        questionHtml: renderInlineMarkdown(question),
-        questionNumber,
-        answer,
-        answerHtml: "",
-        parents: [],
-        _listed: true,
-        permalink: `/faq/${id}/`,
-        _linkResolutionContext,
-        createdAt,
-        lastUpdatedAt,
-        _isNew: isNew(createdAt),
-        _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
-        author: "European Union Agency for Cybersecurity (ENISA)",
-        authorUrl: "https://www.enisa.europa.eu/",
-        license: "ENISA legal notice",
-        licenseUrl: "https://www.enisa.europa.eu/about-enisa/legal-notice",
-        srcUrl: SRP_FAQ_URL,
-        source: "\"Frequently Asked Questions - CRA Single Reporting Platform (SRP)\"",
-        disclaimer: "This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.",
-        disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.")
-      });
-    }
+    faqs.push({
+      id,
+      type: FAQ,
+      status: "official",
+      _pageTitle: question,
+      question,
+      questionHtml: renderInlineMarkdown(question),
+      questionNumber,
+      answer,
+      answerHtml: "",
+      parents: [],
+      _listed: true,
+      permalink: `/faq/${id}/`,
+      _linkResolutionContext,
+      createdAt,
+      lastUpdatedAt,
+      _isNew: isNew(createdAt),
+      _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+      author: "European Union Agency for Cybersecurity (ENISA)",
+      authorUrl: "https://www.enisa.europa.eu/",
+      license: "ENISA legal notice",
+      licenseUrl: "https://www.enisa.europa.eu/about-enisa/legal-notice",
+      srcUrl: SRP_FAQ_URL,
+      source: "\"Frequently Asked Questions - CRA Single Reporting Platform (SRP)\"",
+      disclaimer: "This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.",
+      disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.")
+    });
   }
 }
 

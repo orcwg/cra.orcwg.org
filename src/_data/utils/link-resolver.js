@@ -22,6 +22,24 @@ function mdLink(text, url, title) {
   return `[${text}](${url}${title})`;
 }
 
+// Existing Markdown links: [text](url "title"), allowing escaped or balanced parentheses in the url
+const MARKDOWN_LINK_PATTERN = /!?\[(?:[^\[\]]|\[[^\]]*\])*\]\((?:\\.|[^()\\]|\([^()]*\))*\)/g;
+
+/**
+ * Apply a regex replacement only outside of existing Markdown links, so that
+ * links are never inserted inside the text of another link (nested links
+ * break the outer link when rendered)
+ */
+function replaceOutsideLinks(text, pattern, replacer) {
+  let output = "";
+  let lastIndex = 0;
+  for (const link of text.matchAll(MARKDOWN_LINK_PATTERN)) {
+    output += text.slice(lastIndex, link.index).replace(pattern, replacer) + link[0];
+    lastIndex = link.index + link[0].length;
+  }
+  return output + text.slice(lastIndex).replace(pattern, replacer);
+}
+
 /**
  * Resolve all custom link syntax in markdown content
  *
@@ -38,7 +56,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 
   // Convert EU Directive/Regulation patterns to links using a single comprehensive regex
   // Captures patterns like: "Directive 2014/53", "Regulation (EU) 2024/2847", "Implementing Regulation (EU) 748/2012", "Delegated Directive 2025/123", etc.
-  result = result.replace(/(?:Commission\s+)?(Delegated|Implementing|)\s*(Directive|Regulation)\s*(?:\(EU\)\s*)?(?:No\s+)?(\d{3,4}\/\d{2,4})/g, (match, prefix, type, yearNum) => {
+  result = replaceOutsideLinks(result, /(?:Commission\s+)?(Delegated|Implementing|)\s*(Directive|Regulation)\s*(?:\(EU\)\s*)?(?:No\s+)?(\d{3,4}\/\d{2,4})/g, (match, prefix, type, yearNum) => {
     const regData = euRegData[yearNum];
     if (regData) {
       return mdLink(match, regData.url, `⚖️ ${regData.short_name} - ${regData.description}`);
@@ -47,7 +65,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
   });
 
   // Convert "Blue Guide" references to links
-  result = result.replace(/\bBlue Guide\b/g, (match) => {
+  result = replaceOutsideLinks(result, /\bBlue Guide\b/g, (match) => {
     const blueGuideData = euRegData['52022XC0629(04)'];
     if (blueGuideData) {
       return mdLink(match, blueGuideData.url, `📘 ${blueGuideData.short_name} - ${blueGuideData.description}`);
@@ -96,7 +114,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 
   if (linkResolutionContext === 'srp') {
     // ENISA SRP FAQ cross-references: "FAQ 21" -> link to srp/faq_21
-    result = result.replace(/\bFAQ\s+(\d+)\b/g, (match, num) => {
+    result = replaceOutsideLinks(result, /\bFAQ\s+(\d+)\b/g, (match, num) => {
       const faq = internalLinks?.[`srp/faq_${num}`];
       return faq ? mdLink(match, faq.permalink, `📨 ENISA SRP FAQ: ${faq._pageTitle}`) : match;
     });
@@ -106,7 +124,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
       const faq = internalLinks?.[`official/faq_${num.replace(/\./g, '-')}`];
       return faq ? mdLink(text, faq.permalink, `🇪🇺 Official European Commission FAQ: ${faq._pageTitle}`) : text;
     };
-    result = result.replace(/\b((?:[Ss]ub)?[Ss]ections?\s+)(\d+\.\d+)(\s*&\s*)?(\d+\.\d+)?/g, (match, prefix, first, sep, second) => {
+    result = replaceOutsideLinks(result, /\b((?:[Ss]ub)?[Ss]ections?\s+)(\d+\.\d+)(\s*&\s*)?(\d+\.\d+)?/g, (match, prefix, first, sep, second) => {
       let out = prefix + linkCommissionFaq(first, first);
       if (second) out += sep + linkCommissionFaq(second, second);
       return out;
@@ -252,5 +270,6 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 }
 
 module.exports = {
-  resolveLinks
+  resolveLinks,
+  replaceOutsideLinks
 };

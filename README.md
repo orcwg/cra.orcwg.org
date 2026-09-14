@@ -22,6 +22,7 @@ npm install
 - **`npm run serve`** - Start development server with live reload (no cache update)
 - **`npm run watch`** - Watch for file changes and rebuild (no cache update)
 - **`npm run build`** - Build the production site (no cache update)
+- **`npm test`** - Run the unit tests (Node's built-in test runner, tests in `test/`)
 - **`npm run update-cache`** - Update external content cache
 - **`npm run update-cache -- branch-name`** - Update the external content cache to use a different branch of the [`orcwg/cra-hub`][] repositiory. Great for testing the build with unmerged pull requests.
 
@@ -117,10 +118,12 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
 Besides the community FAQs from [`orcwg/cra-hub`][], the site integrates official EU content:
 
 - **European Commission "FAQs on the Cyber Resilience Act"** (PDF) - parsed by `src/_data/parse-official-faqs.js` from a Markdown conversion of the PDF stored in `src/_data/`, and published at `/faq/official/`. Section metadata (slugs, icons, descriptions) lives in `official-faqs-config-lists.json`, per-FAQ metadata (related issues) in `official-faqs-config-faqs.json`.
-- **European Commission "Cyber Resilience Act - Questions and Answers"** (web page) - fetched at build time from the Commission's press corner API by `fetchAndAddECFaqs` in `src/_data/data.js` and exposed as the `cra-basics` dynamic list.
-- **ENISA "Single Reporting Platform (SRP) - Frequently Asked Questions"** (web page) - fetched at build time from [ENISA's FAQ page](https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/frequently-asked-questions) by `fetchAndAddSrpFaqs` in `src/_data/data.js` and exposed as the `srp` dynamic list. The `<dl class="ckeditor-accordion">` question/answer pairs and the "Updated: ..." date are extracted from the page, and answers are converted from HTML to Markdown (with `turndown`) so that the usual link resolution applies. FAQ ids follow ENISA's question numbers (`srp/faq_<n>`), and references to other SRP FAQs ("FAQ 21") or to sections of the Commission's FAQ ("subsection 5.1") are linked automatically by `utils/link-resolver.js`.
+- **European Commission "Cyber Resilience Act - Questions and Answers"** (web page) - fetched at build time from the Commission's press corner API by `fetchAndAddECFaqs` in `src/_data/data.js`, parsed by `src/_data/utils/ec-qanda-parser.js`, and exposed as the `cra-basics` dynamic list.
+- **ENISA "Single Reporting Platform (SRP) - Frequently Asked Questions"** (web page) - fetched at build time from [ENISA's FAQ page](https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/frequently-asked-questions) by `fetchAndAddSrpFaqs` in `src/_data/data.js`, parsed by `src/_data/utils/srp-faq-parser.js`, and exposed as the `srp` dynamic list. The `<dl class="ckeditor-accordion">` question/answer pairs and the "Updated: ..." date are extracted from the page. FAQ ids follow ENISA's question numbers (`srp/faq_<n>`), and references to other SRP FAQs ("FAQ 21") or to sections of the Commission's FAQ ("subsection 5.1") are linked automatically by `utils/link-resolver.js`.
 
-As with the Commission's Q&A, the build fails if a page cannot be fetched or its structure changes, so that a broken site is never deployed.
+Answers from both web pages are converted from HTML to Markdown (`src/_data/utils/html-to-markdown.js`, using `turndown`) before link resolution. The link resolver inserts Markdown links, which markdown-it would otherwise leave unrendered inside raw HTML blocks. The link resolver never inserts a link inside the text of an existing link.
+
+The build fails if either page cannot be fetched or its structure changes, so that a broken site is never deployed. The parsers are covered by unit tests using excerpts of both pages (`test/fixtures/`); when a page structure changes, update the fixture along with the parser.
 
 ### Dynamic Lists
 
