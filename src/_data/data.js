@@ -687,8 +687,10 @@ async function fetchAndAddECFaqs(faqs) {
 
 // Fetch and process ENISA's Single Reporting Platform (SRP) FAQs, adding them directly to main FAQ array
 // Returns the list description built from the page's intro (null if the page has none)
-// ENISA's page doesn't expose its publication date, only the date of its last update
-const SRP_FAQ_PUBLISHED = new Date("2026-09-11");
+// ENISA's page doesn't expose its publication date, only the date of its last update.
+// It was reported as launched on 26 February 2026:
+// https://www.lexisnexis.com/en-gb/legal/news/enisa-publishes-faq-page-on-cyber-resilience-act-single-reporting-platform
+const SRP_FAQ_PUBLISHED = new Date("2026-02-26");
 
 async function fetchAndAddSrpFaqs(faqs) {
   const _linkResolutionContext = "srp";
