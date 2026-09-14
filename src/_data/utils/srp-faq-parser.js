@@ -3,6 +3,9 @@
  *
  * Extracts the question/answer pairs and the last update date from ENISA's
  * SRP FAQ web page. The page structure relied upon:
+ * - the page title, "All you need to know about the CRA Single Reporting
+ *   Platform", in a <div class="quote-wrapper"> (the <h1> only says
+ *   "Frequently Asked Questions")
  * - an "<em>Updated: 12 September 2026</em>" line with the last update date
  * - intro paragraphs between that line and the FAQ list
  * - a <dl class="ckeditor-accordion"> of <dt>question</dt><dd>answer</dd> pairs
@@ -27,7 +30,7 @@ const SRP_FAQ_URL = "https://www.enisa.europa.eu/topics/product-security/single-
  *
  * @param {string} html - HTML of the FAQ page
  * @param {string} baseUrl - URL of the page, used to absolutize links
- * @returns {{ lastUpdatedAt: Date|null, intro: string|null, items: Array<{ questionNumber: string|null, question: string, updated: boolean, answer: string }> }}
+ * @returns {{ title: string|null, lastUpdatedAt: Date|null, intro: string|null, items: Array<{ questionNumber: string|null, question: string, updated: boolean, answer: string }> }}
  * @throws if the page does not contain the FAQ list, or the list is empty
  */
 function parseSrpFaqPage(html, baseUrl = SRP_FAQ_URL) {
@@ -35,6 +38,9 @@ function parseSrpFaqPage(html, baseUrl = SRP_FAQ_URL) {
   if (!listMatch) {
     throw new Error(`Could not find the FAQ list on ${baseUrl}`);
   }
+
+  const titleMatch = html.match(/<div class="quote-wrapper">\s*<p>([\s\S]*?)<\/p>/);
+  const title = titleMatch ? htmlToText(titleMatch[1]) || null : null;
 
   const updateMatch = html.match(/<em>\s*Updated:\s*([^<]+)<\/em>/i);
   const updateDate = updateMatch ? new Date(`${updateMatch[1].trim()} UTC`) : null;
@@ -74,7 +80,7 @@ function parseSrpFaqPage(html, baseUrl = SRP_FAQ_URL) {
     throw new Error(`No FAQs found on ${baseUrl}`);
   }
 
-  return { lastUpdatedAt, intro, items };
+  return { title, lastUpdatedAt, intro, items };
 }
 
 function markdownLink(text, url, title) {
