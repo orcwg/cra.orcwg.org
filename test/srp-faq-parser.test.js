@@ -107,6 +107,32 @@ describe("linkSrpCrossReferences", () => {
   // Extract [text](url) pairs from Markdown, ignoring link titles
   const links = (markdown) => [...markdown.matchAll(/\[([^\]]+)\]\((\S+)(?: "[^"]*")?\)/g)].map(([, text, url]) => ({ text, url }));
 
+  test("links CRA article references, keeping ENISA's wording", () => {
+    const result = link("In accordance with Art. 14(7) of the CRA, obligations under Art.14 and Article 24(3) apply.");
+    assert.deepEqual(links(result), [
+      { text: "Art. 14(7)", url: "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R2847#art_14" },
+      { text: "Art.14", url: "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R2847#art_14" },
+      { text: "Article 24(3)", url: "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R2847#art_24" }
+    ]);
+    assert.match(result, /\[Art\. 14\(7\)\]\(\S+ "⚖️ Article 14 - Reporting obligations of manufacturers"\)/);
+  });
+
+  test("links article references with a space before the paragraph", () => {
+    assert.deepEqual(links(link("severe incidents (SIs) under Art. 14 (3) having an impact")).map(l => l.text), ["Art. 14 (3)"]);
+  });
+
+  test("links both articles in 'Articles 14-17'", () => {
+    const result = link("Articles 14-17 of the CRA provide the relevant framework.");
+    assert.deepEqual(links(result).map(l => [l.text, l.url.split("#")[1]]), [["14", "art_14"], ["17", "art_17"]]);
+    assert.match(result, /^Articles \[14\]\([^)]+\)-\[17\]\([^)]+\) of the CRA/);
+  });
+
+  test("links only the article when the paragraph is struck through", () => {
+    const result = link("under Art. 14(~~3~~1) and severe incidents");
+    assert.deepEqual(links(result).map(l => l.text), ["Art. 14"]);
+    assert.match(result, /\)\(~~3~~1\) and severe incidents$/);
+  });
+
   test("links references to other SRP FAQs", () => {
     const result = link("More detailed information is provided in FAQ 21.");
     assert.equal(
@@ -137,7 +163,7 @@ describe("linkSrpCrossReferences", () => {
   });
 
   test("does not insert links inside existing links", () => {
-    const markdown = "See [FAQ 21 on ENISA's website](https://www.enisa.europa.eu/faq#21) and [Section 5.4](https://example.org/5-4).";
+    const markdown = "See [FAQ 21 on ENISA's website](https://www.enisa.europa.eu/faq#21), [Section 5.4](https://example.org/5-4) and [Art. 16(1) of the CRA](https://example.org/art-16).";
     assert.equal(link(markdown), markdown);
   });
 
@@ -153,7 +179,7 @@ describe("linkSrpCrossReferences", () => {
 
   test("is not part of the shared link resolver", () => {
     const { resolveLinks } = require("../src/_data/utils/link-resolver.js");
-    const markdown = "See FAQ 21 and subsection 5.1.";
+    const markdown = "See FAQ 21, subsection 5.1 and Art. 14(7).";
     assert.equal(resolveLinks(markdown, "srp", internalLinks, {}), markdown);
   });
 });

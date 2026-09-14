@@ -22,6 +22,18 @@ function mdLink(text, url, title) {
   return `[${text}](${url}${title})`;
 }
 
+/**
+ * Markdown link to an article of the CRA on EUR-Lex
+ *
+ * @param {string} text - Link text, e.g. "Article 14(7)" or "Art. 14(7)"
+ * @param {string|number} number - Article number
+ * @param {Object} craReferences - CRA article/annex/recital titles
+ */
+function craArticleLink(text, number, craReferences) {
+  const title = craReferences?.articleTitles?.[number] || "Unknown article";
+  return mdLink(text, `${CRA_BASE_URL}#art_${number}`, `⚖️ Article ${number} - ${title}`);
+}
+
 // Existing Markdown links: [text](url "title"), allowing escaped or balanced parentheses in the url
 const MARKDOWN_LINK_PATTERN = /!?\[(?:[^\[\]]|\[[^\]]*\])*\]\((?:\\.|[^()\\]|\([^()]*\))*\)/g;
 
@@ -114,9 +126,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 
   // 1. Convert [[Article X]] patterns
   result = result.replace(/\[\[(ARTICLE|ART\.)\s+(\d+)(\([^)]*\))?\]\]/gi, (match, type, num, subsection) => {
-    const displayText = `Article ${num}${subsection || ''}`;
-    const title = craReferences?.articleTitles?.[num] || "Unknown article";
-    return mdLink(displayText, `${CRA_BASE_URL}#art_${num}`, `⚖️ Article ${num} - ${title}`);
+    return craArticleLink(`Article ${num}${subsection || ''}`, num, craReferences);
   });
 
   // 2. Convert [[Annex X]] patterns, including extended syntax like [[Annex I, Part I]]
@@ -252,5 +262,6 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 
 module.exports = {
   resolveLinks,
-  replaceOutsideLinks
+  replaceOutsideLinks,
+  craArticleLink
 };

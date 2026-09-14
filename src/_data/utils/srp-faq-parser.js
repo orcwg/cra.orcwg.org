@@ -15,7 +15,8 @@
  */
 
 const { htmlToMarkdown, htmlToText, absolutizeLinks } = require("./html-to-markdown.js");
-const { replaceOutsideLinks } = require("./link-resolver.js");
+const { replaceOutsideLinks, craArticleLink } = require("./link-resolver.js");
+const craReferences = require("../craReferences.json");
 
 const SRP_FAQ_URL = "https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/frequently-asked-questions";
 
@@ -78,6 +79,8 @@ function markdownLink(text, url, title) {
 /**
  * Link cross-references found in ENISA's SRP FAQ answers
  *
+ * - "Art. 14(7)", "Art.14", "Article 14(7)" or "Articles 14-17" link to the
+ *   corresponding articles of the CRA on EUR-Lex, keeping ENISA's wording
  * - "FAQ 21" links to the SRP FAQ with that number (srp/faq_21)
  * - "Section 5.4", "subsection 5.1" or "subsections 5.1 & 5.3" link to the
  *   corresponding European Commission FAQs (official/faq_5-4, ...), which
@@ -93,7 +96,17 @@ function markdownLink(text, url, title) {
 function linkSrpCrossReferences(markdown, internalLinks) {
   if (!markdown) return markdown;
 
-  let result = replaceOutsideLinks(markdown, /\bFAQ\s+(\d+)\b/g, (match, number) => {
+  // "Articles 14-17": link each article number
+  let result = replaceOutsideLinks(markdown, /\b(Articles\s+)(\d+)(\s*[-–]\s*)(\d+)\b/g, (match, prefix, first, separator, last) => {
+    return prefix + craArticleLink(first, first, craReferences) + separator + craArticleLink(last, last, craReferences);
+  });
+
+  // "Art. 14(7)", "Art.14", "Art. 14 (3)", "Article 14(7)"
+  result = replaceOutsideLinks(result, /\b(?:Art\.\s?|Article\s+)(\d+)(?:\s?\(\d+\))?/g, (match, number) => {
+    return craArticleLink(match, number, craReferences);
+  });
+
+  result = replaceOutsideLinks(result, /\bFAQ\s+(\d+)\b/g, (match, number) => {
     const faq = internalLinks[`srp/faq_${number}`];
     return faq ? markdownLink(match, faq.permalink, `🚨 ENISA SRP FAQ: ${faq._pageTitle}`) : match;
   });
