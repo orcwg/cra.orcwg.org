@@ -477,7 +477,7 @@ const DYNAMIC_LISTS = [
   },
   {
     id: 'srp',
-    title: 'Single Reporting Platform (SRP) FAQs',
+    title: 'Single Reporting Platform (SRP)',
     icon: '🚨',
     description: 'Official questions and answers from ENISA about the CRA Single Reporting Platform (SRP)',  // Replaced by the page's intro when available
     emptyMsg: 'ENISA content is currently unavailable',
@@ -687,7 +687,8 @@ async function fetchAndAddECFaqs(faqs) {
 
 // Fetch and process ENISA's Single Reporting Platform (SRP) FAQs, adding them directly to main FAQ array
 // Returns the list description built from the page's intro (null if the page has none)
-const SRP_FAQ_PUBLISHED = new Date("2026-09-11"); // The page only shows its last update date
+// ENISA's page doesn't expose its publication date, only the date of its last update
+const SRP_FAQ_PUBLISHED = new Date("2026-09-11");
 
 async function fetchAndAddSrpFaqs(faqs) {
   const _linkResolutionContext = "srp";
@@ -699,7 +700,7 @@ async function fetchAndAddSrpFaqs(faqs) {
   const { lastUpdatedAt: pageUpdatedAt, intro, items } = parseSrpFaqPage(html, SRP_FAQ_URL);
 
   const createdAt = SRP_FAQ_PUBLISHED;
-  const lastUpdatedAt = pageUpdatedAt || createdAt;
+  const lastUpdatedAt = pageUpdatedAt || createdAt;  // Last update of the page as a whole
 
   // Quote the first paragraph of ENISA's intro, like the Commission's intro on
   // the official FAQs list (the following paragraph only points to the
@@ -716,7 +717,7 @@ async function fetchAndAddSrpFaqs(faqs) {
     description = `**Message from ENISA**: _"${introText}"_\n\n**Last updated**: ${dateStr}`;
   }
 
-  for (const { questionNumber, question, answer } of items) {
+  for (const { questionNumber, question, updated, answer } of items) {
     const id = questionNumber
       ? `${_linkResolutionContext}/faq_${questionNumber}`
       : `${_linkResolutionContext}/${createSlug(question)}`;
@@ -737,9 +738,10 @@ async function fetchAndAddSrpFaqs(faqs) {
       _linkResolutionContext,
       _linkPreprocessor: linkSrpCrossReferences,  // "FAQ 21", "subsection 5.1"
       createdAt,
-      lastUpdatedAt,
+      // Only questions ENISA marked "[UPDATED]" changed in the page's last update
+      lastUpdatedAt: updated ? lastUpdatedAt : createdAt,
       _isNew: isNew(createdAt),
-      _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt),
+      _recentlyUpdated: recentlyUpdated(createdAt, updated ? lastUpdatedAt : createdAt),
       author: "European Union Agency for Cybersecurity (ENISA)",
       authorUrl: "https://www.enisa.europa.eu/",
       license: "ENISA legal notice",

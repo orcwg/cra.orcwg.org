@@ -37,8 +37,15 @@ test("separates ENISA's question number from the question text", () => {
   assert.equal(byNumber("1").question, "What is the Cyber Resilience Act’s Single Reporting Platform (CRA SRP)?");
 });
 
-test("keeps ENISA's [UPDATED] marker in the question text", () => {
-  assert.equal(byNumber("4").question, "[UPDATED] When will the Single Reporting Platform be operational?");
+test("removes ENISA's [UPDATED] marker from questions and flags them as updated", () => {
+  assert.equal(byNumber("4").question, "When will the Single Reporting Platform be operational?");
+  assert.equal(byNumber("4").updated, true);
+  assert.deepEqual(items.filter(item => item.updated).map(item => item.questionNumber), ["4", "7", "17"]);
+});
+
+test("does not flag questions without the [UPDATED] marker as updated", () => {
+  assert.equal(byNumber("1").updated, false);
+  assert.equal(items[items.length - 1].updated, false);
 });
 
 test("normalizes whitespace and non-breaking spaces in questions", () => {

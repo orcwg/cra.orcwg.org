@@ -8,7 +8,9 @@
  * - a <dl class="ckeditor-accordion"> of <dt>question</dt><dd>answer</dd> pairs
  *
  * Questions are numbered by ENISA ("4. When will ..."); the number is returned
- * separately from the question text. Answers are converted to Markdown.
+ * separately from the question text. Questions ENISA changed in the last update
+ * are marked "[UPDATED]"; the marker is removed from the question text and
+ * returned as the `updated` flag. Answers are converted to Markdown.
  *
  * Also links the cross-references that are specific to ENISA's answers
  * ("FAQ 21", "subsection 5.1"), see linkSrpCrossReferences.
@@ -25,7 +27,7 @@ const SRP_FAQ_URL = "https://www.enisa.europa.eu/topics/product-security/single-
  *
  * @param {string} html - HTML of the FAQ page
  * @param {string} baseUrl - URL of the page, used to absolutize links
- * @returns {{ lastUpdatedAt: Date|null, intro: string|null, items: Array<{ questionNumber: string|null, question: string, answer: string }> }}
+ * @returns {{ lastUpdatedAt: Date|null, intro: string|null, items: Array<{ questionNumber: string|null, question: string, updated: boolean, answer: string }> }}
  * @throws if the page does not contain the FAQ list, or the list is empty
  */
 function parseSrpFaqPage(html, baseUrl = SRP_FAQ_URL) {
@@ -55,13 +57,16 @@ function parseSrpFaqPage(html, baseUrl = SRP_FAQ_URL) {
     const title = htmlToText(match[1]);
     const answer = htmlToMarkdown(absolutizeLinks(match[2], baseUrl));
 
-    // "4. When will ..." → question number "4", question "When will ..."
+    // "4. [UPDATED] When will ..." → question number "4", updated, question "When will ..."
     const numberMatch = title.match(/^(\d+)\.\s+(.+)$/);
     const questionNumber = numberMatch ? numberMatch[1] : null;
-    const question = numberMatch ? numberMatch[2].trim() : title;
+    const questionText = numberMatch ? numberMatch[2].trim() : title;
+    const updatedMatch = questionText.match(/^\[UPDATED\]\s*/i);
+    const updated = Boolean(updatedMatch);
+    const question = updatedMatch ? questionText.slice(updatedMatch[0].length) : questionText;
 
     if (question && answer) {
-      items.push({ questionNumber, question, answer });
+      items.push({ questionNumber, question, updated, answer });
     }
   }
 
