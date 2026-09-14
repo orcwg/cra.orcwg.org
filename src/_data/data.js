@@ -478,7 +478,7 @@ const DYNAMIC_LISTS = [
   {
     id: 'srp',
     title: 'Single Reporting Platform (SRP) FAQs',
-    icon: '📨',
+    icon: '🚨',
     description: 'Official questions and answers from ENISA about the CRA Single Reporting Platform (SRP)',
     emptyMsg: 'ENISA content is currently unavailable',
     insertAt: 'top',

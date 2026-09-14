@@ -97,7 +97,7 @@ describe("linkSrpCrossReferences", () => {
     const result = link("More detailed information is provided in FAQ 21.");
     assert.equal(
       result,
-      'More detailed information is provided in [FAQ 21](/faq/srp/faq_21/ "📨 ENISA SRP FAQ: Can the dissemination of a report be delayed or withheld?").'
+      'More detailed information is provided in [FAQ 21](/faq/srp/faq_21/ "🚨 ENISA SRP FAQ: Can the dissemination of a report be delayed or withheld?").'
     );
   });
 

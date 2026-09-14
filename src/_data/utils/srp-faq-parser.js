@@ -85,7 +85,7 @@ function linkSrpCrossReferences(markdown, internalLinks) {
 
   let result = replaceOutsideLinks(markdown, /\bFAQ\s+(\d+)\b/g, (match, number) => {
     const faq = internalLinks[`srp/faq_${number}`];
-    return faq ? markdownLink(match, faq.permalink, `📨 ENISA SRP FAQ: ${faq._pageTitle}`) : match;
+    return faq ? markdownLink(match, faq.permalink, `🚨 ENISA SRP FAQ: ${faq._pageTitle}`) : match;
   });
 
   const linkCommissionFaq = (number) => {
