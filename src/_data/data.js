@@ -705,8 +705,7 @@ async function fetchAndAddSrpFaqs(faqs) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const html = await response.text();
-  const { title, lastUpdatedAt: pageUpdatedAt, intro, items } = parseSrpFaqPage(html, SRP_FAQ_URL);
-  const source = `"${title || "All you need to know about the CRA Single Reporting Platform"}"`;
+  const { lastUpdatedAt: pageUpdatedAt, intro, items } = parseSrpFaqPage(html, SRP_FAQ_URL);
 
   const createdAt = SRP_FAQ_PUBLISHED;
   const lastUpdatedAt = pageUpdatedAt || createdAt;  // Last update of the page as a whole
@@ -756,7 +755,7 @@ async function fetchAndAddSrpFaqs(faqs) {
       license: "ENISA legal notice",
       licenseUrl: "https://www.enisa.europa.eu/about-enisa/legal-notice",
       srcUrl: SRP_FAQ_URL,
-      source,
+      source: "\"All you need to know about the CRA SRP\"",
       disclaimer: "This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.",
       disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.")
     });

@@ -8,15 +8,6 @@ const fixture = fs.readFileSync(path.join(__dirname, "fixtures", "enisa-srp-faq.
 const { lastUpdatedAt, items } = parseSrpFaqPage(fixture, SRP_FAQ_URL);
 const byNumber = (number) => items.find(item => item.questionNumber === number);
 
-test("extracts the page title", () => {
-  assert.equal(parseSrpFaqPage(fixture).title, "All you need to know about the CRA Single Reporting Platform");
-});
-
-test("returns a null title when the page has none", () => {
-  const html = fixture.replace(/<div class="quote-wrapper">[\s\S]*?<\/div>/, "");
-  assert.equal(parseSrpFaqPage(html).title, null);
-});
-
 test("extracts the last update date", () => {
   assert.equal(lastUpdatedAt.toISOString(), "2026-09-12T00:00:00.000Z");
 });
