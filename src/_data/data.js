@@ -481,7 +481,7 @@ const DYNAMIC_LISTS = [
     icon: '🚨',
     description: 'Official questions and answers from ENISA about the CRA Single Reporting Platform (SRP)',  // Replaced by the page's intro when available
     emptyMsg: 'ENISA content is currently unavailable',
-    insertAt: 'top',
+    insertAt: 'end',  // After the official FAQs
     inclusionFilter: (faq) => faq._linkResolutionContext === 'srp',
     sortChildren: null,  // Maintain ENISA's numbering order
     _showQuestionNumbers: true,
@@ -517,9 +517,11 @@ function initializeDynamicList(config) {
 }
 
 // Create dynamic lists, populate them, and insert into root list
+// Lists to insert at the very end are returned, to be added after all other lists
 function createAndInsertDynamicLists(lists, rootList, faqs) {
   const topLists = [];
   const bottomLists = [];
+  const endLists = [];
 
   // Create and populate each dynamic list
   DYNAMIC_LISTS.forEach(config => {
@@ -554,6 +556,8 @@ function createAndInsertDynamicLists(lists, rootList, faqs) {
     // Categorize by insertion position
     if (config.insertAt === 'top') {
       topLists.push(list);
+    } else if (config.insertAt === 'end') {
+      endLists.push(list);
     } else {
       bottomLists.push(list);
     }
@@ -564,6 +568,8 @@ function createAndInsertDynamicLists(lists, rootList, faqs) {
   // Insert into root list with proper ordering
   rootList.children.unshift(...topLists);
   rootList.children.push(...bottomLists);
+
+  return endLists;
 }
 
 // ============================================================================
@@ -805,7 +811,7 @@ async function processAllContent() {
   crossReferenceListsAndFaqs(lists, faqs);
 
   // Create, populate, and insert dynamic lists
-  createAndInsertDynamicLists(lists, rootList, faqs);
+  const endDynamicLists = createAndInsertDynamicLists(lists, rootList, faqs);
 
   // Describe the SRP FAQs list with the intro of ENISA's page
   const srpList = lists.find(list => list.id === 'srp');
@@ -813,7 +819,7 @@ async function processAllContent() {
     srpList.description = srpFaqs.description;
   }
 
-  rootList.children.push(officialFaqList);
+  rootList.children.push(officialFaqList, ...endDynamicLists);
 
   calculateListCounts(lists);
 

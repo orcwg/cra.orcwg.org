@@ -144,7 +144,7 @@ The system automatically generates special lists based on FAQ properties. These 
 - `sortChildren` - Optional function to sort FAQs in the list
 - `hideInAllFaqsFilter` - Function controlling visibility in "All FAQs" view
 - `hideInTopicsFilter` - Function controlling visibility in topics view
-- `insertAt` - Position in root list (`'top'` or `'bottom'`)
+- `insertAt` - Position in root list (`'top'`, `'bottom'` or `'end'`)
 
 **How Dynamic Lists Work:**
 
@@ -158,6 +158,7 @@ Dynamic lists are generated at build time by the `createAndInsertDynamicLists()`
 6. Lists are inserted into the root list based on `insertAt`:
    - `'top'` lists appear at the beginning (in array order)
    - `'bottom'` lists appear at the end (in array order)
+   - `'end'` lists appear after all other lists, including the official FAQs (in array order)
 
 Dynamic lists are fully automatic and cannot be manually referenced in YAML files.
 
