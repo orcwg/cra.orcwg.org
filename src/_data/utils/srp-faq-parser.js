@@ -4,6 +4,7 @@
  * Extracts the question/answer pairs and the last update date from ENISA's
  * SRP FAQ web page. The page structure relied upon:
  * - an "<em>Updated: 12 September 2026</em>" line with the last update date
+ * - intro paragraphs between that line and the FAQ list
  * - a <dl class="ckeditor-accordion"> of <dt>question</dt><dd>answer</dd> pairs
  *
  * Questions are numbered by ENISA ("4. When will ..."); the number is returned
@@ -23,7 +24,7 @@ const SRP_FAQ_URL = "https://www.enisa.europa.eu/topics/product-security/single-
  *
  * @param {string} html - HTML of the FAQ page
  * @param {string} baseUrl - URL of the page, used to absolutize links
- * @returns {{ lastUpdatedAt: Date|null, items: Array<{ questionNumber: string|null, question: string, answer: string }> }}
+ * @returns {{ lastUpdatedAt: Date|null, intro: string|null, items: Array<{ questionNumber: string|null, question: string, answer: string }> }}
  * @throws if the page does not contain the FAQ list, or the list is empty
  */
 function parseSrpFaqPage(html, baseUrl = SRP_FAQ_URL) {
@@ -35,6 +36,15 @@ function parseSrpFaqPage(html, baseUrl = SRP_FAQ_URL) {
   const updateMatch = html.match(/<em>\s*Updated:\s*([^<]+)<\/em>/i);
   const updateDate = updateMatch ? new Date(`${updateMatch[1].trim()} UTC`) : null;
   const lastUpdatedAt = updateDate && !isNaN(updateDate) ? updateDate : null;
+
+  // Intro: the paragraphs between the "Updated" line and the FAQ list, in Markdown
+  let intro = null;
+  if (updateMatch) {
+    const introStart = html.indexOf("</p>", updateMatch.index);
+    if (introStart !== -1 && introStart < listMatch.index) {
+      intro = htmlToMarkdown(absolutizeLinks(html.slice(introStart + "</p>".length, listMatch.index), baseUrl)) || null;
+    }
+  }
 
   const items = [];
   const itemPattern = /<dt>([\s\S]*?)<\/dt>\s*<dd>([\s\S]*?)<\/dd>/g;
@@ -58,7 +68,7 @@ function parseSrpFaqPage(html, baseUrl = SRP_FAQ_URL) {
     throw new Error(`No FAQs found on ${baseUrl}`);
   }
 
-  return { lastUpdatedAt, items };
+  return { lastUpdatedAt, intro, items };
 }
 
 function markdownLink(text, url, title) {

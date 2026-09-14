@@ -479,7 +479,7 @@ const DYNAMIC_LISTS = [
     id: 'srp',
     title: 'Single Reporting Platform (SRP) FAQs',
     icon: '🚨',
-    description: 'Official questions and answers from ENISA about the CRA Single Reporting Platform (SRP)',
+    description: 'Official questions and answers from ENISA about the CRA Single Reporting Platform (SRP)',  // Replaced by the page's intro when available
     emptyMsg: 'ENISA content is currently unavailable',
     insertAt: 'top',
     inclusionFilter: (faq) => faq._linkResolutionContext === 'srp',
@@ -686,6 +686,7 @@ async function fetchAndAddECFaqs(faqs) {
 }
 
 // Fetch and process ENISA's Single Reporting Platform (SRP) FAQs, adding them directly to main FAQ array
+// Returns the list description built from the page's intro (null if the page has none)
 const SRP_FAQ_PUBLISHED = new Date("2026-09-11"); // The page only shows its last update date
 
 async function fetchAndAddSrpFaqs(faqs) {
@@ -695,10 +696,25 @@ async function fetchAndAddSrpFaqs(faqs) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const html = await response.text();
-  const { lastUpdatedAt: pageUpdatedAt, items } = parseSrpFaqPage(html, SRP_FAQ_URL);
+  const { lastUpdatedAt: pageUpdatedAt, intro, items } = parseSrpFaqPage(html, SRP_FAQ_URL);
 
   const createdAt = SRP_FAQ_PUBLISHED;
   const lastUpdatedAt = pageUpdatedAt || createdAt;
+
+  // Quote the first paragraph of ENISA's intro, like the Commission's intro on
+  // the official FAQs list (the following paragraph only points to the
+  // Commission's FAQ). Links are reduced to their text: list descriptions are
+  // displayed inside card links on the Topics page, and links can't be nested.
+  let description = null;
+  if (intro) {
+    const dateStr = lastUpdatedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const introText = intro
+      .split(/\n\s*\n/)[0]
+      .replace(/\[([^\]]*)\]\((?:\\.|[^()\\]|\([^()]*\))*\)/g, "$1")
+      .replace(/\s+/g, " ")
+      .trim();
+    description = `**Message from ENISA**: _"${introText}"_\n\n**Last updated**: ${dateStr}`;
+  }
 
   for (const { questionNumber, question, answer } of items) {
     const id = questionNumber
@@ -734,6 +750,8 @@ async function fetchAndAddSrpFaqs(faqs) {
       disclaimerHtml: renderInlineMarkdown("This FAQ is subject to the [legal notice](https://www.enisa.europa.eu/about-enisa/legal-notice) published on ENISA's website. Its content was extracted from ENISA's web page when this website was built; please check the original page for accuracy.")
     });
   }
+
+  return { description };
 }
 
 async function fetchOfficialFAQs(faqs, lists, rootList) {
@@ -772,7 +790,7 @@ async function processAllContent() {
   await fetchAndAddECFaqs(faqs);
 
   // Fetch and add ENISA's SRP FAQs (also handled by dynamic list system)
-  await fetchAndAddSrpFaqs(faqs);
+  const srpFaqs = await fetchAndAddSrpFaqs(faqs);
 
   // Fetch and add CRA implementation FAQs from PDF
   const officialFaqList = await fetchOfficialFAQs(faqs, lists, rootList);
@@ -784,6 +802,12 @@ async function processAllContent() {
 
   // Create, populate, and insert dynamic lists
   createAndInsertDynamicLists(lists, rootList, faqs);
+
+  // Describe the SRP FAQs list with the intro of ENISA's page
+  const srpList = lists.find(list => list.id === 'srp');
+  if (srpList && srpFaqs.description) {
+    srpList.description = srpFaqs.description;
+  }
 
   rootList.children.push(officialFaqList);
 

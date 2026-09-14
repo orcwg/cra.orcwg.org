@@ -12,6 +12,20 @@ test("extracts the last update date", () => {
   assert.equal(lastUpdatedAt.toISOString(), "2026-09-12T00:00:00.000Z");
 });
 
+test("extracts the intro paragraphs as Markdown", () => {
+  const { intro } = parseSrpFaqPage(fixture, SRP_FAQ_URL);
+  assert.equal(
+    intro,
+    "This page provides answers to frequently asked questions about the Cyber Resilience Act Single Reporting Platform (CRA SRP), including its purpose, reporting process, registration and use.  The FAQs are updated regularly to reflect the latest available information and guidance as the CRA SRP is implemented.\n\n" +
+    "For broader guidance on the interpretation and implementation of the CRA, please also consult the European Commission’s “[FAQs on the CRA Implementation](https://ec.europa.eu/newsroom/dae/redirection/document/122331)”."
+  );
+});
+
+test("returns a null intro when the page has no intro paragraphs", () => {
+  const html = fixture.replace(/(<\/em><\/p>)[\s\S]*?(<dl class="ckeditor-accordion">)/, "$1\n$2");
+  assert.equal(parseSrpFaqPage(html).intro, null);
+});
+
 test("extracts every question/answer pair in page order", () => {
   assert.deepEqual(
     items.map(item => item.questionNumber),
