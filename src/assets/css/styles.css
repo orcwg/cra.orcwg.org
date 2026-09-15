@@ -267,23 +267,19 @@ a.card>h2 {
     margin-bottom: 0;
 }
 
-/* Section Card Header */
+/* Section Card Header: a <header> holding the <h1>, optionally followed by badges */
 .section-card>.section-header {
     background: var(--background-light);
     padding: 25px 30px 15px 30px;
     border-bottom: 1px solid var(--border-color);
     margin: -20px -30px 25px -30px;
-}
-
-/* Section header wrapper: title followed inline by badges (e.g. freshness) */
-.section-card>header.section-header {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 6px 12px;
 }
 
-.section-card>header.section-header h1 {
+.section-card>.section-header h1 {
     margin: 0;
 }
 
