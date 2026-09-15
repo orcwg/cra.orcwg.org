@@ -14,4 +14,9 @@ permalink: "/"
     <p>{{ nav.description }}</p>
   </a>
   {% endfor %}
+  {% for list in data.lists %}
+    {% if list.id == 'recently-updated' and list.faqCount > 0 %}
+      {% include "components/list-card.njk" %}
+    {% endif %}
+  {% endfor %}
 </nav>
