@@ -6,7 +6,7 @@
   "scripts": {
     "update-cache": "node update-cache.js",
     "fetch-cra-text": "node scripts/fetch-cra-text.js",
-    "extract-guidance": "node scripts/extract-guidance.js",
+    "extract-guidance": "node scripts/extract-guidance.js src/_data/C_2026_5252_1_EN_annexe_acte_autonome_cp_part1_v3_kXuCPwXXxAuG8Uj44Ar0o2Vros_131456.pdf",
     "build": "eleventy",
     "serve": "eleventy --serve",
     "watch": "eleventy --watch",
