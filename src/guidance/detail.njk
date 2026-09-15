@@ -10,7 +10,9 @@ eleventyComputed:
 ---
 
 <article class="section-card">
-  <h1 class="section-header">{{ item.title or 'Pending Guidance' }}</h1>
+  <header class="section-header">
+    <h1>{{ item.title or 'Pending Guidance' }}</h1>
+  </header>
 
   {{ item.bodyHtml | safe }}
 
