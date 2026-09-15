@@ -16,6 +16,7 @@ const { execSync } = require("child_process");
 const { parseOfficialFAQs } = require("./parse-official-faqs.js");
 const { EC_QANDA_API_URL, parseEcQandaDocument } = require("./utils/ec-qanda-parser.js");
 const { SRP_FAQ_URL, parseSrpFaqPage, linkSrpCrossReferences } = require("./utils/srp-faq-parser.js");
+const { fetchWithFallback } = require("./utils/fetch-with-fallback.js");
 const { createApiArray } = require("./utils/api-formatter.js");
 
 // ============================================================================
@@ -650,14 +651,15 @@ function createSlug(text) {
 }
 
 // Fetch and process EC content, adding FAQs directly to main FAQ array
+// (falls back to the last-known-good snapshot, see utils/fetch-with-fallback.js)
 async function fetchAndAddECFaqs(faqs) {
   const _linkResolutionContext = "cra-basics";
-  const response = await fetch(EC_QANDA_API_URL);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const ecData = await response.json();
-  const { createdAt, lastUpdatedAt, items } = parseEcQandaDocument(ecData);
+  const { data: { createdAt, lastUpdatedAt, items } } = await fetchWithFallback({
+    name: "The Commission's \"Cyber Resilience Act - Questions and Answers\"",
+    url: EC_QANDA_API_URL,
+    snapshotFile: "ec-qanda.json",
+    parse: (body) => parseEcQandaDocument(JSON.parse(body))
+  });
 
   for (const { question, answer } of items) {
     const slug = createSlug(question);
@@ -692,6 +694,7 @@ async function fetchAndAddECFaqs(faqs) {
 }
 
 // Fetch and process ENISA's Single Reporting Platform (SRP) FAQs, adding them directly to main FAQ array
+// (falls back to the last-known-good snapshot, see utils/fetch-with-fallback.js)
 // Returns the list description built from the page's intro (null if the page has none)
 // ENISA's page doesn't expose its publication date, only the date of its last update.
 // It was reported as launched on 26 February 2026:
@@ -700,12 +703,12 @@ const SRP_FAQ_PUBLISHED = new Date("2026-02-26");
 
 async function fetchAndAddSrpFaqs(faqs) {
   const _linkResolutionContext = "srp";
-  const response = await fetch(SRP_FAQ_URL);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const html = await response.text();
-  const { lastUpdatedAt: pageUpdatedAt, intro, items } = parseSrpFaqPage(html, SRP_FAQ_URL);
+  const { data: { lastUpdatedAt: pageUpdatedAt, intro, items } } = await fetchWithFallback({
+    name: "ENISA's SRP FAQ page",
+    url: SRP_FAQ_URL,
+    snapshotFile: "enisa-srp-faq.html",
+    parse: (html) => parseSrpFaqPage(html, SRP_FAQ_URL)
+  });
 
   const createdAt = SRP_FAQ_PUBLISHED;
   const lastUpdatedAt = pageUpdatedAt || createdAt;  // Last update of the page as a whole

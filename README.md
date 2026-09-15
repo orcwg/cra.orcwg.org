@@ -123,7 +123,7 @@ Besides the community FAQs from [`orcwg/cra-hub`][], the site integrates officia
 
 Answers from both web pages are converted from HTML to Markdown (`src/_data/utils/html-to-markdown.js`, using `turndown`) before link resolution. The link resolver inserts Markdown links, which markdown-it would otherwise leave unrendered inside raw HTML blocks. The link resolver never inserts a link inside the text of an existing link.
 
-The build fails if either page cannot be fetched or its structure changes, so that a broken site is never deployed. The parsers are covered by unit tests using excerpts of both pages (`test/fixtures/`); when a page structure changes, update the fixture along with the parser.
+Both pages are fetched by `fetchWithFallback` (`src/_data/utils/fetch-with-fallback.js`), which keeps a snapshot of the last page that was fetched and parsed successfully in `_snapshots/` (not committed). When a page cannot be fetched within 30 seconds or its structure changes, the build falls back to that snapshot, logs a warning and, in GitHub Actions, adds a warning annotation and a job summary entry so that the problem doesn't go unnoticed. Without a snapshot, the build fails, so that a broken site is never deployed. Set `OFFICIAL_FAQ_FETCH=strict` to disable the fallback (e.g. to check that a parser still matches the live page). The parsers are covered by unit tests using excerpts of both pages (`test/fixtures/`); when a page structure changes, update the fixture along with the parser.
 
 ### Dynamic Lists
 
@@ -250,11 +250,13 @@ flowchart TD
     D[Push to main]
     E[Build and Deploy<br/>GitHub Actions]
     F[cra.orcwg.org<br/>Live Website]
+    G[Daily schedule<br/>04:23 UTC]
 
     A -->|Update content source| B
     B -->|Webhook trigger| E
     C -->|Update  website generator| D
     D -->|Direct trigger| E
+    G -->|Cron trigger| E
     E -->|Deploy to Pages| F
 
     style A fill:#e1f5ff
@@ -265,10 +267,11 @@ flowchart TD
 
 ### Automatic Update Workflow
 
-The website automatically rebuilds and deploys through two triggers:
+The website automatically rebuilds and deploys through three triggers:
 
 1. **Content updates** - When content is pushed to `main` in `orcwg/cra-hub`
 2. **Website changes** - When code is pushed to `main` in this repository
+3. **Daily schedule** - Every day at 04:23 UTC, to pick up changes to the official FAQ pages fetched at build time
 
 #### Trigger 1: Content Repository Updates
 
@@ -290,7 +293,14 @@ When content is pushed to the `main` branch of `orcwg/cra-hub`, a [GitHub Action
 
 When changes are pushed to the `main` branch of this repository (template updates, styling changes, configuration), the deployment workflow runs directly without needing a webhook.
 
-**Both triggers execute the same deployment workflow:**
+#### Trigger 3: Daily Schedule
+
+The European Commission's "Questions and Answers" and ENISA's SRP FAQs are fetched from their web pages at build time, so the deployment workflow also runs on a daily `schedule` (04:23 UTC). Scheduled runs are resistant to problems with those pages: the last successfully parsed copy of each page is kept in the GitHub Actions cache between runs (`actions/cache/restore` and `actions/cache/save` around the build step) and used as a fallback, as described in [Official FAQs](#official-faqs-european-commission-and-enisa). A run that had to fall back shows a warning annotation and a job summary entry. If a page is unavailable and there is no cached snapshot yet, the build fails and the previous deployment stays online.
+
+> [!NOTE]
+> GitHub only runs scheduled workflows from the default branch, and automatically disables them in repositories with no activity for 60 days (a notification email is sent; the workflow can be re-enabled from the Actions tab). Cache entries are evicted after 7 days without access, which the daily run prevents.
+
+**All triggers execute the same deployment workflow:**
 
 1. Pulls latest content from `cra-hub` via `update-cache.sh`
 2. Processes FAQ data through the Eleventy data pipeline
