@@ -43,7 +43,7 @@ function buildListId(number) {
 function parseVersionTable(content) {
   const versionTableMatch = content.match(/\| FAQ Version \| Date\s*\| Changes\s*\|[\s\S]*?\n(?=\n[^|])/);
   if (!versionTableMatch) {
-    return { createdAt: new Date(), lastUpdatedAt: new Date(), latestVersion: null };
+    return { createdAt: new Date(), lastUpdatedAt: new Date(), latestVersion: null, versions: [] };
   }
 
   const tableContent = versionTableMatch[0];
@@ -63,14 +63,16 @@ function parseVersionTable(content) {
         versions.push({
           version: cells[0],
           date: new Date(`${year}-${month}-${day}`),
-          changes: cells[2] || ''
+          changes: cells[2] || '',
+          // Question or section numbers the entry mentions, e.g. "Addition of FAQ 5.5" → ["5.5"]
+          numbers: (cells[2] || '').match(/\d+(?:\.\d+)+/g) || []
         });
       }
     }
   }
 
   if (versions.length === 0) {
-    return { createdAt: new Date(), lastUpdatedAt: new Date(), latestVersion: null };
+    return { createdAt: new Date(), lastUpdatedAt: new Date(), latestVersion: null, versions: [] };
   }
 
   // Sort by date
@@ -79,8 +81,24 @@ function parseVersionTable(content) {
   return {
     createdAt: versions[0].date,
     lastUpdatedAt: versions[versions.length - 1].date,
-    latestVersion: versions[versions.length - 1]
+    latestVersion: versions[versions.length - 1],
+    versions
   };
+}
+
+// Date a question was last changed, according to the version table's changelog:
+// the latest version whose changes mention the question's number, or the number
+// of a section containing it. What the change was doesn't matter. Questions the
+// changelog never mentions haven't changed since the document was created.
+function getQuestionLastUpdatedAt(questionNumber, versions, createdAt) {
+  let lastUpdatedAt = createdAt;
+  for (const { date, numbers } of versions) {
+    const mentioned = numbers.some(n => questionNumber === n || questionNumber.startsWith(n + '.'));
+    if (mentioned && date > lastUpdatedAt) {
+      lastUpdatedAt = date;
+    }
+  }
+  return lastUpdatedAt;
 }
 
 // Extract disclaimer text from markdown content
@@ -114,7 +132,7 @@ function extractIntroText(content) {
 async function parseOfficialFAQs(mdPath = path.join(__dirname, 'FAQs_on_the_CRA__v14_NBetxUGiUQm9skmnHZ7ig2xOG4_123307.md')) {
   const content = fs.readFileSync(mdPath, 'utf8');
 
-  const { createdAt, lastUpdatedAt, latestVersion } = parseVersionTable(content);
+  const { createdAt, lastUpdatedAt, latestVersion, versions } = parseVersionTable(content);
   const disclaimer = extractDisclaimer(content);
   const introText = extractIntroText(content);
 
@@ -356,6 +374,9 @@ async function parseOfficialFAQs(mdPath = path.join(__dirname, 'FAQs_on_the_CRA_
       const currentFaqConfig = faqConfig[heading.number];
       const relatedIssues = currentFaqConfig && currentFaqConfig.relatedIssues.join(', ') || "";
 
+      // Lists keep the document's dates; a question only counts as updated when the changelog names it
+      const faqLastUpdatedAt = getQuestionLastUpdatedAt(heading.number, versions, createdAt);
+
       const faq = {
         id: faqId,
         type: FAQ,
@@ -380,9 +401,9 @@ async function parseOfficialFAQs(mdPath = path.join(__dirname, 'FAQs_on_the_CRA_
         relatedIssues: parseRelatedIssues(relatedIssues),
         guidanceId: false,
         createdAt,
-        lastUpdatedAt,
+        lastUpdatedAt: faqLastUpdatedAt,
         _isNew: isNew(createdAt),
-        _recentlyUpdated: recentlyUpdated(createdAt, lastUpdatedAt)
+        _recentlyUpdated: recentlyUpdated(createdAt, faqLastUpdatedAt)
       };
 
       // Add to parent
@@ -397,4 +418,4 @@ async function parseOfficialFAQs(mdPath = path.join(__dirname, 'FAQs_on_the_CRA_
 }
 
 // Export for use in other scripts
-module.exports = { parseOfficialFAQs };
+module.exports = { parseOfficialFAQs, parseVersionTable, getQuestionLastUpdatedAt };
