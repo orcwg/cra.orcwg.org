@@ -616,6 +616,16 @@ guidance:
   date: ${yamlString(meta.date)}
   sourceFile: ${yamlString(meta.sourceFile)}
   sourceSha256: ${yamlString(meta.sourceSha256)}
+  sourceUrl: ${yamlString(meta.sourceUrl)}
+# Rendered by components/faq/faq-attribution.njk, as for the official FAQs.
+attribution:
+  author: "European Union"
+  createdAt: ${meta.isoDate}
+  license: "CC-BY-4.0"
+  licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice"
+  srcUrl: ${yamlString(meta.sourceUrl)}
+  source: ${yamlString(`"${meta.reference} - Annex" (PDF)`)}
+  disclaimer: ${yamlString(`This guidance is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.<br><br>The content of this page was generated from the [original PDF](${meta.sourceUrl}) of the guidance, and its text was verified against it. Please check the original PDF for accuracy.`)}
 ---
 <section class="section-card guidance-toc">
 <h2 id="toc_1">Contents</h2>
@@ -786,6 +796,13 @@ function extractFigures(pdf, figuresUrl) {
   }
 }
 
+// "27.7.2026" -> "2026-07-27"
+function isoDate(date) {
+  if (!date) return null;
+  const [day, month, year] = date.split(".");
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
 // "27.7.2026" -> "27 July 2026"
 function formatDate(date) {
   if (!date) return null;
@@ -796,7 +813,11 @@ function formatDate(date) {
 
 const TITLE_PREFIX = "Commission guidance on the application of ";
 
-function extract(input, figuresUrl) {
+// The Commission's download link for the PDF, from
+// https://digital-strategy.ec.europa.eu/en/library/commission-publishes-new-guidance-support-timely-cyber-resilience-act-implementation
+const SOURCE_URL = "https://ec.europa.eu/newsroom/dae/redirection/document/131456";
+
+function extract(input, figuresUrl, sourceUrl = SOURCE_URL) {
   const pdf = fs.readFileSync(input);
   const run = (cmd, args) => execFileSync(cmd, args, { maxBuffer: 256 * 1024 * 1024 }).toString("utf8");
   const tree = parseStructText(run("pdfinfo", ["-struct-text", input]));
@@ -815,8 +836,10 @@ function extract(input, figuresUrl) {
     title: doc.cover.match(new RegExp(`(${TITLE_PREFIX}.*?\\))\\s*$`))?.[1],
     reference: doc.cover.match(/C\(\d{4}\) \d+ final/)?.[0],
     date: formatDate(doc.cover.match(/Brussels, (\d+\.\d+\.\d{4})/)?.[1]),
+    isoDate: isoDate(doc.cover.match(/Brussels, (\d+\.\d+\.\d{4})/)?.[1]),
     sourceFile: path.basename(input),
     sourceSha256: crypto.createHash("sha256").update(pdf).digest("hex"),
+    sourceUrl,
   };
   for (const [key, value] of Object.entries(meta)) if (!value) problems.push(`Could not find the ${key} on the cover page`);
 

@@ -173,4 +173,8 @@ describe("extract", { skip: !(fs.existsSync(PDF) && hasPoppler) && "guidance PDF
     assert.match(result.page, /^---\n[\s\S]*\npermalink: "\/official-guidance\/"\n[\s\S]*\ntemplateEngineOverride: false\n/);
     assert.match(result.page, /reference: "C\(2026\) 5252 final"/);
   });
+
+  test("attributes the guidance to the EU under the Commission's copyright notice", () => {
+    assert.match(result.page, /\nattribution:\n  author: "European Union"\n  createdAt: 2026-07-27\n  license: "CC-BY-4.0"\n  licenseUrl: "https:\/\/commission\.europa\.eu\/legal-notice_en#copyright-notice"\n  srcUrl: "https:\/\/ec\.europa\.eu\/newsroom\/dae\/redirection\/document\/131456"\n/);
+  });
 });
