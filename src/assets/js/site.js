@@ -255,7 +255,7 @@ function initializeCopyLink() {
 
 
 // ============================================================================
-// SELF LINKS (numbers on the Commission guidance page)
+// SELF LINKS (numbers on the Official CRA Guidance page)
 // ============================================================================
 
 // Clicking a self link navigates to its anchor as usual, and also copies the

@@ -905,16 +905,16 @@ tbody tr:hover {
 }
 
 /* ===================================================================
-   COMMISSION GUIDANCE
+   OFFICIAL GUIDANCE
    Page generated from the Commission's guidance PDF by
    scripts/extract-guidance.js
    =================================================================== */
 
-.commission-guidance [id] {
+.official-guidance [id] {
     scroll-margin-top: 20px;
 }
 
-.commission-guidance .section-header h1 {
+.official-guidance .section-header h1 {
     font-size: 1.5em;
 }
 
@@ -977,116 +977,116 @@ tbody tr:hover {
 }
 
 /* Section headings: the section card's h2 keeps its gradient rule */
-.commission-guidance section section {
+.official-guidance section section {
     margin-top: 30px;
 }
 
-.commission-guidance h2 .self-link,
-.commission-guidance h3 .self-link,
-.commission-guidance h4 .self-link {
+.official-guidance h2 .self-link,
+.official-guidance h3 .self-link,
+.official-guidance h4 .self-link {
     color: inherit;
     margin-right: 0.25em;
 }
 
 /* Numbered points, with the number in a gutter */
-.commission-guidance .point {
+.official-guidance .point {
     display: grid;
     grid-template-columns: 3em minmax(0, 1fr);
     gap: 0 8px;
     margin: 16px 0;
 }
 
-.commission-guidance .point > .self-link {
+.official-guidance .point > .self-link {
     justify-self: start;
     align-self: start;
 }
 
-.commission-guidance .point p {
+.official-guidance .point p {
     margin: 0 0 10px 0;
 }
 
-.commission-guidance .point p:last-child {
+.official-guidance .point p:last-child {
     margin-bottom: 0;
 }
 
 /* Lettered sub-points, bullets and footnotes, with the label in a gutter */
-.commission-guidance .labelled,
-.commission-guidance .footnotes-list {
+.official-guidance .labelled,
+.official-guidance .footnotes-list {
     list-style: none;
     padding-left: 0;
     margin: 10px 0;
 }
 
-.commission-guidance .labelled > li,
-.commission-guidance .footnotes-list > li {
+.official-guidance .labelled > li,
+.official-guidance .footnotes-list > li {
     display: grid;
     grid-template-columns: 2em minmax(0, 1fr);
     gap: 0 8px;
     margin: 6px 0;
 }
 
-.commission-guidance .labelled > li > p,
-.commission-guidance .footnotes-list > li > p {
+.official-guidance .labelled > li > p,
+.official-guidance .footnotes-list > li > p {
     margin: 0;
 }
 
-.commission-guidance .label {
+.official-guidance .label {
     color: var(--text-light);
 }
 
 /* Examples */
-.commission-guidance aside.example {
+.official-guidance aside.example {
     --color: var(--primary-dark);
     background: var(--background-light);
     border-color: var(--border-color);
     border-left-color: var(--primary-color);
 }
 
-.commission-guidance aside.example strong {
+.official-guidance aside.example strong {
     color: var(--primary-dark);
 }
 
 /* Figures */
-.commission-guidance figure {
+.official-guidance figure {
     margin: 30px 0;
 }
 
-.commission-guidance figure img {
+.official-guidance figure img {
     display: block;
     max-width: 100%;
     height: auto;
     margin: 0 auto 10px auto;
 }
 
-.commission-guidance figcaption {
+.official-guidance figcaption {
     font-size: 0.9em;
     color: var(--text-light);
     text-align: center;
 }
 
 /* Footnotes */
-.commission-guidance .footnote-ref {
+.official-guidance .footnote-ref {
     line-height: 0;
     font-size: 0.75em;
 }
 
-.commission-guidance .footnote-ref a {
+.official-guidance .footnote-ref a {
     padding: 0 1px;
 }
 
-.commission-guidance .footnotes-list {
+.official-guidance .footnotes-list {
     font-size: 0.85em;
     overflow-wrap: anywhere;
 }
 
-.commission-guidance .footnote-backref::after {
+.official-guidance .footnote-backref::after {
     content: "↩\FE0E";
     margin-left: 4px;
 }
 
 /* Highlight the target of a link */
-.commission-guidance :target:not(section),
-.commission-guidance section:target > :first-child {
+.official-guidance :target:not(section),
+.official-guidance section:target > :first-child {
     background: var(--background-hover);
     border-radius: 4px;
 }
