@@ -2,3 +2,4 @@ _cache
 _tmp
 node_modules
 _site
+_snapshots

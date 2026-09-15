@@ -8,6 +8,10 @@ on:
   # Trigger when cra-hub repo sends a repository_dispatch event
   repository_dispatch:
     types: [cra-hub-update]
+  # Rebuild daily to pick up changes to the Commission's and ENISA's FAQ pages,
+  # which are fetched at build time (runs on the default branch only)
+  schedule:
+    - cron: '23 4 * * *'
   # Allow manual triggering
   workflow_dispatch:
 
@@ -23,6 +27,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,10 +47,27 @@ jobs:
       - name: Pull contents from CRA-HUB
         run: npm run update-cache
 
+      # The Commission's and ENISA's FAQ pages are fetched at build time. Their
+      # last-known-good snapshots are kept in the Actions cache so that the
+      # build can fall back to them when a page is down or changed structure
+      # (see src/_data/utils/fetch-with-fallback.js)
+      - name: Restore snapshots of the official FAQ pages
+        uses: actions/cache/restore@v4
+        with:
+          path: _snapshots
+          key: official-faq-snapshots-${{ github.run_id }}
+          restore-keys: official-faq-snapshots-
+
       - name: Build site
         run: npm run build
         env:
           BUILD_ENV: production
+
+      - name: Save snapshots of the official FAQ pages
+        uses: actions/cache/save@v4
+        with:
+          path: _snapshots
+          key: official-faq-snapshots-${{ github.run_id }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
