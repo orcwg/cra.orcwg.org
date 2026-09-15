@@ -1,7 +1,13 @@
+{#
+  Freshness Badge Component
+
+  Displays at most one badge: "New" takes precedence over "Recently Updated".
+
+  Parameters:
+  - faq: FAQ object with _isNew / _recentlyUpdated flags
+#}
 {% if faq._isNew %}
   <data class="badge important" data-emoji="🌟" value="new">New</data>
-{% endif %}
-
-{% if faq._recentlyUpdated %}
+{% elif faq._recentlyUpdated %}
   <data class="badge important" data-emoji="💫" value="recently-updated">Recently Updated</data>
 {% endif %}

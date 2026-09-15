@@ -275,6 +275,18 @@ a.card>h2 {
     margin: -20px -30px 25px -30px;
 }
 
+/* Section header wrapper: title followed inline by badges (e.g. freshness) */
+.section-card>header.section-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+}
+
+.section-card>header.section-header h1 {
+    margin: 0;
+}
+
 .section-card h1 {
     font-size: 1.5em;
     font-weight: 600;
@@ -462,24 +474,31 @@ a.card>h2 {
 }
 
 .faq-accordion-item > summary {
-    padding: 18px 20px;
+    /* Right padding reserves room for the absolutely positioned caret */
+    padding: 18px 50px 18px 20px;
+    position: relative;
     cursor: pointer;
     font-weight: 500;
     font-size: 1em;
     color: var(--text-color);
     list-style: none;
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 15px;
+    gap: 6px 12px;
     line-height: 1.4;
     transition: all 0.2s ease;
 }
 
 .faq-accordion-item > summary .question-text {
-    flex: 1;
+    flex: 0 1 auto;
     color: var(--text-color);
     font-weight: 500;
+}
+
+/* Badges (e.g. freshness) follow the question text and wrap below it when needed */
+.faq-accordion-item > summary .badge {
+    flex-shrink: 0;
 }
 
 .faq-accordion-item > summary .question-text p {
@@ -493,13 +512,14 @@ a.card>h2 {
 
 .faq-accordion-item > summary::after {
     content: '▼';
-    flex-shrink: 0;
+    position: absolute;
+    right: 20px;
+    top: 50%;
     color: var(--primary-color);
     font-size: 0.8em;
     font-weight: bold;
-    margin-top: 2px;
-    /* Rotation controlled by JS via CSS variable */
-    transform: rotate(var(--caret-rotation, 0deg));
+    /* Vertically centered; rotation controlled by JS via CSS variable */
+    transform: translateY(-50%) rotate(var(--caret-rotation, 0deg));
 }
 
 /* Shared styles for action buttons and labels */
