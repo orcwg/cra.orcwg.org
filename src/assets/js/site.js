@@ -122,8 +122,34 @@ async function closeAndCompensateScroll(openAccordion, details, sizeWhenOpen) {
     ]);
 }
 
+async function toggleAccordion(details) {
+    isAnimating = true;
+
+    try {
+        if (details.open) { // Closes the clicked accordion if it's already open
+            await animateAccordion(details, false);
+        } else {
+            const openAccordion = document.querySelector('details.faq-accordion-item[open]');
+            if (openAccordion) {
+                if (openAccordion.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING) { // If there is an open accordion above, close it and compensate scroll.
+                    await closeAndCompensateScroll(openAccordion, details, openAccordion.offsetHeight);
+                } else { // If the clicked accordion is below the open one, simply close it while opening the clicked accordion.
+                    await Promise.all([
+                        animateAccordion(openAccordion, false),
+                        animateAccordion(details, true)
+                    ]);
+                }
+            } else { // If there is no open accordion, just open the clicked one.
+                await animateAccordion(details, true);
+            }
+        }
+    } finally {
+        isAnimating = false;
+    }
+}
+
 function attachAccordionClickHandler() {
-    document.addEventListener('click', async function(e) {
+    document.addEventListener('click', function(e) {
         const summary = e.target.closest('summary');
         if (!summary) return;
 
@@ -134,30 +160,39 @@ function attachAccordionClickHandler() {
 
         e.preventDefault();
         e.stopPropagation();
-        isAnimating = true;
-
-        try {
-            if (details.open) { // Closes the clicked accordion if it's already open
-                await animateAccordion(details, false);
-            } else {
-                const openAccordion = document.querySelector('details.faq-accordion-item[open]');
-                if (openAccordion) {
-                    if (openAccordion.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING) { // If there is an open accordion above, close it and compensate scroll.
-                        await closeAndCompensateScroll(openAccordion, details, openAccordion.offsetHeight);
-                    } else { // If the clicked accordion is below the open one, simply close it while opening the clicked accordion.
-                        await Promise.all([
-                            animateAccordion(openAccordion, false),
-                            animateAccordion(details, true)
-                        ]);
-                    }
-                } else { // If there is no open accordion, just open the clicked one.
-                    await animateAccordion(details, true);
-                }
-            }
-        } finally {
-            isAnimating = false;
-        }
+        toggleAccordion(details);
     }, true);
+}
+
+
+// ============================================================================
+// IN-PAGE FAQ LINKS
+// ============================================================================
+
+// When a link points to an FAQ that is also rendered as an accordion on the
+// current page, open that accordion and scroll to it instead of navigating away.
+function attachInPageFaqLinkHandler() {
+    document.addEventListener('click', async function(e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+        const link = e.target.closest('a[href]');
+        if (!link || (link.target && link.target !== '_self')) return;
+
+        const url = new URL(link.href, location.href);
+        if (url.origin !== location.origin) return;
+
+        const details = Array.from(document.querySelectorAll('details.faq-accordion-item[data-permalink]'))
+            .find(el => el.dataset.permalink === url.pathname);
+        // Ignore links inside the target itself (e.g. its own "Go to page" button)
+        if (!details || details.contains(link)) return;
+
+        e.preventDefault();
+        if (isAnimating) return;
+
+        if (!details.open) await toggleAccordion(details);
+        details.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        details.querySelector('summary')?.focus({ preventScroll: true });
+    });
 }
 
 // ============================================================================
@@ -235,4 +270,5 @@ document.addEventListener('DOMContentLoaded', function() {
     attachAdminToggle();
     initializeCopyLink();
     attachAccordionClickHandler();
+    attachInPageFaqLinkHandler();
 });
