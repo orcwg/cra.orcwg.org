@@ -905,6 +905,193 @@ tbody tr:hover {
 }
 
 /* ===================================================================
+   OFFICIAL GUIDANCE
+   Page generated from the Commission's guidance PDF by
+   scripts/extract-guidance.js
+   =================================================================== */
+
+.official-guidance [id] {
+    scroll-margin-top: 20px;
+}
+
+.official-guidance .section-header h1 {
+    font-size: 1.5em;
+}
+
+.guidance-source {
+    font-size: 0.8em;
+    color: var(--text-light);
+    overflow-wrap: anywhere;
+}
+
+/* Numbers and labels that link to themselves (clicking copies the link) */
+.self-link {
+    color: var(--link-color);
+    font-variant-numeric: tabular-nums;
+    text-decoration: underline dotted;
+    text-decoration-color: var(--text-very-light);
+    text-underline-offset: 0.2em;
+}
+
+.self-link:hover {
+    text-decoration-style: solid;
+    text-decoration-color: currentColor;
+}
+
+.self-link-copied {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--secondary-color);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    box-shadow: var(--card-shadow);
+    pointer-events: none;
+}
+
+/* Table of contents */
+.guidance-toc ol {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.guidance-toc ol ol {
+    padding-left: 1.5em;
+}
+
+.guidance-toc li {
+    margin: 4px 0;
+}
+
+.guidance-toc > ol > li {
+    font-weight: 500;
+}
+
+.guidance-toc > ol > li li {
+    font-weight: 400;
+    font-size: 0.95em;
+}
+
+/* Section headings: the section card's h2 keeps its gradient rule */
+.official-guidance section section {
+    margin-top: 30px;
+}
+
+.official-guidance h2 .self-link,
+.official-guidance h3 .self-link,
+.official-guidance h4 .self-link {
+    color: inherit;
+    margin-right: 0.25em;
+}
+
+/* Numbered points, with the number in a gutter */
+.official-guidance .point {
+    display: grid;
+    grid-template-columns: 3em minmax(0, 1fr);
+    gap: 0 8px;
+    margin: 16px 0;
+}
+
+.official-guidance .point > .self-link {
+    justify-self: start;
+    align-self: start;
+}
+
+.official-guidance .point p {
+    margin: 0 0 10px 0;
+}
+
+.official-guidance .point p:last-child {
+    margin-bottom: 0;
+}
+
+/* Lettered sub-points, bullets and footnotes, with the label in a gutter */
+.official-guidance .labelled,
+.official-guidance .footnotes-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 10px 0;
+}
+
+.official-guidance .labelled > li,
+.official-guidance .footnotes-list > li {
+    display: grid;
+    grid-template-columns: 2em minmax(0, 1fr);
+    gap: 0 8px;
+    margin: 6px 0;
+}
+
+.official-guidance .labelled > li > p,
+.official-guidance .footnotes-list > li > p {
+    margin: 0;
+}
+
+.official-guidance .label {
+    color: var(--text-light);
+}
+
+/* Examples */
+.official-guidance aside.example {
+    --color: var(--primary-dark);
+    background: var(--background-light);
+    border-color: var(--border-color);
+    border-left-color: var(--primary-color);
+}
+
+.official-guidance aside.example strong {
+    color: var(--primary-dark);
+}
+
+/* Figures */
+.official-guidance figure {
+    margin: 30px 0;
+}
+
+.official-guidance figure img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto 10px auto;
+}
+
+.official-guidance figcaption {
+    font-size: 0.9em;
+    color: var(--text-light);
+    text-align: center;
+}
+
+/* Footnotes */
+.official-guidance .footnote-ref {
+    line-height: 0;
+    font-size: 0.75em;
+}
+
+.official-guidance .footnote-ref a {
+    padding: 0 1px;
+}
+
+.official-guidance .footnotes-list {
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+}
+
+.official-guidance .footnote-backref::after {
+    content: "↩\FE0E";
+    margin-left: 4px;
+}
+
+/* Highlight the target of a link */
+.official-guidance :target:not(section),
+.official-guidance section:target > :first-child {
+    background: var(--background-hover);
+    border-radius: 4px;
+}
+
+/* ===================================================================
    UTILITY CLASSES
    =================================================================== */
 
