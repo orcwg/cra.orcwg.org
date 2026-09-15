@@ -8,6 +8,7 @@ Eleventy-based static site generator that creates a FAQ website for ORC WG's CRA
 
 - Node.js
 - npm
+- [poppler](https://poppler.freedesktop.org/) (optional): only needed to regenerate the Official CRA Guidance page and to run its end-to-end tests, which are skipped without it. Install it with `brew install poppler` on macOS or `apt-get install poppler-utils` on Debian/Ubuntu.
 
 ### Installation
 
@@ -25,6 +26,8 @@ npm install
 - **`npm test`** - Run the unit tests (Node's built-in test runner, tests in `test/`)
 - **`npm run update-cache`** - Update external content cache
 - **`npm run update-cache -- branch-name`** - Update the external content cache to use a different branch of the [`orcwg/cra-hub`][] repositiory. Great for testing the build with unmerged pull requests.
+- **`npm run extract-guidance`** - Regenerate the Official CRA Guidance page (`src/commission-guidance.html` and `src/assets/images/commission-guidance/`) from the Commission's guidance PDF in `src/_data/`, verifying the extracted text against the PDF (requires poppler). The generated files are committed and shouldn't be edited by hand.
+- **`npm run extract-guidance -- --check`** - Confirm the committed Official CRA Guidance page matches the PDF, without writing anything (requires poppler).
 
 ## Architecture
 
