@@ -6,6 +6,7 @@
   "scripts": {
     "update-cache": "node update-cache.js",
     "fetch-cra-text": "node scripts/fetch-cra-text.js",
+    "extract-guidance": "node scripts/extract-guidance.js",
     "build": "eleventy",
     "serve": "eleventy --serve",
     "watch": "eleventy --watch",

@@ -7,19 +7,25 @@
       "description": "Browse all FAQs in one single list"
     },
     {
-      "url": "/faq/official/",
-      "title": "🇪🇺 Official FAQs",
-      "description": "Browse the official FAQs of the EU Commission"
-    },
-    {
       "url": "/faq/",
       "title": "Topics",
       "description": "FAQs organized by topic and/or audience"
     },
     {
+      "url": "/faq/official/",
+      "title": "🇪🇺 Official FAQs",
+      "description": "Browse the official FAQs of the EU Commission"
+    },
+    {
+      "url": "/official-guidance/",
+      "title": "🇪🇺 Official Guidance",
+      "description": "Read the Commission's official guidance on the application of the CRA, with links to every section and point"
+    },
+    {
       "url": "/pending-guidance/",
       "title": "Pending Guidance",
-      "description": "Topics requiring additional clarification by the European Commission"
+      "description": "Topics requiring additional clarification by the European Commission",
+      "hideFromNav": true
     },
     {
       "url": "/faq/srp/",

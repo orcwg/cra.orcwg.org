@@ -255,6 +255,34 @@ function initializeCopyLink() {
 
 
 // ============================================================================
+// SELF LINKS (numbers on the Commission guidance page)
+// ============================================================================
+
+// Clicking a self link navigates to its anchor as usual, and also copies the
+// full URL to the clipboard.
+function initializeSelfLinks() {
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a.self-link');
+        if (!link || !navigator.clipboard) return;
+
+        navigator.clipboard.writeText(link.href).then(function() {
+            document.querySelector('.self-link-copied')?.remove();
+            const note = document.createElement('div');
+            note.className = 'self-link-copied';
+            note.setAttribute('role', 'status');
+            note.textContent = 'Link copied';
+            document.body.append(note);
+            setTimeout(function() {
+                note.remove();
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Failed to copy: ', err);
+        });
+    });
+}
+
+
+// ============================================================================
 // ACCORDION CLICK HANDLER & SCROLL COMPENSATION
 // ============================================================================
 
@@ -269,6 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeMermaid();
     attachAdminToggle();
     initializeCopyLink();
+    initializeSelfLinks();
     attachAccordionClickHandler();
     attachInPageFaqLinkHandler();
 });
