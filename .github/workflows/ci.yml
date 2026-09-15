@@ -35,17 +35,6 @@ jobs:
       - name: Pull contents from CRA-HUB
         run: npm run update-cache
 
-      # Restore (but never save) the snapshots of the official FAQ pages kept
-      # by the deploy workflow, so that an outage of the Commission's or ENISA's
-      # FAQ pages doesn't fail PR builds
-      # (see src/_data/utils/fetch-with-fallback.js)
-      - name: Restore snapshots of the official FAQ pages
-        uses: actions/cache/restore@v4
-        with:
-          path: _snapshots
-          key: official-faq-snapshots-${{ github.run_id }}
-          restore-keys: official-faq-snapshots-
-
       - name: Build site
         run: npm run build
         env:
