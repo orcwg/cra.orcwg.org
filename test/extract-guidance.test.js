@@ -166,7 +166,7 @@ describe("extract", { skip: !(fs.existsSync(PDF) && hasPoppler) && "guidance PDF
 
   test("builds a JSON document the API can serve", () => {
     const { json } = result;
-    assert.equal(json.id, "official-guidance");
+    assert.equal(json.id, "official-cra-guidance");
     assert.equal(json.type, "document");
     assert.equal(json.permalink, "/official-guidance/");
     assert.equal(json.reference, "C(2026) 5252 final");

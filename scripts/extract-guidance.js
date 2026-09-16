@@ -759,7 +759,7 @@ function jsonSections(doc, figures) {
 // (see src/_data/utils/api-formatter.js).
 function renderJson(doc, figures, meta) {
   return {
-    id: "official-guidance",
+    id: "official-cra-guidance",
     type: "document",
     title: meta.title,
     shortTitle: "Official CRA Guidance",
