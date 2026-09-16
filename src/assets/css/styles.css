@@ -1095,8 +1095,9 @@ tbody tr:hover {
     content: "↑ Back to top";
 }
 
-/* Highlight the target of a link */
-.official-guidance :target:not(section),
+/* Highlight the target of a link, except the contents heading, which the
+   back-to-top links point at */
+.official-guidance :target:not(section):not(#toc_1),
 .official-guidance section:target > :first-child {
     background: var(--background-hover);
     border-radius: 4px;
