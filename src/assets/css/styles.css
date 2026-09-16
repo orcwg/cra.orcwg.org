@@ -1092,7 +1092,7 @@ tbody tr:hover {
 }
 
 .back-to-contents a::after {
-    content: "↑ Contents";
+    content: "↑ Back to top";
 }
 
 /* Highlight the target of a link */

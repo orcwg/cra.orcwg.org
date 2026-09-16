@@ -570,10 +570,11 @@ function insertFootnoteMarkers(doc, contexts, problems) {
 function nestSections(blocks, rendered) {
   const open = [];
   let html = "";
-  // Each top-level section ends with a link back to the table of contents. Its
-  // label comes from CSS, so that the page's text stays that of the guidance.
+  // Each top-level section ends with a link back to the table of contents at
+  // the top of the page. Its label comes from CSS, so that the page's text
+  // stays that of the guidance.
   const close = (level) =>
-    `${level === 1 ? `<p class="back-to-contents"><a href="#toc_1" aria-label="Back to contents"></a></p>\n` : ""}</section>\n`;
+    `${level === 1 ? `<p class="back-to-contents"><a href="#toc_1" aria-label="Back to top"></a></p>\n` : ""}</section>\n`;
   blocks.forEach((b, i) => {
     if (b.type === "heading") {
       while (open.length && open[open.length - 1] >= b.level) html += close(open.pop());
