@@ -5,8 +5,9 @@
 //
 // Usage: node scripts/extract-guidance.js [--check] <input.pdf>
 //
-// Writes src/official-guidance.html (rendered with the
-// official-guidance.njk layout) and the figures, in their original image
+// Writes src/official-guidance.html (rendered with the official-guidance.njk
+// layout), src/_data/official-guidance.json (served by the API, in the shape
+// of the machine-readable CRA text) and the figures, in their original image
 // encoding, to src/assets/images/official-guidance/. With --check, writes
 // nothing and fails unless the committed output matches what the PDF produces.
 //
@@ -176,7 +177,7 @@ function inlines(node, objects) {
   return node.children.filter((c) => c.obj === undefined).flatMap((c) => inlines(c, objects));
 }
 
-const plain = (tokens) => tokens.map((t) => t.text).join("");
+const plain = (tokens) => tokens.map((t) => (t.footnote ? String(t.footnote) : t.text)).join("");
 
 function trimTokens(tokens) {
   tokens = tokens.filter((t) => t.text !== "");
@@ -450,6 +451,7 @@ function resolveInternalLinks(doc, problems) {
 function renderTokens(tokens) {
   return tokens
     .map((t) => {
+      if (t.footnote) return `<sup class="footnote-ref"><a href="#${ids.footnote(t.footnote)}" id="${ids.footnoteRef(t.footnote)}">${t.footnote}</a></sup>`;
       if (!t.link) return escapeHtml(t.text);
       const href = t.link.uri || t.link.href;
       return href ? `<a href="${escapeHtml(href)}">${escapeHtml(t.text)}</a>` : escapeHtml(t.text);
@@ -509,45 +511,54 @@ function renderBlock(b, figures) {
   }
 }
 
-// Inserts footnote references into rendered blocks. Each reference is looked
-// for, in order, between the previous reference and the place where the
-// footnote appeared in the structure tree, by matching the body text that
-// precedes the superscript on the page.
-function insertFootnoteReferences(rendered, footnotes, contexts, problems) {
-  let blockIdx = 0;
-  let htmlOffset = 0;
-  footnotes.forEach((fn, n) => {
+// Inserts a footnote marker token where each superscript sits in the PDF.
+// Markers are looked for in order, each between the previous one and the place
+// where its footnote appeared in the structure tree, by matching the body text
+// that precedes the superscript on the page.
+function insertFootnoteMarkers(doc, contexts, problems) {
+  // Every paragraph of the document, in order, with the block it belongs to.
+  const paragraphs = [];
+  const collect = (body, blockIndex) => {
+    for (const part of body) {
+      if (part.p) paragraphs.push({ tokens: part.p, blockIndex });
+      else part.list.items.forEach((item) => collect(item.body, blockIndex));
+    }
+  };
+  doc.blocks.forEach((b, i) => {
+    if (b.body) collect(b.body, i);
+    if (b.list) b.list.items.forEach((item) => collect(item.body, i));
+    if (b.caption) paragraphs.push({ tokens: b.caption, blockIndex: i });
+  });
+
+  let from = 0;
+  doc.footnotes.forEach((fn, n) => {
     const needle = contexts[n] + fn.label;
-    for (let i = blockIdx; i < fn.before; i++) {
-      const html = rendered[i];
-      // Map each non-whitespace text character to its offset in the HTML.
+    for (let i = from; i < paragraphs.length; i++) {
+      const { tokens, blockIndex } = paragraphs[i];
+      if (blockIndex >= fn.before) break;
+      // Map each non-whitespace character to the token it came from.
       let text = "";
-      const offsets = [];
-      for (let j = 0; j < html.length; j++) {
-        if (html[j] === "<") {
-          j = html.indexOf(">", j);
-          continue;
-        }
-        let ch = html[j];
-        const start = j;
-        if (ch === "&") {
-          const end = html.indexOf(";", j);
-          ch = decodeEntities(html.slice(j, end + 1));
-          j = end;
-        }
-        if (/\s/.test(ch) || (i === blockIdx && start < htmlOffset)) continue;
-        text += ch;
-        offsets.push(start);
-      }
+      const positions = [];
+      tokens.forEach((token, t) => {
+        if (token.footnote) return;
+        [...token.text].forEach((ch, c) => {
+          if (/\s/.test(ch)) return;
+          text += ch;
+          positions.push({ t, c });
+        });
+      });
       const at = text.indexOf(needle);
       if (at === -1) continue;
       if (text.indexOf(needle, at + 1) !== -1) problems.push(`Footnote ${fn.label} reference context is ambiguous: ${needle}`);
-      const start = offsets[at + contexts[n].length];
-      const end = offsets[at + needle.length - 1] + 1;
-      const ref = `<sup class="footnote-ref"><a href="#${ids.footnote(fn.num)}" id="${ids.footnoteRef(fn.num)}">${fn.label}</a></sup>`;
-      rendered[i] = html.slice(0, start) + ref + html.slice(end);
-      blockIdx = i;
-      htmlOffset = start + ref.length;
+      const start = positions[at + contexts[n].length];
+      const end = positions[at + needle.length - 1];
+      if (start.t !== end.t || tokens[start.t].link) {
+        problems.push(`Footnote ${fn.label} reference is not plain text: ${needle}`);
+        break;
+      }
+      const token = tokens[start.t];
+      tokens.splice(start.t, 1, { text: token.text.slice(0, start.c) }, { footnote: fn.num }, { text: token.text.slice(end.c + 1) });
+      from = i;
       return;
     }
     problems.push(`Footnote ${fn.label} reference not found (context "${needle}")`);
@@ -573,10 +584,9 @@ function nestSections(blocks, rendered) {
 }
 
 // Returns the three parts of the page: table of contents, body and footnotes.
-function renderDocument(doc, figures, contexts, problems) {
+function renderDocument(doc, figures, problems) {
   resolveInternalLinks(doc, problems);
   const rendered = doc.blocks.map((b) => renderBlock(b, figures));
-  insertFootnoteReferences(rendered, doc.footnotes, contexts, problems);
 
   // Nested lists, closing each level's <ol> before a shallower entry.
   let toc = "";
@@ -644,6 +654,129 @@ ${parts.footnotes}
 }
 
 // ---------------------------------------------------------------------------
+// JSON document, in the shape of the machine-readable CRA text published at
+// https://cra.orcwg.org/api/ (see x-eur-lex's generated/cra.json): typed nodes
+// carrying a marker, an id, the anchor they live at (src), a human-readable
+// citation (cite) and content, with footnotes collected at the end and
+// referenced by id.
+
+const footnotesIn = (content) =>
+  [...new Set(content.flatMap((part) => (typeof part === "string" ? [...part.matchAll(/#ntc(\d+)"/g)].map((m) => m[1]) : part.footnotes || [])))];
+
+function jsonContent(body, pointId) {
+  const parts = [];
+  for (const part of body) {
+    if (part.p) {
+      parts.push(renderTokens(part.p));
+      continue;
+    }
+    if (part.list.type === "Disc") {
+      parts.push({ type: "list", items: part.list.items.map((item) => ({ marker: item.label, content: jsonContent(item.body, null) })) });
+      continue;
+    }
+    // Lettered sub-points, e.g. point 91(a).
+    for (const item of part.list.items) {
+      const id = ids.subpoint(pointId, item.label);
+      const content = jsonContent(item.body, null);
+      parts.push({
+        type: "point",
+        marker: item.label,
+        id,
+        src: `#${id}`,
+        cite: `point ${pointId.slice(4)}(${item.label.replace(/\W/g, "")})`,
+        content,
+        footnotes: footnotesIn(content),
+      });
+    }
+  }
+  return parts;
+}
+
+function jsonBlock(block, figures) {
+  switch (block.type) {
+    case "point":
+    case "example": {
+      const id = block.type === "point" ? ids.point(block.num) : ids.example(block.num);
+      const content = jsonContent(block.body, id);
+      return {
+        type: block.type,
+        marker: block.label,
+        id,
+        src: `#${id}`,
+        cite: block.type === "point" ? `point ${block.num}` : `Example ${block.num}`,
+        content,
+        footnotes: footnotesIn(content),
+      };
+    }
+    case "figure": {
+      const id = ids.figure(block.num);
+      const caption = renderTokens(block.caption);
+      return {
+        type: "figure",
+        marker: block.label,
+        id,
+        src: `#${id}`,
+        cite: `Figure ${block.num}`,
+        title: caption,
+        image: figures[block.num - 1].src,
+        footnotes: footnotesIn([caption]),
+      };
+    }
+    default:
+      return jsonContent(block.body || [{ list: block.list }], null);
+  }
+}
+
+// Nests the flat blocks under the sections their headings open.
+function jsonSections(doc, figures) {
+  const root = { sections: [] };
+  const stack = [root];
+  for (const block of doc.blocks) {
+    if (block.type === "heading") {
+      stack.length = block.level;
+      const id = ids.section(block.num);
+      const section = {
+        type: "section",
+        marker: block.num,
+        title: block.title,
+        id,
+        src: `#${id}`,
+        cite: `Section ${block.num}`,
+        content: [],
+        sections: [],
+      };
+      stack[stack.length - 1].sections.push(section);
+      stack.push(section);
+      continue;
+    }
+    const rendered = jsonBlock(block, figures);
+    stack[stack.length - 1].content.push(...(Array.isArray(rendered) ? rendered : [rendered]));
+  }
+  return root.sections;
+}
+
+// The document, shaped so that the site's API serves it like any other item
+// (see src/_data/utils/api-formatter.js).
+function renderJson(doc, figures, meta) {
+  return {
+    id: "official-guidance",
+    type: "document",
+    title: meta.title,
+    shortTitle: "Official CRA Guidance",
+    reference: meta.reference,
+    date: meta.isoDate,
+    permalink: "/official-guidance/",
+    author: "European Union",
+    license: "CC-BY-4.0",
+    licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice",
+    srcUrl: meta.sourceUrl,
+    source: { file: meta.sourceFile, sha256: meta.sourceSha256 },
+    sections: jsonSections(doc, figures),
+    footnotes: doc.footnotes.map((fn) => ({ id: fn.label, text: renderTokens(fn.tokens) })),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Verification
 
 // Text of the structure tree, split into the body stream and the footnote
@@ -677,7 +810,19 @@ function firstDifference(expected, actual) {
     : `at character ${i}: expected "…${expected.slice(Math.max(0, i - 40), i + 40)}…", got "…${actual.slice(Math.max(0, i - 40), i + 40)}…"`;
 }
 
-function verify({ tree, doc, parts, pageText, figures }) {
+// The document's text, in order: markers, titles and content.
+function jsonText(nodes) {
+  return nodes
+    .map((node) => {
+      if (typeof node === "string") return node;
+      const own = [node.marker, node.title, node.image ? "" : null].filter(Boolean).join(" ");
+      const children = node.items || node.content || [];
+      return `${own} ${jsonText(children)} ${jsonText(node.sections || [])}`;
+    })
+    .join(" ");
+}
+
+function verify({ tree, doc, parts, json, pageText, figures }) {
   const problems = [];
   const report = [];
   const check = (name, fn) => {
@@ -705,11 +850,15 @@ function verify({ tree, doc, parts, pageText, figures }) {
   // 2. Fidelity: output text equals structure tree text, in order.
   check("fidelity", () => {
     const source = sourceStreams(tree);
+    const jsonDiff = firstDifference(source.body, htmlText(jsonText(json.sections)));
+    if (jsonDiff) problems.push(`JSON text differs from the structure tree ${jsonDiff}`);
+    const jsonNotesDiff = firstDifference(source.notes, htmlText(json.footnotes.map((fn) => `${fn.id} ${fn.text}`).join(" ")));
+    if (jsonNotesDiff) problems.push(`JSON footnote text differs from the structure tree ${jsonNotesDiff}`);
     const bodyDiff = firstDifference(source.body, htmlText(parts.body));
     const notesDiff = firstDifference(source.notes, htmlText(parts.footnotes));
     if (bodyDiff) problems.push(`Body text differs from the structure tree ${bodyDiff}`);
     if (notesDiff) problems.push(`Footnote text differs from the structure tree ${notesDiff}`);
-    return `HTML text is identical to the structure tree's ${source.body.length} body and ${source.notes.length} footnote characters (whitespace ignored)`;
+    return `HTML and JSON text are identical to the structure tree's ${source.body.length} body and ${source.notes.length} footnote characters (whitespace ignored)`;
   });
 
   // 3. Numbering.
@@ -843,13 +992,16 @@ function extract(input, figuresUrl, sourceUrl = SOURCE_URL) {
   };
   for (const [key, value] of Object.entries(meta)) if (!value) problems.push(`Could not find the ${key} on the cover page`);
 
-  const parts = renderDocument(doc, figures, contexts, problems);
+  insertFootnoteMarkers(doc, contexts, problems);
+  const parts = renderDocument(doc, figures, problems);
   const page = renderPage(parts, meta);
-  const verification = verify({ tree, doc, parts, pageText, figures });
-  return { page, parts, figures, tree, doc, pageText, problems: [...problems, ...verification.problems], report: verification.report };
+  const json = renderJson(doc, figures, meta);
+  const verification = verify({ tree, doc, parts, json, pageText, figures });
+  return { page, parts, json, figures, tree, doc, pageText, problems: [...problems, ...verification.problems], report: verification.report };
 }
 
 const PAGE = "src/official-guidance.html";
+const JSON_FILE = "src/_data/official-guidance.json";
 const FIGURES_DIR = "src/assets/images/official-guidance";
 const FIGURES_URL = "/assets/images/official-guidance";
 
@@ -862,7 +1014,8 @@ function main() {
     process.exit(2);
   }
   const root = path.join(__dirname, "..");
-  const { page, figures, problems, report } = extract(input, FIGURES_URL);
+  const { page, json, figures, problems, report } = extract(input, FIGURES_URL);
+  const jsonText = `${JSON.stringify(json, null, 2)}\n`;
   for (const line of report) console.log(`  ${line}`);
   if (problems.length) {
     for (const p of problems) console.error(`FAILED: ${p}`);
@@ -871,10 +1024,12 @@ function main() {
 
   const figuresPath = path.join(root, FIGURES_DIR);
   const pagePath = path.join(root, PAGE);
+  const jsonPath = path.join(root, JSON_FILE);
   if (check) {
     // Confirms the committed output is exactly what this PDF produces.
     const stale = [];
     if (!fs.existsSync(pagePath) || fs.readFileSync(pagePath, "utf8") !== page) stale.push(PAGE);
+    if (!fs.existsSync(jsonPath) || fs.readFileSync(jsonPath, "utf8") !== jsonText) stale.push(JSON_FILE);
     const expected = new Set(figures.map((f) => f.name));
     const existing = fs.existsSync(figuresPath) ? fs.readdirSync(figuresPath) : [];
     for (const f of figures) {
@@ -894,7 +1049,8 @@ function main() {
   fs.mkdirSync(figuresPath, { recursive: true });
   for (const f of figures) fs.writeFileSync(path.join(figuresPath, f.name), f.data);
   fs.writeFileSync(pagePath, page);
-  console.log(`Verification passed. Wrote ${PAGE} and ${figures.length} figures to ${FIGURES_DIR}/`);
+  fs.writeFileSync(jsonPath, jsonText);
+  console.log(`Verification passed. Wrote ${PAGE}, ${JSON_FILE} and ${figures.length} figures to ${FIGURES_DIR}/`);
 }
 
 if (require.main === module) main();

@@ -164,6 +164,47 @@ describe("extract", { skip: !(fs.existsSync(PDF) && hasPoppler) && "guidance PDF
     }
   });
 
+  test("builds a JSON document the API can serve", () => {
+    const { json } = result;
+    assert.equal(json.id, "official-guidance");
+    assert.equal(json.type, "document");
+    assert.equal(json.permalink, "/official-guidance/");
+    assert.equal(json.reference, "C(2026) 5252 final");
+    assert.equal(json.footnotes.length, 31);
+    assert.deepEqual(json.sections.map((s) => s.marker), ["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+
+    const flatten = (nodes) =>
+      nodes.flatMap((n) => (typeof n === "string" ? [] : [n, ...flatten([...(n.content || []), ...(n.sections || []), ...(n.items || [])])]));
+    const nodes = flatten(json.sections);
+    const all = (id) => nodes.find((n) => n.id === id);
+    assert.deepEqual(all("sct_2.sct_3"), {
+      ...all("sct_2.sct_3"),
+      type: "section",
+      marker: "2.3",
+      title: "Computer code",
+      src: "#sct_2.sct_3",
+      cite: "Section 2.3",
+    });
+    const point = all("pnt_45");
+    assert.equal(point.type, "point");
+    assert.equal(point.marker, "45.");
+    assert.equal(point.cite, "point 45");
+    assert.equal(point.src, "#pnt_45");
+    assert.equal(all("pnt_91.pnt_a").cite, "point 91(a)");
+    assert.equal(all("exm_10").cite, "Example 10");
+    assert.equal(all("fgr_9").image, "/figures/figure-9.png");
+    // Footnote 7 is referenced in point 13 and listed once.
+    assert.deepEqual(all("pnt_13").footnotes, ["7"]);
+    assert.equal(json.footnotes[6].id, "7");
+  });
+
+  test("verification detects text missing from the JSON", () => {
+    const json = JSON.parse(JSON.stringify(result.json));
+    const section = json.sections[0].sections[0];
+    section.content[0].content[0] = section.content[0].content[0].replace("entered into force", "");
+    assert.match(verify({ ...result, json }).problems.join("\n"), /JSON text differs/);
+  });
+
   test("verification detects broken anchors", () => {
     const body = result.parts.body.replace('id="pnt_14"', 'id="pnt_14x"');
     assert.match(verify({ ...result, parts: { ...result.parts, body } }).problems.join("\n"), /Links to missing ids: .*pnt_14/);

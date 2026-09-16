@@ -26,7 +26,7 @@ npm install
 - **`npm test`** - Run the unit tests (Node's built-in test runner, tests in `test/`)
 - **`npm run update-cache`** - Update external content cache
 - **`npm run update-cache -- branch-name`** - Update the external content cache to use a different branch of the [`orcwg/cra-hub`][] repositiory. Great for testing the build with unmerged pull requests.
-- **`npm run extract-guidance`** - Regenerate the Official CRA Guidance page (`src/official-guidance.html` and `src/assets/images/official-guidance/`) from the Commission's guidance PDF in `src/_data/`, verifying the extracted text against the PDF (requires poppler). The generated files are committed and shouldn't be edited by hand.
+- **`npm run extract-guidance`** - Regenerate the Official CRA Guidance page (`src/official-guidance.html`), its API document (`src/_data/official-guidance.json`, served at `/api/v0/documents/official-guidance.json`) and its figures (`src/assets/images/official-guidance/`) from the Commission's guidance PDF in `src/_data/`, verifying the extracted text against the PDF (requires poppler). The generated files are committed and shouldn't be edited by hand.
 - **`npm run extract-guidance -- --check`** - Confirm the committed Official CRA Guidance page matches the PDF, without writing anything (requires poppler).
 
 ## Architecture
