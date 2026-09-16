@@ -570,17 +570,20 @@ function insertFootnoteMarkers(doc, contexts, problems) {
 function nestSections(blocks, rendered) {
   const open = [];
   let html = "";
+  // Each top-level section ends with a link back to the table of contents at
+  // the top of the page. Its label comes from CSS, so that the page's text
+  // stays that of the guidance.
+  const close = (level) =>
+    `${level === 1 ? `<p class="back-to-top"><a href="#toc_1" aria-label="Back to top"></a></p>\n` : ""}</section>\n`;
   blocks.forEach((b, i) => {
     if (b.type === "heading") {
-      while (open.length && open[open.length - 1] >= b.level) {
-        open.pop();
-        html += "</section>\n";
-      }
+      while (open.length && open[open.length - 1] >= b.level) html += close(open.pop());
       open.push(b.level);
     }
     html += `${rendered[i]}\n\n`;
   });
-  return html + "</section>\n".repeat(open.length);
+  while (open.length) html += close(open.pop());
+  return html;
 }
 
 // Returns the three parts of the page: table of contents, body and footnotes.
@@ -606,7 +609,7 @@ function renderDocument(doc, figures, problems) {
     })
     .join("\n");
 
-  return { toc: toc.trim(), body: nestSections(doc.blocks, rendered).trim(), footnotes };
+  return { toc: `<h2 id="toc_1">Contents</h2>\n${toc.trim()}`, body: nestSections(doc.blocks, rendered).trim(), footnotes };
 }
 
 const yamlString = (s) => JSON.stringify(s);
@@ -638,7 +641,6 @@ attribution:
   disclaimer: ${yamlString(`This guidance is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.<br><br>The content of this page was generated from the [original PDF](${meta.sourceUrl}) of the guidance, and its text was verified against it. Please check the original PDF for accuracy.`)}
 ---
 <section class="section-card guidance-toc">
-<h2 id="toc_1">Contents</h2>
 ${parts.toc}
 </section>
 
