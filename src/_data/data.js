@@ -18,6 +18,9 @@ const { EC_QANDA_API_URL, parseEcQandaDocument } = require("./utils/ec-qanda-par
 const { SRP_FAQ_URL, parseSrpFaqPage, linkSrpCrossReferences } = require("./utils/srp-faq-parser.js");
 const { fetchWithFallback } = require("./utils/fetch-with-fallback.js");
 const { createApiArray } = require("./utils/api-formatter.js");
+// The Commission's guidance, extracted from its PDF by
+// scripts/extract-guidance.js (regenerate with `npm run extract-guidance`)
+const officialGuidance = require("./official-guidance.json");
 
 // ============================================================================
 // Constants
@@ -836,7 +839,7 @@ async function processAllContent() {
   const acknowledgements = await processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
 
   // Create simple JSON API
-  const api = createApiArray({ faqs, guidanceRequests, lists });
+  const api = createApiArray({ faqs, guidanceRequests, lists, documents: [officialGuidance] });
 
   return {
     faqs,

@@ -7,6 +7,9 @@
  */
 
 const API_BASE_URL = "https://cra.orcwg.org";
+
+// Permalinks already start with a slash
+const siteUrl = (permalink) => `${API_BASE_URL}/${permalink.replace(/^\//, "")}`;
 const API_VERSION = "v0";
 
 // Fields that should be used to build API links (extracted and not included in data)
@@ -102,7 +105,7 @@ function serializeItem(item) {
 function buildLinks(item, collectionName) {
   const links = {
     self: `${API_BASE_URL}/api/${API_VERSION}/${collectionName}/${item.id}.json`,
-    html: `${API_BASE_URL}/${item.permalink}`,
+    html: siteUrl(item.permalink),
     collection: `${API_BASE_URL}/api/${API_VERSION}/${collectionName}.json`
   };
 
