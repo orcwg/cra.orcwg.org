@@ -51,6 +51,64 @@ describe("EU regulation links", () => {
   });
 });
 
+describe("prefixed citations", () => {
+  const eurLex = (celex) => `https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:${celex}`;
+
+  test("[[Article N]] without a prefix still links the CRA", () => {
+    assert.deepEqual(links(resolve("See [[Article 24]].")), [{ text: "Article 24", url: `${eurLex("32024R2847")}#art_24` }]);
+  });
+
+  test("links articles, recitals and annexes of other acts by their cite key", () => {
+    const result = resolve("See [[PLD Article 5]], [[AI-ACT Recital 3]], [[NIS2 Annex I]] and [[CRA Art. 13(8)]].");
+    assert.deepEqual(links(result), [
+      { text: "Article 5 of the PLD", url: `${eurLex("32024L2853")}#art_5` },
+      { text: "Recital 3 of the AI Act", url: `${eurLex("32024R1689")}#rct_3` },
+      { text: "Annex I of the NIS 2 Directive", url: `${eurLex("32022L2555")}#anx_I` },
+      { text: "Article 13(8) of the CRA", url: `${eurLex("32024R2847")}#art_13` }
+    ]);
+  });
+
+  test("links sections, points, examples and figures of the Commission guidance", () => {
+    const result = resolve("See [[CRA-GUIDANCE Section 3.2.4]], [[CRA-GUIDANCE point 71]], [[CRA-GUIDANCE Example 1]] and [[CRA-GUIDANCE Figure 1]].");
+    assert.deepEqual(links(result), [
+      { text: "Section 3.2.4 of the Commission guidance", url: "/official-guidance/#sct_3.sct_2.sct_4" },
+      { text: "point 71 of the Commission guidance", url: "/official-guidance/#pnt_71" },
+      { text: "Example 1 of the Commission guidance", url: "/official-guidance/#exm_1" },
+      { text: "Figure 1 of the Commission guidance", url: "/official-guidance/#fgr_1" }
+    ]);
+    assert.match(result, /"🇪🇺 Official CRA Guidance - Section 3\.2\.4 - Donations"/);
+  });
+
+  test("links any act in eu-reg.json by its number, named as in its full title", () => {
+    const result = resolve("See [[168/2013 Article 1]], [[2022/30 Annex I]] and [[2014/53 Recital 2]].");
+    assert.deepEqual(links(result), [
+      { text: "Article 1 of Regulation (EU) No 168/2013", url: `${eurLex("32013R0168")}#art_1` },
+      { text: "Annex I of Commission Delegated Regulation (EU) 2022/30", url: `${eurLex("32022R0030")}#anx_I` },
+      { text: "Recital 2 of Directive 2014/53/EU", url: `${eurLex("32014L0053")}#rct_2` }
+    ]);
+  });
+
+  test("an act with a cite key is named by it whichever prefix is used", () => {
+    assert.equal(resolve("[[2024/2853 Article 5]]"), resolve("[[PLD Article 5]]"));
+  });
+
+  test("the prefix is not case sensitive", () => {
+    assert.deepEqual(links(resolve("[[pld article 5]]")).map(link => link.url), [`${eurLex("32024L2853")}#art_5`]);
+  });
+
+  test("leaves unknown documents and parts as written", () => {
+    for (const markdown of ["[[GDPR Article 5]]", "[[2016/679 Article 5]]", "[[CRA-GUIDANCE Section 99.9]]", "[[CRA-GUIDANCE point 9999]]", "[[PLD Section 2]]"]) {
+      assert.equal(resolve(markdown), markdown);
+    }
+  });
+
+  test("does not mistake FAQ and list references for prefixed citations", () => {
+    for (const markdown of ["[[maintainers/should-i-worry]]", "[[stewards]]", "[[Annex I, Part I]]"]) {
+      assert.doesNotMatch(resolve(markdown), /of the/);
+    }
+  });
+});
+
 describe("rendering answers fetched as HTML", () => {
   const render = (html, context) => md.render(resolve(htmlToMarkdown(html), context));
 

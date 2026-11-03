@@ -81,14 +81,18 @@
     "full_title": "Regulation (EU) 2022/2554 of the European Parliament and of the Council of 14 December 2022 on digital operational resilience for the financial sector",
     "status": "Regulation",
     "description": "Establishes a harmonised framework for ICT risk management, incident reporting, testing and oversight of critical third-party ICT providers in the financial sector.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554",
+    "cite": "DORA",
+    "cite_name": "DORA"
   },
   "2022/2555": {
     "short_name": "NIS 2 Directive",
     "full_title": "Directive (EU) 2022/2555 of the European Parliament and of the Council of 14 December 2022 on measures for a high common level of cybersecurity across the Union",
     "status": "Directive",
     "description": "Replaces the original NIS Directive, expanding scope and imposing stricter cybersecurity risk-management and incident-reporting obligations on essential and important entities.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022L2555"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022L2555",
+    "cite": "NIS2",
+    "cite_name": "the NIS 2 Directive"
   },
   "2023/1230": {
     "short_name": "Machinery Regulation",
@@ -102,14 +106,18 @@
     "full_title": "Regulation (EU) 2024/2847 of the European Parliament and of the Council of 23 October 2024 on horizontal cybersecurity requirements for products with digital elements",
     "status": "Regulation",
     "description": "Sets horizontal cybersecurity and vulnerability-management requirements for “products with digital elements” (hardware and software), covering the full product lifecycle.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R2847"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R2847",
+    "cite": "CRA",
+    "cite_name": "the CRA"
   },
   "2024/2853": {
     "short_name": "New Product Liability Directive (PLD 2024)",
     "full_title": "Directive (EU) 2024/2853 of the European Parliament and of the Council of 23 October 2024 on liability for defective products and repealing Council Directive 85/374/EEC",
     "status": "Directive",
     "description": "Updates EU product-liability rules for the digital age, explicitly covering software, AI and other modern products, and broadening access to compensation for damage caused by defective products.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024L2853"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024L2853",
+    "cite": "PLD",
+    "cite_name": "the PLD"
   },
   "2025/1533": {
     "short_name": "Marine Equipment Directive – Implementing Regulation 2025",
@@ -133,10 +141,19 @@
     "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2392"
   },
   "52022XC0629(04)": {
-      "short_name": "Blue Guide (2022 Edition)",
-      "full_title": "Commission Notice — The ‘Blue Guide’ on the implementation of EU product rules 2022",
-      "status": "Commission Notice (Guidance)",
-      "description": "Non-binding guidance explaining how EU product legislation works in practice, including conformity assessment, CE marking, economic operator roles, market surveillance, and harmonised standards.",
-      "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:52022XC0629(04)"
+    "short_name": "Blue Guide (2022 Edition)",
+    "full_title": "Commission Notice — The ‘Blue Guide’ on the implementation of EU product rules 2022",
+    "status": "Commission Notice (Guidance)",
+    "description": "Non-binding guidance explaining how EU product legislation works in practice, including conformity assessment, CE marking, economic operator roles, market surveillance, and harmonised standards.",
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:52022XC0629(04)"
+  },
+  "2024/1689": {
+    "short_name": "Artificial Intelligence Act (AI Act)",
+    "full_title": "Regulation (EU) 2024/1689 of the European Parliament and of the Council of 13 June 2024 laying down harmonised rules on artificial intelligence",
+    "status": "Regulation",
+    "description": "Lays down harmonised rules for placing AI systems on the market and putting them into service, with obligations scaled to the risk of each system.",
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689",
+    "cite": "AI-ACT",
+    "cite_name": "the AI Act"
   }
 }
