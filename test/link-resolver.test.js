@@ -76,7 +76,7 @@ describe("prefixed citations", () => {
       { text: "Example 1 of the Commission guidance", url: "/official-guidance/#exm_1" },
       { text: "Figure 1 of the Commission guidance", url: "/official-guidance/#fgr_1" }
     ]);
-    assert.match(result, /"📜 Official CRA Guidance - Section 3\.2\.4 - Donations"/);
+    assert.match(result, /"🇪🇺 Official CRA Guidance - Section 3\.2\.4 - Donations"/);
   });
 
   test("links any act in eu-reg.json by its number, named as in its full title", () => {

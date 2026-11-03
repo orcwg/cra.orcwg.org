@@ -63,7 +63,7 @@ function guidanceDocument(doc) {
     return {
       text: `${cite} of the Commission guidance`,
       url: `${doc.permalink}#${part.id}`,
-      title: `📜 ${doc.shortTitle} - ${part.label}`
+      title: `🇪🇺 ${doc.shortTitle} - ${part.label}`
     };
   };
 }
