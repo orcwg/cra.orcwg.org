@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const markdownIt = require("markdown-it");
 const { resolveLinks, replaceOutsideLinks } = require("../src/_data/utils/link-resolver.js");
 const { htmlToMarkdown } = require("../src/_data/utils/html-to-markdown.js");
-const craReferences = require("../src/_data/craReferences.json");
+const craReferences = require("../src/_data/eu-reg-titles.json")["2024/2847"];
 
 const md = markdownIt({ html: true, linkify: true });
 
@@ -86,6 +86,20 @@ describe("prefixed citations", () => {
       { text: "Annex I of Commission Delegated Regulation (EU) 2022/30", url: `${eurLex("32022R0030")}#anx_I` },
       { text: "Recital 2 of Directive 2014/53/EU", url: `${eurLex("32014L0053")}#rct_2` }
     ]);
+  });
+
+  test("a prefixed citation carries the article or annex title when eu-reg-titles.json has it", () => {
+    assert.match(resolve("[[PLD Article 5]]"), /"⚖️ New Product Liability Directive \(PLD 2024\) - Article 5 - Right to compensation"/);
+    assert.match(resolve("[[AI-ACT Annex III]]"), /"⚖️ Artificial Intelligence Act \(AI Act\) - Annex III - High-risk AI systems referred to in Article 6\(2\)"/);
+    assert.match(resolve("[[2019/2144 Article 5]]"), /"⚖️ General Safety Regulation \(vehicles\) - Article 5"\)/);
+  });
+
+  test("a prefixed CRA citation carries the article or annex title, like the unprefixed one", () => {
+    const [article] = links(resolve("[[CRA Article 24]]"));
+    assert.deepEqual(article, { text: "Article 24 of the CRA", url: `${eurLex("32024R2847")}#art_24` });
+    assert.match(resolve("[[CRA Article 24]]"), new RegExp(`"⚖️ Cyber Resilience Act \\(CRA\\) - Article 24 - ${craReferences.articleTitles[24]}"`));
+    assert.match(resolve("[[CRA Annex I]]"), new RegExp(` - Annex I - ${craReferences.annexTitles.I}"`));
+    assert.match(resolve("[[CRA Recital 18]]"), /"⚖️ Cyber Resilience Act \(CRA\) - Recital 18"/);
   });
 
   test("an act with a cite key is named by it whichever prefix is used", () => {

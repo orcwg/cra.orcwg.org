@@ -14,6 +14,8 @@
 const path = require('path');
 const euRegData = require('../eu-reg.json');
 const officialGuidance = require('../official-guidance.json');
+// Article and annex titles per act, from scripts/fetch-eu-reg-titles.js
+const euRegTitles = require('../eu-reg-titles.json');
 
 const EUR_LEX_HTML_URL = 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:';
 const CRA_BASE_URL = `${EUR_LEX_HTML_URL}32024R2847`;
@@ -26,7 +28,8 @@ const CRA_BASE_URL = `${EUR_LEX_HTML_URL}32024R2847`;
 // or undefined when the document has no such part.
 const EUR_LEX_ANCHORS = { article: 'art_', recital: 'rct_', annex: 'anx_' };
 
-function euRegDocument(reg) {
+function euRegDocument(number, reg) {
+  const titles = euRegTitles[number];
   const base = EUR_LEX_HTML_URL + reg.url.match(/CELEX:([^&#]+)/)[1];
   // "the PLD" for an act with a cite key, otherwise the act's own name
   // from the start of its full title: "Directive (EU) 2024/2853"
@@ -38,9 +41,16 @@ function euRegDocument(reg) {
     return {
       text: `${part} of ${name}`,
       url: `${base}#${anchor}${number}`,
-      title: `⚖️ ${reg.short_name} - ${part}`
+      title: `⚖️ ${reg.short_name} - ${part}${partTitle(titles, type, number)}`
     };
   };
+}
+
+// " - Right to compensation" for an article or annex whose title is known; recitals have none
+function partTitle(titles, type, number) {
+  if (type === 'recital') return '';
+  const title = titles?.[type === 'annex' ? 'annexTitles' : 'articleTitles']?.[number];
+  return title ? ` - ${title}` : '';
 }
 
 function guidanceDocument(doc) {
@@ -72,7 +82,7 @@ const CITABLE_DOCUMENTS = Object.fromEntries([
   ...Object.entries(euRegData)
     .filter(([number]) => /^\d+\/\d+$/.test(number)) // acts, not the Blue Guide
     .flatMap(([number, reg]) => {
-      const document = euRegDocument(reg);
+      const document = euRegDocument(number, reg);
       return reg.cite ? [[number, document], [reg.cite, document]] : [[number, document]];
     }),
   ['CRA-GUIDANCE', guidanceDocument(officialGuidance)]
