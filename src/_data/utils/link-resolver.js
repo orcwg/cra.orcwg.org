@@ -194,6 +194,8 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
   result = result.replace(/\[\[(\d+\/\d+|[A-Z][A-Z0-9-]*)\s+(Article|Art\.|Recital|Rec\.|Annex|Section|point|Example|Figure)\s+([^\]\s]+(?:,\s+Part\s+[IVX]+)?)\]\]/gi, (match, prefix, type, number) => {
     const document = CITABLE_DOCUMENTS[prefix.toUpperCase()];
     if (!document) return match;
+    // The CRA is the site's subject: [[CRA Article 5]] renders like [[Article 5]] (steps 1 to 3 below)
+    if (document === CITABLE_DOCUMENTS.CRA) return `[[${type} ${number}]]`;
     type = { art: 'article', rec: 'recital' }[type.slice(0, 3).toLowerCase()] || type.toLowerCase();
     const displayNumber = type === 'annex' ? number.replace(/^([ivx]+)(,\s+Part\s+)?([ivx]+)?$/i, (m, annex, sep, part) => `${annex.toUpperCase()}${sep ? sep + part.toUpperCase() : ''}`) : number;
     const anchorNumber = type === 'article' ? number.match(/^\d+/)?.[0] : type === 'annex' ? displayNumber.split(',')[0] : number;
