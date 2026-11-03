@@ -79,12 +79,25 @@ describe("prefixed citations", () => {
     assert.match(result, /"📜 Official CRA Guidance - Section 3\.2\.4 - Donations"/);
   });
 
+  test("links any act in eu-reg.json by its number, named as in its full title", () => {
+    const result = resolve("See [[168/2013 Article 1]], [[2022/30 Annex I]] and [[2014/53 Recital 2]].");
+    assert.deepEqual(links(result), [
+      { text: "Article 1 of Regulation (EU) No 168/2013", url: `${eurLex("32013R0168")}#art_1` },
+      { text: "Annex I of Commission Delegated Regulation (EU) 2022/30", url: `${eurLex("32022R0030")}#anx_I` },
+      { text: "Recital 2 of Directive 2014/53/EU", url: `${eurLex("32014L0053")}#rct_2` }
+    ]);
+  });
+
+  test("an act with a cite key is named by it whichever prefix is used", () => {
+    assert.equal(resolve("[[2024/2853 Article 5]]"), resolve("[[PLD Article 5]]"));
+  });
+
   test("the prefix is not case sensitive", () => {
     assert.deepEqual(links(resolve("[[pld article 5]]")).map(link => link.url), [`${eurLex("32024L2853")}#art_5`]);
   });
 
   test("leaves unknown documents and parts as written", () => {
-    for (const markdown of ["[[GDPR Article 5]]", "[[CRA-GUIDANCE Section 99.9]]", "[[CRA-GUIDANCE point 9999]]", "[[PLD Section 2]]"]) {
+    for (const markdown of ["[[GDPR Article 5]]", "[[2016/679 Article 5]]", "[[CRA-GUIDANCE Section 99.9]]", "[[CRA-GUIDANCE point 9999]]", "[[PLD Section 2]]"]) {
       assert.equal(resolve(markdown), markdown);
     }
   });

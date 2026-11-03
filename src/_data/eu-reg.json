@@ -25,9 +25,7 @@
     "full_title": "Directive 2014/53/EU of the European Parliament and of the Council of 16 April 2014 on the harmonisation of the laws of the Member States relating to the making available on the market of radio equipment",
     "status": "Directive",
     "description": "Lays down essential requirements for safety, EMC, and efficient use of radio spectrum for radio equipment placed on the EU market.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32014L0053",
-    "cite": "RED",
-    "cite_name": "the Radio Equipment Directive"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32014L0053"
   },
   "2014/90": {
     "short_name": "Marine Equipment Directive (MED)",
@@ -41,18 +39,14 @@
     "full_title": "Regulation (EU) 2017/745 of the European Parliament and of the Council of 5 April 2017 on medical devices, amending and repealing several earlier acts",
     "status": "Regulation",
     "description": "Overhauls the EU framework for medical devices, strengthening pre-market scrutiny, clinical evaluation, post-market surveillance and traceability.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017R0745",
-    "cite": "MDR",
-    "cite_name": "the Medical Devices Regulation"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017R0745"
   },
   "2017/746": {
     "short_name": "In Vitro Diagnostic Medical Devices Regulation (IVDR)",
     "full_title": "Regulation (EU) 2017/746 of the European Parliament and of the Council of 5 April 2017 on in vitro diagnostic medical devices and repealing Directive 98/79/EC",
     "status": "Regulation",
     "description": "Establishes a stricter regulatory regime for in vitro diagnostic devices (IVDs), including classification, notified bodies, UDI and post-market surveillance.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017R0746",
-    "cite": "IVDR",
-    "cite_name": "the IVDR"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017R0746"
   },
   "2018/1139": {
     "short_name": "EASA Basic Regulation",
@@ -66,9 +60,7 @@
     "full_title": "Regulation (EU) 2019/1020 of the European Parliament and of the Council of 20 June 2019 on market surveillance and compliance of products",
     "status": "Regulation",
     "description": "Provides a horizontal framework for market surveillance of products in the EU, strengthening enforcement and cooperation among Member States.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R1020",
-    "cite": "MARKET-SURVEILLANCE",
-    "cite_name": "the Market Surveillance Regulation"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R1020"
   },
   "2019/2144": {
     "short_name": "General Safety Regulation (vehicles)",
@@ -82,9 +74,7 @@
     "full_title": "Commission Delegated Regulation (EU) 2022/30 of 29 October 2021 supplementing Directive 2014/53/EU with regard to cybersecurity, privacy and fraud-prevention requirements",
     "status": "Commission Delegated Regulation",
     "description": "Introduces additional cybersecurity, privacy and fraud-prevention requirements for certain categories of radio equipment under the RED.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R0030",
-    "cite": "RED-CYBERSECURITY",
-    "cite_name": "the RED cybersecurity Delegated Regulation"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R0030"
   },
   "2022/2554": {
     "short_name": "Digital Operational Resilience Act (DORA)",
@@ -109,9 +99,7 @@
     "full_title": "Regulation (EU) 2023/1230 of the European Parliament and of the Council of 14 June 2023 on machinery and repealing Directive 2006/42/EC",
     "status": "Regulation",
     "description": "Modernises the EU machinery framework, tightening safety requirements, conformity assessment and market surveillance for machinery and related products.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R1230",
-    "cite": "MACHINERY",
-    "cite_name": "the Machinery Regulation"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R1230"
   },
   "2024/2847": {
     "short_name": "Cyber Resilience Act (CRA)",
@@ -143,18 +131,14 @@
     "full_title": "Commission Delegated Regulation (EU) 2025/1535 of 29 July 2025 supplementing Regulation (EU) 2024/2847 with regard to an exclusion for certain vehicles",
     "status": "Commission Delegated Regulation",
     "description": "Clarifies that certain L-category vehicles and related systems covered by type-approval Regulation (EU) No 168/2013 are excluded from the CRA, to avoid overlap of regulatory regimes.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R1535",
-    "cite": "CRA-VEHICLES",
-    "cite_name": "the CRA motor-vehicle exclusion Delegated Regulation"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R1535"
   },
   "2025/2392": {
     "short_name": "CRA Implementing Regulation on Product Categories",
     "full_title": "Commission Implementing Regulation (EU) 2025/2392 of 28 November 2025 on the technical description of important and critical products with digital elements under Regulation 2024/2847",
     "status": "Commission Implementing Regulation",
     "description": "Provides detailed technical descriptions for the “important” and “critical” product categories under the CRA, guiding conformity-assessment procedures.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2392",
-    "cite": "CRA-PRODUCTS",
-    "cite_name": "the CRA product categories Implementing Regulation"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2392"
   },
   "52022XC0629(04)": {
     "short_name": "Blue Guide (2022 Edition)",
