@@ -88,6 +88,15 @@ describe("prefixed citations", () => {
     ]);
   });
 
+  test("a prefixed CRA citation carries the article or annex title, like the unprefixed one", () => {
+    const [article] = links(resolve("[[CRA Article 24]]"));
+    assert.deepEqual(article, { text: "Article 24 of the CRA", url: `${eurLex("32024R2847")}#art_24` });
+    assert.match(resolve("[[CRA Article 24]]"), new RegExp(`"⚖️ Cyber Resilience Act \\(CRA\\) - Article 24 - ${craReferences.articleTitles[24]}"`));
+    assert.match(resolve("[[CRA Annex I]]"), new RegExp(` - Annex I - ${craReferences.annexTitles.I}"`));
+    assert.match(resolve("[[CRA Recital 18]]"), /"⚖️ Cyber Resilience Act \(CRA\) - Recital 18"/);
+    assert.match(resolve("[[PLD Article 5]]"), /"⚖️ New Product Liability Directive \(PLD 2024\) - Article 5"/);
+  });
+
   test("an act with a cite key is named by it whichever prefix is used", () => {
     assert.equal(resolve("[[2024/2853 Article 5]]"), resolve("[[PLD Article 5]]"));
   });

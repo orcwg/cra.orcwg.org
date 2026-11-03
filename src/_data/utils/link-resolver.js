@@ -31,16 +31,23 @@ function euRegDocument(reg) {
   // "the PLD" for an act with a cite key, otherwise the act's own name
   // from the start of its full title: "Directive (EU) 2024/2853"
   const name = reg.cite_name || reg.full_title.match(/^.*?\d+\/\d+(?:\/EU)?/)[0];
-  return (type, number, displayNumber) => {
+  return (type, number, displayNumber, craReferences) => {
     const anchor = EUR_LEX_ANCHORS[type];
     if (!anchor) return undefined;
     const part = `${type[0].toUpperCase()}${type.slice(1)} ${displayNumber}`;
     return {
       text: `${part} of ${name}`,
       url: `${base}#${anchor}${number}`,
-      title: `⚖️ ${reg.short_name} - ${part}`
+      // The CRA's articles and annexes have titles (craReferences.json); other acts don't
+      title: `⚖️ ${reg.short_name} - ${part}${partTitle(reg, type, number, craReferences)}`
     };
   };
+}
+
+function partTitle(reg, type, number, craReferences) {
+  if (reg.cite !== 'CRA' || type === 'recital') return '';
+  const title = craReferences?.[type === 'annex' ? 'annexTitles' : 'articleTitles']?.[number];
+  return title ? ` - ${title}` : '';
 }
 
 function guidanceDocument(doc) {
@@ -198,7 +205,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
     const displayNumber = type === 'annex' ? number.replace(/^([ivx]+)(,\s+Part\s+)?([ivx]+)?$/i, (m, annex, sep, part) => `${annex.toUpperCase()}${sep ? sep + part.toUpperCase() : ''}`) : number;
     const anchorNumber = type === 'article' ? number.match(/^\d+/)?.[0] : type === 'annex' ? displayNumber.split(',')[0] : number;
     if (!anchorNumber) return match;
-    const link = document(type, anchorNumber, displayNumber);
+    const link = document(type, anchorNumber, displayNumber, craReferences);
     return link ? mdLink(link.text, link.url, link.title) : match;
   });
 
