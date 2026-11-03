@@ -82,12 +82,12 @@ describe("prefixed citations", () => {
     assert.match(result, /"🇪🇺 Official CRA Guidance - Section 3\.2\.4 - Donations"/);
   });
 
-  test("links any act in eu-reg.json by its number, named as in its full title", () => {
+  test("links any act in eu-reg.json by its number, named by it", () => {
     const result = resolve("See [[168/2013 Article 1]], [[2022/30 Annex I]] and [[2014/53 Recital 2]].");
     assert.deepEqual(links(result), [
-      { text: "Regulation (EU) No 168/2013 Article 1", url: `${eurLex("32013R0168")}#art_1` },
-      { text: "Commission Delegated Regulation (EU) 2022/30 Annex I", url: `${eurLex("32022R0030")}#anx_I` },
-      { text: "Directive 2014/53/EU Recital 2", url: `${eurLex("32014L0053")}#rct_2` }
+      { text: "168/2013 Article 1", url: `${eurLex("32013R0168")}#art_1` },
+      { text: "2022/30 Annex I", url: `${eurLex("32022R0030")}#anx_I` },
+      { text: "2014/53 Recital 2", url: `${eurLex("32014L0053")}#rct_2` }
     ]);
   });
 
@@ -134,7 +134,7 @@ describe("prefixed citations", () => {
   test("grouped citations name each change of document or part type", () => {
     const short = (markdown) => linkText(resolve(markdown));
     assert.equal(short("([[CRA-GUIDANCE point 52]], [[CRA-GUIDANCE point 53]], [[CRA-GUIDANCE point 76]], [[CRA-GUIDANCE Example 18]])"), "([Guidance points 52], [53], and [76], [Example 18])");
-    assert.equal(short("([[CRA Article 3(14)]], [[PLD Article 5]], [[AI-ACT Recital 3]], [[2019/1020 Annex I]])"), "([CRA Article 3(14)], [PLD Article 5], [AI Act Recital 3], [Regulation (EU) 2019/1020 Annex I])");
+    assert.equal(short("([[CRA Article 3(14)]], [[PLD Article 5]], [[AI-ACT Recital 3]], [[2019/1020 Annex I]])"), "([CRA Article 3(14)], [PLD Article 5], [AI Act Recital 3], [2019/1020 Annex I])");
     assert.equal(short("([[CRA Article 5]])"), "([CRA Article 5])");
   });
 

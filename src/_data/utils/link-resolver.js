@@ -31,9 +31,8 @@ const EUR_LEX_ANCHORS = { article: 'art_', recital: 'rct_', annex: 'anx_' };
 function euRegDocument(number, reg) {
   const titles = euRegTitles[number];
   const base = EUR_LEX_HTML_URL + reg.url.match(/CELEX:([^&#]+)/)[1];
-  // "PLD" for an act with a cite key, otherwise the act's own name
-  // from the start of its full title: "Directive (EU) 2024/2853"
-  const name = (reg.cite_name || reg.full_title.match(/^.*?\d+\/\d+(?:\/EU)?/)[0]).replace(/^the /, '');
+  // "PLD" for an act with a cite key, otherwise the act's number: "2024/2853"
+  const name = (reg.cite_name || number).replace(/^the /, '');
   const resolve = (type, number, displayNumber) => {
     const anchor = EUR_LEX_ANCHORS[type];
     if (!anchor) return undefined;
