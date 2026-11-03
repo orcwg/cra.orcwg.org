@@ -34,7 +34,7 @@ function euRegDocument(number, reg) {
   // "the PLD" for an act with a cite key, otherwise the act's own name
   // from the start of its full title: "Directive (EU) 2024/2853"
   const name = reg.cite_name || reg.full_title.match(/^.*?\d+\/\d+(?:\/EU)?/)[0];
-  return (type, number, displayNumber) => {
+  const resolve = (type, number, displayNumber) => {
     const anchor = EUR_LEX_ANCHORS[type];
     if (!anchor) return undefined;
     const part = `${type[0].toUpperCase()}${type.slice(1)} ${displayNumber}`;
@@ -44,6 +44,9 @@ function euRegDocument(number, reg) {
       title: `⚖️ ${reg.short_name} - ${part}${partTitle(titles, type, number)}`
     };
   };
+  // "CRA" in the short form used inside parentheses: "(CRA Recital 15)"
+  resolve.shortName = name.replace(/^the /, '');
+  return resolve;
 }
 
 // " - Right to compensation" for an article or annex whose title is known; recitals have none
@@ -66,7 +69,7 @@ function guidanceDocument(doc) {
   };
   for (const section of doc.sections) walk(section);
 
-  return (type, number) => {
+  const resolve = (type, number) => {
     const part = parts[`${type} ${number}`];
     if (!part) return undefined;
     const cite = part.label.split(' (')[0].split(' - ')[0];
@@ -76,6 +79,8 @@ function guidanceDocument(doc) {
       title: `🇪🇺 ${doc.shortTitle} - ${part.label}`
     };
   };
+  resolve.shortName = 'Guidance';
+  return resolve;
 }
 
 const CITABLE_DOCUMENTS = Object.fromEntries([
@@ -87,6 +92,49 @@ const CITABLE_DOCUMENTS = Object.fromEntries([
     }),
   ['CRA-GUIDANCE', guidanceDocument(officialGuidance)]
 ]);
+
+const PREFIXED_CITATION = /\[\[(\d+\/\d+|[A-Z][A-Z0-9-]*)\s+(Article|Art\.|Recital|Rec\.|Annex|Section|point|Example|Figure)\s+([^\]\s]+(?:,\s+Part\s+[IVX]+)?)\]\]/i;
+
+/**
+ * Parse one prefixed citation, "[[PLD Article 5]]", into its document, part type, display
+ * number and resolved link, or undefined when it is not one or doesn't resolve
+ */
+function parseCitation(citation) {
+  const match = citation.match(PREFIXED_CITATION);
+  if (!match || match[0] !== citation) return undefined;
+  let [, prefix, type, number] = match;
+  const document = CITABLE_DOCUMENTS[prefix.toUpperCase()];
+  if (!document) return undefined;
+  type = { art: 'article', rec: 'recital' }[type.slice(0, 3).toLowerCase()] || type.toLowerCase();
+  const displayNumber = type === 'annex' ? number.replace(/^([ivx]+)(,\s+Part\s+)?([ivx]+)?$/i, (m, annex, sep, part) => `${annex.toUpperCase()}${sep ? sep + part.toUpperCase() : ''}`) : number;
+  const anchorNumber = type === 'article' ? number.match(/^\d+/)?.[0] : type === 'annex' ? displayNumber.split(',')[0] : number;
+  if (!anchorNumber) return undefined;
+  const link = document(type, anchorNumber, displayNumber);
+  return link && { document, type, displayNumber, link };
+}
+
+const PLURALS = { annex: 'Annexes' };
+
+/**
+ * Render citations in the short form: "CRA Recital 15, Guidance points 58, 61, Example 20".
+ * Consecutive citations of the same document share its name, and consecutive citations of
+ * the same part type share the type's name; every citation stays its own link.
+ */
+function groupCitations(citations) {
+  const label = (type, plural) => {
+    const name = plural ? PLURALS[type] || `${type}s` : type;
+    return type === 'point' ? name : `${name[0].toUpperCase()}${name.slice(1)}`;
+  };
+  return citations.map((citation, i) => {
+    const previous = citations[i - 1];
+    const next = citations[i + 1];
+    const sameDocument = previous?.document === citation.document;
+    const sameType = sameDocument && previous.type === citation.type;
+    const plural = sameType || (next?.document === citation.document && next.type === citation.type);
+    const prefix = (sameDocument ? '' : `${citation.document.shortName} `) + (sameType ? '' : `${label(citation.type, plural)} `);
+    return mdLink(prefix + citation.displayNumber, citation.link.url, citation.link.title);
+  }).join(', ');
+}
 
 /**
  * Helper to create markdown link with optional title
@@ -201,15 +249,18 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
   // 0. Convert prefixed [[DOC Article 5]], [[DOC Recital 3]], [[DOC Annex I]], [[DOC Section 3.2.4]],
   //    [[DOC point 71]], [[DOC Example 3]] and [[DOC Figure 2]] patterns, where DOC is a citable document:
   //    an act's number (2024/2853) or cite key (PLD), or CRA-GUIDANCE. Unknown documents or parts are left as written.
-  result = result.replace(/\[\[(\d+\/\d+|[A-Z][A-Z0-9-]*)\s+(Article|Art\.|Recital|Rec\.|Annex|Section|point|Example|Figure)\s+([^\]\s]+(?:,\s+Part\s+[IVX]+)?)\]\]/gi, (match, prefix, type, number) => {
-    const document = CITABLE_DOCUMENTS[prefix.toUpperCase()];
-    if (!document) return match;
-    type = { art: 'article', rec: 'recital' }[type.slice(0, 3).toLowerCase()] || type.toLowerCase();
-    const displayNumber = type === 'annex' ? number.replace(/^([ivx]+)(,\s+Part\s+)?([ivx]+)?$/i, (m, annex, sep, part) => `${annex.toUpperCase()}${sep ? sep + part.toUpperCase() : ''}`) : number;
-    const anchorNumber = type === 'article' ? number.match(/^\d+/)?.[0] : type === 'annex' ? displayNumber.split(',')[0] : number;
-    if (!anchorNumber) return match;
-    const link = document(type, anchorNumber, displayNumber);
-    return link ? mdLink(link.text, link.url, link.title) : match;
+  //
+  //    A parenthesis holding nothing but such citations, "([[CRA Recital 15]], [[CRA-GUIDANCE point 58]],
+  //    [[CRA-GUIDANCE point 61]])", renders in a short form grouped by document and part:
+  //    "(CRA Recital 15, Guidance points 58, 61)". Each number keeps its own link and tooltip.
+  result = result.replace(/\((\[\[[^\]]+\]\](?:,\s*\[\[[^\]]+\]\])*)\)/g, (match, list) => {
+    const citations = list.split(/,\s*(?=\[\[)/).map(parseCitation);
+    if (citations.some(citation => !citation)) return match;
+    return `(${groupCitations(citations)})`;
+  });
+  result = result.replace(new RegExp(PREFIXED_CITATION.source, 'gi'), (match) => {
+    const citation = parseCitation(match);
+    return citation ? mdLink(citation.link.text, citation.link.url, citation.link.title) : match;
   });
 
   // 1. Convert [[Article X]] patterns
