@@ -27,7 +27,7 @@ const RELATION_FIELDS = ["parents", "children", "relatedFaqs", "relatedGuidanceR
 const itemUrl = (collectionName, id) => `${API_BASE_URL}/api/${API_VERSION}/${collectionName}/${id}.json`;
 
 /**
- * Map each item type to the name of the collection serving it ("guidance-request" → "guidanceRequests"),
+ * Map each item type to the name of the collection serving it ("guidance-request" → "guidance-requests"),
  * so references can link to the endpoint the item is actually served at
  */
 function collectionsByType(dataSources) {
