@@ -18,7 +18,7 @@
 
 const { htmlToMarkdown, htmlToText, absolutizeLinks } = require("./html-to-markdown.js");
 const { replaceOutsideLinks, craArticleLink } = require("./link-resolver.js");
-const craReferences = require("../craReferences.json");
+const craReferences = require("../eu-reg-titles.json")["2024/2847"];
 
 const SRP_FAQ_URL = "https://www.enisa.europa.eu/topics/product-security/single-reporting-platform-srp/frequently-asked-questions";
 

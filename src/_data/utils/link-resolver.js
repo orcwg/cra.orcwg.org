@@ -14,6 +14,8 @@
 const path = require('path');
 const euRegData = require('../eu-reg.json');
 const officialGuidance = require('../official-guidance.json');
+// Article and annex titles per act, from scripts/fetch-eu-reg-titles.js
+const euRegTitles = require('../eu-reg-titles.json');
 
 const EUR_LEX_HTML_URL = 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:';
 const CRA_BASE_URL = `${EUR_LEX_HTML_URL}32024R2847`;
@@ -26,27 +28,28 @@ const CRA_BASE_URL = `${EUR_LEX_HTML_URL}32024R2847`;
 // or undefined when the document has no such part.
 const EUR_LEX_ANCHORS = { article: 'art_', recital: 'rct_', annex: 'anx_' };
 
-function euRegDocument(reg) {
+function euRegDocument(number, reg) {
+  const titles = euRegTitles[number];
   const base = EUR_LEX_HTML_URL + reg.url.match(/CELEX:([^&#]+)/)[1];
   // "the PLD" for an act with a cite key, otherwise the act's own name
   // from the start of its full title: "Directive (EU) 2024/2853"
   const name = reg.cite_name || reg.full_title.match(/^.*?\d+\/\d+(?:\/EU)?/)[0];
-  return (type, number, displayNumber, craReferences) => {
+  return (type, number, displayNumber) => {
     const anchor = EUR_LEX_ANCHORS[type];
     if (!anchor) return undefined;
     const part = `${type[0].toUpperCase()}${type.slice(1)} ${displayNumber}`;
     return {
       text: `${part} of ${name}`,
       url: `${base}#${anchor}${number}`,
-      // The CRA's articles and annexes have titles (craReferences.json); other acts don't
-      title: `⚖️ ${reg.short_name} - ${part}${partTitle(reg, type, number, craReferences)}`
+      title: `⚖️ ${reg.short_name} - ${part}${partTitle(titles, type, number)}`
     };
   };
 }
 
-function partTitle(reg, type, number, craReferences) {
-  if (reg.cite !== 'CRA' || type === 'recital') return '';
-  const title = craReferences?.[type === 'annex' ? 'annexTitles' : 'articleTitles']?.[number];
+// " - Right to compensation" for an article or annex whose title is known; recitals have none
+function partTitle(titles, type, number) {
+  if (type === 'recital') return '';
+  const title = titles?.[type === 'annex' ? 'annexTitles' : 'articleTitles']?.[number];
   return title ? ` - ${title}` : '';
 }
 
@@ -79,7 +82,7 @@ const CITABLE_DOCUMENTS = Object.fromEntries([
   ...Object.entries(euRegData)
     .filter(([number]) => /^\d+\/\d+$/.test(number)) // acts, not the Blue Guide
     .flatMap(([number, reg]) => {
-      const document = euRegDocument(reg);
+      const document = euRegDocument(number, reg);
       return reg.cite ? [[number, document], [reg.cite, document]] : [[number, document]];
     }),
   ['CRA-GUIDANCE', guidanceDocument(officialGuidance)]
@@ -205,7 +208,7 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
     const displayNumber = type === 'annex' ? number.replace(/^([ivx]+)(,\s+Part\s+)?([ivx]+)?$/i, (m, annex, sep, part) => `${annex.toUpperCase()}${sep ? sep + part.toUpperCase() : ''}`) : number;
     const anchorNumber = type === 'article' ? number.match(/^\d+/)?.[0] : type === 'annex' ? displayNumber.split(',')[0] : number;
     if (!anchorNumber) return match;
-    const link = document(type, anchorNumber, displayNumber, craReferences);
+    const link = document(type, anchorNumber, displayNumber);
     return link ? mdLink(link.text, link.url, link.title) : match;
   });
 

@@ -27,6 +27,7 @@ npm install
 - **`npm run update-cache`** - Update external content cache
 - **`npm run update-cache -- branch-name`** - Update the external content cache to use a different branch of the [`orcwg/cra-hub`][] repositiory. Great for testing the build with unmerged pull requests.
 - **`npm run extract-guidance`** - Regenerate the Official CRA Guidance page (`src/official-guidance.html`), its API document (`src/_data/official-guidance.json`, served at `/api/v0/documents/official-cra-guidance.json`) and its figures (`src/assets/images/official-guidance/`) from the Commission's guidance PDF in `src/_data/`, verifying the extracted text against the PDF (requires poppler). The generated files are committed and shouldn't be edited by hand.
+- **`npm run fetch-eu-reg-titles`** - Regenerate `src/_data/eu-reg-titles.json`, the article and annex titles of the EU acts in `src/_data/eu-reg.json`, from their EUR-Lex HTML. The link resolver shows them in the tooltips of `[[CRA Article 24]]`, `[[PLD Article 5]]` and the like. Pass act numbers to refresh only those (`-- 2024/2853`), or `-- --from <dir>` to read `<CELEX>.html` files from a folder instead of fetching.
 - **`npm run extract-guidance -- --check`** - Confirm the committed Official CRA Guidance page matches the PDF, without writing anything (requires poppler).
 
 ## Architecture
