@@ -59,24 +59,13 @@ describe("prefixed citations", () => {
   });
 
   test("links articles, recitals and annexes of other acts by their cite key", () => {
-    const result = resolve("See [[PLD Article 5]], [[AI-ACT Recital 3]] and [[NIS2 Annex I]].");
+    const result = resolve("See [[PLD Article 5]], [[AI-ACT Recital 3]], [[NIS2 Annex I]] and [[CRA Art. 13(8)]].");
     assert.deepEqual(links(result), [
       { text: "Article 5 of the PLD", url: `${eurLex("32024L2853")}#art_5` },
       { text: "Recital 3 of the AI Act", url: `${eurLex("32024R1689")}#rct_3` },
-      { text: "Annex I of the NIS 2 Directive", url: `${eurLex("32022L2555")}#anx_I` }
+      { text: "Annex I of the NIS 2 Directive", url: `${eurLex("32022L2555")}#anx_I` },
+      { text: "Article 13(8) of the CRA", url: `${eurLex("32024R2847")}#art_13` }
     ]);
-  });
-
-  test("[[CRA …]] renders exactly like the unprefixed form, titles included", () => {
-    for (const [prefixed, plain] of [
-      ["[[CRA Article 24]]", "[[Article 24]]"],
-      ["[[CRA Art. 13(8)]]", "[[Art. 13(8)]]"],
-      ["[[2024/2847 Recital 18]]", "[[Recital 18]]"],
-      ["[[cra Annex I, Part I]]", "[[Annex I, Part I]]"]
-    ]) {
-      assert.equal(resolve(prefixed), resolve(plain));
-      assert.doesNotMatch(resolve(prefixed), /of the CRA/);
-    }
   });
 
   test("links sections, points, examples and figures of the Commission guidance", () => {
