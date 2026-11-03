@@ -5,17 +5,22 @@
 
   Parameters (passed via faq variable):
   - faq.status: String ("draft" or null)
-  - faq.relatedGuidanceRequest: Object with { guidanceText, permalink }
+  - faq.relatedGuidanceRequest: Object with { status, guidanceText, permalink }
+
+  The pending guidance message is shown while the guidance request is pending;
+  once its status is "guidance-received", the FAQ cites the guidance itself.
 #}
 
-{% if faq.status == "draft" or faq.relatedGuidanceRequest %}
+{% set pendingGuidance = faq.relatedGuidanceRequest and faq.relatedGuidanceRequest.status != "guidance-received" %}
+
+{% if faq.status == "draft" or pendingGuidance %}
 <aside class="warning">
 
   {% if faq.status == "draft" %}
   <p><strong>This FAQ is draft</strong> — It hasn't been reviewed by the FAQ Task Force. The answer may be incomplete or incorrect.</p>
   {% endif %}
 
-  {% if faq.relatedGuidanceRequest %}
+  {% if pendingGuidance %}
     <p><strong>Pending Guidance</strong></p>
     {% if faq.relatedGuidanceRequest.guidanceText %}
       <p>This FAQ awaits commission guidance on:</p>
