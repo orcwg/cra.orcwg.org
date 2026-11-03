@@ -31,19 +31,21 @@ const EUR_LEX_ANCHORS = { article: 'art_', recital: 'rct_', annex: 'anx_' };
 function euRegDocument(number, reg) {
   const titles = euRegTitles[number];
   const base = EUR_LEX_HTML_URL + reg.url.match(/CELEX:([^&#]+)/)[1];
-  // "PLD" for an act with a cite key, otherwise the act's number: "2024/2853"
-  const name = (reg.cite_name || number).replace(/^the /, '');
+  // "the PLD" for an act with a cite key, otherwise the act's own name
+  // from the start of its full title: "Directive (EU) 2024/2853"
+  const name = reg.cite_name || reg.full_title.match(/^.*?\d+\/\d+(?:\/EU)?/)[0];
   const resolve = (type, number, displayNumber) => {
     const anchor = EUR_LEX_ANCHORS[type];
     if (!anchor) return undefined;
     const part = `${type[0].toUpperCase()}${type.slice(1)} ${displayNumber}`;
     return {
-      text: `${name} ${part}`,
+      text: `${part} of ${name}`,
       url: `${base}#${anchor}${number}`,
       title: `⚖️ ${reg.short_name} - ${part}${partTitle(titles, type, number)}`
     };
   };
-  resolve.documentName = name;
+  // "PLD" or "2024/2853" in the short form used inside a parenthesis: "(PLD Article 5)"
+  resolve.shortName = (reg.cite_name || number).replace(/^the /, '');
   return resolve;
 }
 
@@ -72,12 +74,12 @@ function guidanceDocument(doc) {
     if (!part) return undefined;
     const cite = part.label.split(' (')[0].split(' - ')[0];
     return {
-      text: `Guidance ${cite}`,
+      text: `${cite} of the Commission guidance`,
       url: `${doc.permalink}#${part.id}`,
       title: `🇪🇺 ${doc.shortTitle} - ${part.label}`
     };
   };
-  resolve.documentName = 'Guidance';
+  resolve.shortName = 'Guidance';
   return resolve;
 }
 
@@ -114,8 +116,8 @@ function parseCitation(citation) {
 const PLURALS = { annex: 'Annexes' };
 
 /**
- * Render citations grouped by document and part type: "CRA Recital 15, Guidance points 52,
- * 53, and 76, Example 18". Consecutive citations of the same document share its name, and
+ * Render citations in the short form, grouped by document and part type: "CRA Recital 15,
+ * Guidance points 52, 53, and 76, Example 18". Consecutive citations of the same document share its name, and
  * consecutive citations of the same part type share the type's name and are joined with
  * "and"; every citation stays its own link.
  */
@@ -130,7 +132,7 @@ function groupCitations(citations) {
     const plural = group.citations.length > 1;
     const type = plural ? PLURALS[group.type] || `${group.type}s` : group.type;
     const label = group.type === 'point' ? type : `${type[0].toUpperCase()}${type.slice(1)}`;
-    const name = groups[i - 1]?.document === group.document ? '' : `${group.document.documentName} `;
+    const name = groups[i - 1]?.document === group.document ? '' : `${group.document.shortName} `;
     const links = group.citations.map((citation, j) => mdLink((j === 0 ? `${name}${label} ` : '') + citation.displayNumber, citation.link.url, citation.link.title));
     return links.length > 2 ? `${links.slice(0, -1).join(', ')}, and ${links.at(-1)}` : links.join(' and ');
   }).join(', ');
@@ -250,10 +252,10 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
   //    [[DOC point 71]], [[DOC Example 3]] and [[DOC Figure 2]] patterns, where DOC is a citable document:
   //    an act's number (2024/2853) or cite key (PLD), or CRA-GUIDANCE. Unknown documents or parts are left as written.
   //
-  //    Each renders as "CRA Article 5", "PLD Recital 15", "Guidance point 71". A parenthesis holding nothing
-  //    but such citations, "([[CRA Recital 15]], [[CRA-GUIDANCE point 58]], [[CRA-GUIDANCE point 61]])",
-  //    renders them grouped by document and part: "(CRA Recital 15, Guidance points 58 and 61)". Each
-  //    citation keeps its own link and tooltip.
+  //    Each renders as "Article 5 of the CRA", "Recital 15 of the PLD", "point 71 of the Commission guidance".
+  //    A parenthesis holding nothing but such citations, "([[CRA Recital 15]], [[CRA-GUIDANCE point 58]],
+  //    [[CRA-GUIDANCE point 61]])", renders them in a short form grouped by document and part:
+  //    "(CRA Recital 15, Guidance points 58 and 61)". Each citation keeps its own link and tooltip.
   result = result.replace(/\((\[\[[^\]]+\]\](?:,\s*\[\[[^\]]+\]\])*)\)/g, (match, list) => {
     const citations = list.split(/,\s*(?=\[\[)/).map(parseCitation);
     if (citations.some(citation => !citation)) return match;
