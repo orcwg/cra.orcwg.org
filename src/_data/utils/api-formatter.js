@@ -24,14 +24,30 @@ const LINK_FIELDS = {
 // Fields that reference other content items
 const RELATION_FIELDS = ["parents", "children", "relatedFaqs", "relatedGuidanceRequest", "relatedIssues"];
 
+const itemUrl = (collectionName, id) => `${API_BASE_URL}/api/${API_VERSION}/${collectionName}/${id}.json`;
+
 /**
- * Convert a single item to an API reference
+ * Map each item type to the name of the collection serving it ("guidance-request" → "guidance-requests"),
+ * so references can link to the endpoint the item is actually served at
  */
-function toApiReference(item) {
+function collectionsByType(dataSources) {
+  const collections = {};
+  for (const [collectionName, items] of Object.entries(dataSources)) {
+    for (const item of items) collections[item.type] = collectionName;
+  }
+  return collections;
+}
+
+/**
+ * Convert a single item to an API reference. An item without an API collection,
+ * such as a GitHub issue, links to its own page instead.
+ */
+function toApiReference(item, collections) {
+  const collectionName = collections[item.type];
   return {
     id: item.id,
     type: item.type,
-    url: `${API_BASE_URL}/api/${API_VERSION}/${item.type}s/${item.id}.json`
+    url: collectionName ? itemUrl(collectionName, item.id) : item.url
   };
 }
 
@@ -39,11 +55,11 @@ function toApiReference(item) {
  * Convert item to collection list format
  * Shows: type, id, title/question, url
  */
-function toCollectionItem(item) {
+function toCollectionItem(item, collectionName) {
   const result = {
     type: item.type,
     id: item.id,
-    url: `${API_BASE_URL}/api/${API_VERSION}/${item.type}s/${item.id}.json`
+    url: itemUrl(collectionName, item.id)
   };
 
   // Add title/question with proper key name based on type
@@ -59,14 +75,14 @@ function toCollectionItem(item) {
 /**
  * Transform a relation field (array or single) into API references
  */
-function serializeRelation(value) {
-  return Array.isArray(value) ? value.map(toApiReference) : toApiReference(value);
+function serializeRelation(value, collections) {
+  return Array.isArray(value) ? value.map(item => toApiReference(item, collections)) : toApiReference(value, collections);
 }
 
 /**
  * Serialize an item for API output, filtering and transforming fields
  */
-function serializeItem(item) {
+function serializeItem(item, collections) {
   const serialized = {};
 
   for (const [key, value] of Object.entries(item)) {
@@ -82,13 +98,7 @@ function serializeItem(item) {
 
     // Handle relation fields (parents, children, etc.)
     if (RELATION_FIELDS.includes(key)) {
-      serialized[key] = serializeRelation(value);
-      continue;
-    }
-
-    // Handle GitHub issue references
-    if (key === 'relatedIssues') {
-      serialized[key] = serializeRelatedIssues(value);
+      serialized[key] = serializeRelation(value, collections);
       continue;
     }
 
@@ -104,7 +114,7 @@ function serializeItem(item) {
  */
 function buildLinks(item, collectionName) {
   const links = {
-    self: `${API_BASE_URL}/api/${API_VERSION}/${collectionName}/${item.id}.json`,
+    self: itemUrl(collectionName, item.id),
     html: siteUrl(item.permalink),
     collection: `${API_BASE_URL}/api/${API_VERSION}/${collectionName}.json`
   };
@@ -122,12 +132,12 @@ function buildLinks(item, collectionName) {
 /**
  * Create an API page object for a single item
  */
-function createApiPage(item, collectionName) {
+function createApiPage(item, collectionName, collections) {
   return {
     endpoint: `/api/${API_VERSION}/${collectionName}/${item.id}.json`,
     payload: {
       links: buildLinks(item, collectionName),
-      data: serializeItem(item)
+      data: serializeItem(item, collections)
     }
   };
 }
@@ -140,10 +150,11 @@ function createApiPage(item, collectionName) {
  */
 function createApiArray(dataSources) {
   const apiPages = [];
+  const collections = collectionsByType(dataSources);
 
   // create individual item endpoints
   for (const [collectionName, items] of Object.entries(dataSources)) {
-    const pages = items.map(item => createApiPage(item, collectionName));
+    const pages = items.map(item => createApiPage(item, collectionName, collections));
     apiPages.push(...pages);
   }
 
@@ -157,7 +168,7 @@ function createApiArray(dataSources) {
           self: `${API_BASE_URL}/api/${API_VERSION}/${collectionName}.json`
         },
         data: {
-          items: collectionItems.map(item => toCollectionItem(item))
+          items: collectionItems.map(item => toCollectionItem(item, collectionName))
         }
       }
     });

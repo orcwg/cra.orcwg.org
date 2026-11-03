@@ -839,7 +839,7 @@ async function processAllContent() {
   const acknowledgements = await processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
 
   // Create simple JSON API
-  const api = createApiArray({ faqs, guidanceRequests, lists, documents: [officialGuidance] });
+  const api = createApiArray({ faqs, "guidance-requests": guidanceRequests, lists, documents: [officialGuidance] });
 
   return {
     faqs,
