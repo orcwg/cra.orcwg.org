@@ -71,6 +71,13 @@ describe("prefixed citations", () => {
     ]);
   });
 
+  test("links the implementing regulation on product categories by its cite key", () => {
+    const result = resolve("See [[CRA-CATEGORIES Annex I]].");
+    assert.deepEqual(links(result), [{ text: "Annex I of the CRA Implementing Regulation on product categories", url: `${eurLex("32025R2392")}#anx_I` }]);
+    assert.match(result, /"⚖️ CRA Implementing Regulation on Product Categories - Annex I - IMPORTANT PRODUCTS WITH DIGITAL ELEMENTS"/);
+    assert.equal(resolve("[[2025/2392 Annex I]]"), resolve("[[CRA-CATEGORIES Annex I]]"));
+  });
+
   test("links sections, points, examples and figures of the Commission guidance", () => {
     const result = resolve("See [[CRA-GUIDANCE Section 3.2.4]], [[CRA-GUIDANCE point 71]], [[CRA-GUIDANCE Example 1]] and [[CRA-GUIDANCE Figure 1]].");
     assert.deepEqual(links(result), [
