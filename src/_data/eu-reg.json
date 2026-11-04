@@ -138,7 +138,9 @@
     "full_title": "Commission Implementing Regulation (EU) 2025/2392 of 28 November 2025 on the technical description of important and critical products with digital elements under Regulation 2024/2847",
     "status": "Commission Implementing Regulation",
     "description": "Provides detailed technical descriptions for the “important” and “critical” product categories under the CRA, guiding conformity-assessment procedures.",
-    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2392"
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2392",
+    "cite": "CRA-CATEGORIES",
+    "cite_name": "the CRA Implementing Regulation on product categories"
   },
   "52022XC0629(04)": {
     "short_name": "Blue Guide (2022 Edition)",
