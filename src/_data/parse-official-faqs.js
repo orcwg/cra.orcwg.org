@@ -306,6 +306,7 @@ async function parseOfficialFAQs(mdPath = path.join(__dirname, 'FAQs_on_the_CRA_
         listCount: 0,
         countText: "",
         _level: sectionLevel,
+        _sectionNumber: heading.number, // Lets "see section _4.1_" in an answer link here
         _showQuestionNumbers: true,
         createdAt,
         lastUpdatedAt,

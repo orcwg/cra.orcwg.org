@@ -181,3 +181,124 @@ describe("rendering answers fetched as HTML", () => {
     );
   });
 });
+
+describe("official FAQ cross-references", () => {
+  // The Commission's FAQ refers to its own questions and sections by number, in italics
+  const official = {
+    "official/faq_1-2": { id: "official/faq_1-2", type: "faq", permalink: "/faq/official/faq_1-2/", _pageTitle: "What is a product with digital elements? Are stand-alone software or firmware products with digital elements?" },
+    "official/faq_1-3": { id: "official/faq_1-3", type: "faq", permalink: "/faq/official/faq_1-3/", _pageTitle: "What is a direct or indirect logical or physical data connection to a device or network?" },
+    "official/faq_6-7": { id: "official/faq_6-7", type: "faq", permalink: "/faq/official/faq_6-7/", _pageTitle: "What is the CE marking?" },
+    "official/faq_6-8": { id: "official/faq_6-8", type: "faq", permalink: "/faq/official/faq_6-8/", _pageTitle: "What is the declaration of conformity?" },
+    "official/faq_7-2": { id: "official/faq_7-2", type: "faq", permalink: "/faq/official/faq_7-2/", _pageTitle: "A manufacturer develops a product type before the CRA applies. Can it continue to manufacture products identical to that type after the CRA applies?" },
+    "lists/official/interplay/aviation": { id: "official/interplay/aviation", type: "list", _sectionNumber: "2.1", permalink: "/faq/official/interplay/aviation/", _pageTitle: "Regulation (EU) 2018/1139 on common rules in the field of civil aviation" },
+    "lists/official/manufacturers/risk-assessment": { id: "official/manufacturers/risk-assessment", type: "list", _sectionNumber: "4.1", permalink: "/faq/official/manufacturers/risk-assessment/", _pageTitle: "Risk-based approach and risk-assessment" },
+    "lists/official/manufacturers/support-period": { id: "official/manufacturers/support-period", type: "list", _sectionNumber: "4.5", permalink: "/faq/official/manufacturers/support-period/", _pageTitle: "Support period" },
+    // Another source's list with the same section number must never be picked
+    "lists/srp": { id: "srp", type: "list", _sectionNumber: "4.1", permalink: "/faq/srp/", _pageTitle: "SRP FAQ" }
+  };
+  const link = (markdown) => resolveLinks(markdown, "official", official, craReferences);
+
+  test("links an italic number followed by the question's title inside the italics", () => {
+    assert.deepEqual(links(link("See also entry _1.3 What is a direct or indirect logical or physical data connection to a device or network?_ for details.")), [
+      { text: "_1.3 What is a direct or indirect logical or physical data connection to a device or network?_", url: "/faq/official/faq_1-3/" }
+    ]);
+  });
+
+  test("links an italic number followed by the question's title outside the italics", () => {
+    const result = link("See also _1.3_ What is a direct or indirect logical or physical data connection to a device or network? and more.");
+    assert.deepEqual(links(result), [{ text: "_1.3_ What is a direct or indirect logical or physical data connection to a device or network?", url: "/faq/official/faq_1-3/" }]);
+    assert.equal(linkText(result), "See also [_1.3_ What is a direct or indirect logical or physical data connection to a device or network?] and more.");
+  });
+
+  test("the link covers a title that starts inside the italics and continues after them", () => {
+    const result = link("See also _7.2 A manufacturer develops a product type before the CRA applies._ Can it continue to manufacture products identical to that type after the CRA applies?");
+    assert.deepEqual(links(result).map(l => l.url), ["/faq/official/faq_7-2/"]);
+    assert.equal(linkText(result), "See also [_7.2 A manufacturer develops a product type before the CRA applies._ Can it continue to manufacture products identical to that type after the CRA applies?]");
+  });
+
+  test("the title may be split across the italics boundary wherever the source splits it", () => {
+    const result = link("(see also entry _1.2 What is a product with digital elements?_ Are stand-alone software or firmware products with digital elements?);");
+    assert.equal(linkText(result), "(see also entry [_1.2 What is a product with digital elements?_ Are stand-alone software or firmware products with digital elements?]);");
+  });
+
+  test("the word section may sit inside the italics", () => {
+    assert.deepEqual(links(link("(see _section 6.8_ What is the declaration of conformity?).")), [
+      { text: "_section 6.8_ What is the declaration of conformity?", url: "/faq/official/faq_6-8/" }
+    ]);
+  });
+
+  test("asterisks work as italics too", () => {
+    assert.deepEqual(links(link("See *6.8* What is the declaration of conformity? and *4.1 Risk-based approach and risk-assessment*.")), [
+      { text: "*6.8* What is the declaration of conformity?", url: "/faq/official/faq_6-8/" },
+      { text: "*4.1 Risk-based approach and risk-assessment*", url: "/faq/official/manufacturers/risk-assessment/" }
+    ]);
+  });
+
+  test("a plain section number is a cross-reference only when the question's title follows it", () => {
+    assert.deepEqual(links(link("affixes the CE marking (see section 6.7 What is the CE marking?), and")), [
+      { text: "section 6.7 What is the CE marking?", url: "/faq/official/faq_6-7/" }
+    ]);
+    // "section 2.3" is a section of the Blue Guide, which gets its own link, not a cross-reference
+    assert.deepEqual(links(link("manufactured for one's own use (The 'Blue Guide' on the implementation of EU product rules 2022, section 2.3).")).map(l => l.url.startsWith("/")), [false]);
+    const annex = "(Annex II, section 2.1 of CRA SR). For more information, see the standards.";
+    assert.equal(link(annex), annex);
+  });
+
+  test("a section number links to the section's list, not to another source's list", () => {
+    assert.deepEqual(links(link("see the section _4.1_ Risk-based approach and risk-assessment.")), [
+      { text: "_4.1_ Risk-based approach and risk-assessment", url: "/faq/official/manufacturers/risk-assessment/" }
+    ]);
+  });
+
+  test("a section title naming a regulation is linked whole, without a nested regulation link", () => {
+    const result = link("see also section _2.1_ Regulation (EU) 2018/1139 on common rules in the field of civil aviation.");
+    assert.deepEqual(links(result), [
+      { text: "_2.1_ Regulation (EU) 2018/1139 on common rules in the field of civil aviation", url: "/faq/official/interplay/aviation/" }
+    ]);
+  });
+
+  test("only the number is linked when the text that follows isn't the target's title", () => {
+    const result = link("described in section _4.1_ What does the CRA require of the manufacturer's cybersecurity risk assessment?");
+    assert.deepEqual(links(result), [{ text: "_4.1_", url: "/faq/official/manufacturers/risk-assessment/" }]);
+    assert.equal(linkText(result), "described in section [_4.1_] What does the CRA require of the manufacturer's cybersecurity risk assessment?");
+  });
+
+  test("the title must end at a word boundary", () => {
+    assert.deepEqual(links(link("_4.5_ Support periods vary.")), [{ text: "_4.5_", url: "/faq/official/manufacturers/support-period/" }]);
+    assert.deepEqual(links(link("See also section _4.5_ Support period.")), [{ text: "_4.5_ Support period", url: "/faq/official/manufacturers/support-period/" }]);
+  });
+
+  test("titles are compared regardless of case, spacing and the shape of quotes", () => {
+    const index = { ...official, "official/faq_4-2-5": { id: "official/faq_4-2-5", type: "faq", permalink: "/faq/official/faq_4-2-5/", _pageTitle: 'When is a product “tailor-made”? What documentation is required in these cases?' } };
+    const result = resolveLinks('see entry _4.2.5 When is a product "tailor-made"?_  what documentation is required in these cases?', "official", index, craReferences);
+    assert.deepEqual(links(result).map(l => l.url), ["/faq/official/faq_4-2-5/"]);
+    assert.equal(linkText(result), 'see entry [_4.2.5 When is a product "tailor-made"?_  what documentation is required in these cases?]');
+  });
+
+  test("links every cross-reference on a line", () => {
+    const result = link("- Affix the CE marking (see section _6.7_ What is the CE marking?), draw up a declaration of conformity (see section _6.8_ What is the declaration of conformity?).");
+    assert.deepEqual(links(result).map(l => l.url), ["/faq/official/faq_6-7/", "/faq/official/faq_6-8/"]);
+    assert.equal(linkText(result), "- Affix the CE marking (see section [_6.7_ What is the CE marking?]), draw up a declaration of conformity (see section [_6.8_ What is the declaration of conformity?]).");
+  });
+
+  test("leaves numbers that are neither a question nor a section as written", () => {
+    const markdown = "see also _9.9_ Nothing here, _1.1.9_ nor sections 1.1.9 and 1.2.1, or _2.3_.";
+    assert.equal(link(markdown), markdown);
+  });
+
+  test("does not insert links inside existing links", () => {
+    const markdown = "see [the _6.8_ What is the declaration of conformity? page](https://example.org/doc).";
+    assert.equal(link(markdown), markdown);
+  });
+
+  test("only applies to the Commission's own FAQ", () => {
+    const markdown = "see _6.8_ What is the declaration of conformity?";
+    assert.equal(resolveLinks(markdown, "cra-basics", official, craReferences), markdown);
+    assert.equal(resolveLinks(markdown, "srp", official, craReferences), markdown);
+  });
+
+  test("renders as a single link holding the italic number", () => {
+    const html = md.renderInline(link("See _6.8_ What is the declaration of conformity?"));
+    assert.equal(html, 'See <a href="/faq/official/faq_6-8/" title="🇪🇺 Official European Commission FAQ: What is the declaration of conformity?"><em>6.8</em> What is the declaration of conformity?</a>');
+  });
+});
