@@ -146,6 +146,88 @@ function mdLink(text, url, title) {
   return `[${text}](${url}${title})`;
 }
 
+// A cross-reference in the Commission's FAQ: an italic question or section number, "_1.3_", "*1.3*",
+// "_section 6.8_" or "_1.2 What is a product with digital elements?_", or a plain "section 6.7".
+// The rest of the line is captured too, since the title may continue there.
+const OFFICIAL_CROSS_REFERENCE = /(?:(_|\*)(?:section\s+)?(\d+(?:\.\d+)+)(?:\s+([^_*\n]+?))?\1|\bsection\s+(\d+(?:\.\d+)+))([^\n]*)/gi;
+
+/**
+ * Link the cross-references between the Commission's own FAQs.
+ *
+ * The Markdown version of the Commission's FAQ writes them as an italic question or section number,
+ * followed by the question's title either inside the italics ("_1.2 What is a product with digital elements?_"),
+ * partly inside ("_7.2 A manufacturer develops a product type before the CRA applies._ Can it continue [...]?"),
+ * or entirely outside ("_1.3_ What is a direct or indirect logical or physical data connection?",
+ * "see section _4.1_ Risk-based approach and risk-assessment", "see _section 6.8_ What is the declaration of conformity?").
+ * The italics may use underscores or asterisks. Occasionally the number isn't in italics at all
+ * ("see section 6.7 What is the CE marking?"); such a reference counts only when the title follows it,
+ * since "section 2.3 of the Blue Guide" is a section of another document.
+ *
+ * Each becomes a link to the question, or to the section when the number is a section's. The link covers the
+ * number and, when the text that follows is the target's title, the title too; otherwise only the italic part.
+ * Numbers that match neither a question nor a section are left as written.
+ *
+ * @param {string} markdown - Answer of an official FAQ
+ * @param {Object} internalLinks - Index of internal FAQ/list links
+ * @returns {string} Markdown with the cross-references linked
+ */
+function linkOfficialCrossReferences(markdown, internalLinks) {
+  if (!markdown) return markdown;
+  return replaceOutsideLinks(markdown, OFFICIAL_CROSS_REFERENCE, (match, delimiter, italicNumber, innerTitle, plainNumber, rest) => {
+    const number = italicNumber || plainNumber;
+    const reference = match.slice(0, match.length - rest.length);
+    const target = findOfficialItem(number, internalLinks);
+    const titleLength = target ? officialTitleLength(target._pageTitle, innerTitle, rest) : 0;
+    // The rest of the line may hold further cross-references
+    const linkRest = (text) => linkOfficialCrossReferences(text, internalLinks);
+
+    if (!target || (!delimiter && !titleLength)) return reference + linkRest(rest);
+
+    const tooltip = target.type === 'list'
+      ? `🇪🇺 Official European Commission FAQ section ${number}: ${target._pageTitle}`
+      : `🇪🇺 Official European Commission FAQ: ${target._pageTitle}`;
+    return mdLink(reference + rest.slice(0, titleLength), target.permalink, tooltip) + linkRest(rest.slice(titleLength));
+  });
+}
+
+// The official question or section a number designates, if any
+function findOfficialItem(number, internalLinks) {
+  if (!internalLinks) return undefined;
+  const faq = internalLinks[`official/faq_${number.replace(/\./g, '-')}`];
+  if (faq) return faq;
+  return Object.values(internalLinks).find(item =>
+    item.type === 'list' && item._sectionNumber === number && typeof item.id === 'string' && item.id.startsWith('official/'));
+}
+
+// Ignore whitespace, case and the shape of quotes when comparing a reference's text with a title
+const normalizeTitleChar = (c) => /\s/.test(c) ? '' : c.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"');
+const normalizeTitle = (text) => [...text].map(normalizeTitleChar).join('');
+
+/**
+ * How many characters of `rest`, the text following an italic cross-reference, complete the target's title,
+ * given `innerTitle`, the part of the title already inside the italics. 0 when the text that follows isn't the title.
+ */
+function officialTitleLength(title, innerTitle, rest) {
+  if (!title) return 0;
+  const wanted = normalizeTitle(title);
+  const inner = normalizeTitle(innerTitle || '');
+  if (!wanted.startsWith(inner)) return 0;
+  let remaining = wanted.slice(inner.length);
+  if (!remaining) return 0;
+
+  let i = 0;
+  while (i < rest.length && remaining) {
+    const c = normalizeTitleChar(rest[i]);
+    if (c && remaining[0] !== c) return 0;
+    remaining = remaining.slice(c.length);
+    i++;
+  }
+  if (remaining) return 0;
+  // The title must end at a word boundary: "Support period" doesn't match "Support periods"
+  if (/[\p{L}\p{N}]/u.test(rest[i] || '')) return 0;
+  return i;
+}
+
 /**
  * Markdown link to an article of the CRA on EUR-Lex
  *
@@ -190,45 +272,12 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
 
   let result = markdown;
 
-  // Convert EU Directive/Regulation patterns to links using a single comprehensive regex
-  // Captures patterns like: "Directive 2014/53", "Regulation (EU) 2024/2847", "Implementing Regulation (EU) 748/2012", "Delegated Directive 2025/123", etc.
-  result = replaceOutsideLinks(result, /(?:Commission\s+)?(Delegated|Implementing|)\s*(Directive|Regulation)\s*(?:\(EU\)\s*)?(?:No\s+)?(\d{3,4}\/\d{2,4})/g, (match, prefix, type, yearNum) => {
-    const regData = euRegData[yearNum];
-    if (regData) {
-      return mdLink(match, regData.url, `⚖️ ${regData.short_name} - ${regData.description}`);
-    }
-    return match;
-  });
-
-  // Convert "Blue Guide" references to links
-  result = replaceOutsideLinks(result, /\bBlue Guide\b/g, (match) => {
-    const blueGuideData = euRegData['52022XC0629(04)'];
-    if (blueGuideData) {
-      return mdLink(match, blueGuideData.url, `📘 ${blueGuideData.short_name} - ${blueGuideData.description}`);
-    }
-    return match;
-  });
-
   if (linkResolutionContext === 'official') {
 
-    // Convert _4.5.1 Question title?_ or *4.5.1 Question title?* patterns (Official EU FAQ cross-references)
-    // Handles both underscore and asterisk italic delimiters
-    const convertOfficialFaqRef = (match, delimiter, number, title) => {
-      // Look for FAQ with matching question number
-      const faqId = `official/faq_${number.replace(/\./g, '-')}`;
-      const faq = internalLinks?.[faqId];
-      if (faq) {
-        return mdLink(`${delimiter}${number} ${title}${delimiter}`, faq.permalink, `🇪🇺 Official European Commission FAQ: ${ faq._pageTitle }`);
-      }
-      return match; // Return original if not found
-    };
+    // Cross-references between the Commission's own FAQs: "_1.2 What is a product with digital elements?_",
+    // "_1.3_ What is a direct or indirect [...] connection?", "see section _4.1_ Risk-based approach"
+    result = linkOfficialCrossReferences(result, internalLinks);
 
-    // Match underscore-delimited patterns
-    result = result.replace(/(_)(\d+(?:\.\d+)*)\s+([^_]+)_/g, convertOfficialFaqRef);
-
-    // Match asterisk-delimited patterns
-    result = result.replace(/(\*)(\d+(?:\.\d+)*)\s+([^*]+)\*/g, convertOfficialFaqRef);
-    
     // Convert parenthetical references to wiki-style syntax, then let existing patterns handle them
 
     // Natural language legal references (only for official EU FAQs) - BEFORE wiki patterns
@@ -247,6 +296,25 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
       return `([[Recital ${num}]])`;
     });
   }
+
+  // Convert EU Directive/Regulation patterns to links using a single comprehensive regex
+  // Captures patterns like: "Directive 2014/53", "Regulation (EU) 2024/2847", "Implementing Regulation (EU) 748/2012", "Delegated Directive 2025/123", etc.
+  result = replaceOutsideLinks(result, /(?:Commission\s+)?(Delegated|Implementing|)\s*(Directive|Regulation)\s*(?:\(EU\)\s*)?(?:No\s+)?(\d{3,4}\/\d{2,4})/g, (match, prefix, type, yearNum) => {
+    const regData = euRegData[yearNum];
+    if (regData) {
+      return mdLink(match, regData.url, `⚖️ ${regData.short_name} - ${regData.description}`);
+    }
+    return match;
+  });
+
+  // Convert "Blue Guide" references to links
+  result = replaceOutsideLinks(result, /\bBlue Guide\b/g, (match) => {
+    const blueGuideData = euRegData['52022XC0629(04)'];
+    if (blueGuideData) {
+      return mdLink(match, blueGuideData.url, `📘 ${blueGuideData.short_name} - ${blueGuideData.description}`);
+    }
+    return match;
+  });
 
   // 0. Convert prefixed [[DOC Article 5]], [[DOC Recital 3]], [[DOC Annex I]], [[DOC Section 3.2.4]],
   //    [[DOC point 71]], [[DOC Example 3]] and [[DOC Figure 2]] patterns, where DOC is a citable document:
