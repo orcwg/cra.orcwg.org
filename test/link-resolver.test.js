@@ -54,6 +54,52 @@ describe("EU regulation links", () => {
   });
 });
 
+describe("link text", () => {
+  const eurLex = "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:";
+  const internalLinks = {
+    "maintainers/transparency": { _pageTitle: "What must I publish?", permalink: "/faq/maintainers/transparency/" },
+    "lists/maintainers": { title: "Maintainers", description: "For maintainers", permalink: "/faq/maintainers/" }
+  };
+
+  test("[[target | text]] links the target with the given text and the target's tooltip", () => {
+    const result = resolve("Stewards may issue [[CRA Article 25 | security attestations]].");
+    assert.deepEqual(links(result), [{ text: "security attestations", url: `${eurLex}32024R2847#art_25` }]);
+    assert.equal(result.match(/"[^"]*"/)[0], resolve("[[CRA Article 25]]").match(/"[^"]*"/)[0]);
+    assert.equal(linkText(result), "Stewards may issue [security attestations].");
+  });
+
+  test("works for every kind of target", () => {
+    const result = resolveLinks(
+      "[[Annex I, Part II|a]] [[PLD Recital 15 | b]] [[CRA-GUIDANCE point 71 | c]] [[maintainers/transparency | d]] [[maintainers | e]]",
+      "maintainers", internalLinks, craReferences);
+    assert.deepEqual(links(result), [
+      { text: "a", url: `${eurLex}32024R2847#anx_I` },
+      { text: "b", url: `${eurLex}32024L2853#rct_15` },
+      { text: "c", url: "/official-guidance/#pnt_71" },
+      { text: "d", url: "/faq/maintainers/transparency/" },
+      { text: "e", url: "/faq/maintainers/" }
+    ]);
+  });
+
+  test("accepts an escaped pipe, as needed in a table cell", () => {
+    assert.equal(resolve("[[CRA Article 25 \\| security attestations]]"), resolve("[[CRA Article 25 | security attestations]]"));
+  });
+
+  test("does not link acts named in the text", () => {
+    assert.deepEqual(links(resolve("[[CRA Article 2 | the scope of Regulation (EU) 2024/2847]]")),
+      [{ text: "the scope of Regulation (EU) 2024/2847", url: `${eurLex}32024R2847#art_2` }]);
+  });
+
+  test("keeps its text inside a parenthesis of citations", () => {
+    assert.equal(linkText(resolve("([[CRA Article 25 | attestations]], [[CRA Recital 21]])")), "([attestations], [Recital 21 of the CRA])");
+  });
+
+  test("leaves targets that don't resolve as written", () => {
+    const markdown = "See [[NOPE Article 5 | this]] and [[missing/faq | that]].";
+    assert.equal(resolve(markdown), markdown);
+  });
+});
+
 describe("prefixed citations", () => {
   const eurLex = (celex) => `https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:${celex}`;
 
