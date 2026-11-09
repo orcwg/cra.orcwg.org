@@ -29,14 +29,10 @@
       "description": "Browse all FAQs in one single list"
     },
     {
-      "url": "/faq/",
-      "title": "Topics",
-      "description": "FAQs organized by topic and/or audience"
+      "list": "faq"
     },
     {
-      "url": "/faq/official/",
-      "title": "🇪🇺 Official FAQs",
-      "description": "Browse the official FAQs of the EU Commission"
+      "list": "official"
     },
     {
       "url": "/official-guidance/",
@@ -49,9 +45,7 @@
       "description": "Topics requiring additional clarification by the European Commission"
     },
     {
-      "url": "/faq/srp/",
-      "title": "🚨 Single Reporting Platform (SRP)",
-      "description": "Browse ENISA's FAQs on reporting vulnerabilities and incidents through the Single Reporting Platform"
+      "list": "srp"
     }
   ],
   "footer": {
