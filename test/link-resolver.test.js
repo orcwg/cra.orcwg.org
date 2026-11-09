@@ -182,6 +182,26 @@ describe("rendering answers fetched as HTML", () => {
   });
 });
 
+describe("FAQ references", () => {
+  const faqs = {
+    "maintainers/should-i-worry": { id: "maintainers/should-i-worry", type: "faq", permalink: "/faq/maintainers/should-i-worry/", _pageTitle: "Should I worry?" },
+    "maintainers/scope/new-faq": { id: "maintainers/scope/new-faq", type: "faq", permalink: "/faq/maintainers/scope/new-faq/", _pageTitle: "A new FAQ" }
+  };
+  const link = (markdown) => resolveLinks(markdown, "maintainers", faqs, craReferences);
+
+  test("links an FAQ by its category and filename", () => {
+    assert.deepEqual(links(link("See [[maintainers/should-i-worry]].")), [{ text: "Should I worry?", url: "/faq/maintainers/should-i-worry/" }]);
+  });
+
+  test("links an FAQ in a sublist's folder by its full id", () => {
+    assert.deepEqual(links(link("See [[maintainers/scope/new-faq]].")), [{ text: "A new FAQ", url: "/faq/maintainers/scope/new-faq/" }]);
+  });
+
+  test("leaves an unknown id as it is", () => {
+    assert.equal(link("See [[maintainers/scope/missing]]."), "See [[maintainers/scope/missing]].");
+  });
+});
+
 describe("official FAQ cross-references", () => {
   // The Commission's FAQ refers to its own questions and sections by number, in italics
   const official = {

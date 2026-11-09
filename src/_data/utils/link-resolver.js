@@ -6,7 +6,7 @@
  * - [[Article 17]] → CRA legislation links
  * - [[2024/2853 Article 5]], [[PLD Article 5]] → links into other EU acts, by their number in eu-reg.json or their `cite` key
  * - [[CRA-GUIDANCE Section 3.2.4]], [[CRA-GUIDANCE point 71]] → links into the Commission's CRA guidance
- * - [[category/filename]] → Internal FAQ links
+ * - [[category/filename]], [[category/sublist/filename]] → Internal FAQ links
  * - [[category]] → List links
  * - ../relative/path.md → Relative markdown links
  */
@@ -352,8 +352,8 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
     return mdLink(`Recital ${num}`, `${CRA_BASE_URL}#rct_${num}`, `⚖️ Recital ${num}`);
   });
 
-  // 4. Convert [[category/filename]] patterns (FAQ references)
-  result = result.replace(/\[\[([a-z0-9_-]+\/[a-z0-9_-]+)\]\]/gi, (match, faqId) => {
+  // 4. Convert [[category/filename]] and [[category/sublist/filename]] patterns (FAQ references)
+  result = result.replace(/\[\[([a-z0-9_-]+(?:\/[a-z0-9_-]+)+)\]\]/gi, (match, faqId) => {
     const faq = internalLinks?.[faqId];
     if (faq) {
       return mdLink(faq._pageTitle, faq.permalink, `💬 FAQ: ${faq._pageTitle}`);
