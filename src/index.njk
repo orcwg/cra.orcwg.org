@@ -8,10 +8,10 @@ permalink: "/"
 </section>
 
 <nav class="card-grid half-width">
-  {% for nav in site.navigation %}
-  <a href="{{ nav.url }}" class="card">
-    <h2>{{ nav.title }}</h2>
-    <p>{{ nav.description }}</p>
+  {% for card in site.homepage %}
+  <a href="{{ card.url }}" class="card">
+    <h2>{{ card.title }}</h2>
+    <p>{{ card.description }}</p>
   </a>
   {% endfor %}
   {% for list in data.lists %}

@@ -20,18 +20,38 @@
       "url": "/official-guidance/",
       "title": "🇪🇺 Official Guidance",
       "description": "Read the Commission's official guidance on the application of the CRA, with links to every section and point"
+    }
+  ],
+  "homepage": [
+    {
+      "url": "/faq/all/",
+      "title": "All FAQs",
+      "description": "Browse all FAQs in one single list"
+    },
+    {
+      "url": "/faq/",
+      "title": "Topics",
+      "description": "FAQs organized by topic and/or audience"
+    },
+    {
+      "url": "/faq/official/",
+      "title": "🇪🇺 Official FAQs",
+      "description": "Browse the official FAQs of the EU Commission"
+    },
+    {
+      "url": "/official-guidance/",
+      "title": "🇪🇺 Official Guidance",
+      "description": "Read the Commission's official guidance on the application of the CRA, with links to every section and point"
     },
     {
       "url": "/pending-guidance/",
       "title": "Pending Guidance",
-      "description": "Topics requiring additional clarification by the European Commission",
-      "hideFromNav": true
+      "description": "Topics requiring additional clarification by the European Commission"
     },
     {
       "url": "/faq/srp/",
       "title": "🚨 Single Reporting Platform (SRP)",
-      "description": "Browse ENISA's FAQs on reporting vulnerabilities and incidents through the Single Reporting Platform",
-      "hideFromNav": true
+      "description": "Browse ENISA's FAQs on reporting vulnerabilities and incidents through the Single Reporting Platform"
     }
   ],
   "footer": {
