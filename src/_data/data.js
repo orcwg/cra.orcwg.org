@@ -153,10 +153,10 @@ const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
 
     const [status, filePath, renamedTo] = line.split('\t');
     if (status.startsWith('R')) {
-      // A moved file keeps its creation date; moving it without changing it isn't an update
-      const timestamps = timestampMap.get(filePath);
+      // A moved file keeps its dates. Moving it isn't an update, even with the small edits a move
+      // comes with (an `id` to keep its URL, relative links), since PRs are squash-merged
+      timestampMap.set(renamedTo, timestampMap.get(filePath));
       timestampMap.delete(filePath);
-      timestampMap.set(renamedTo, status === 'R100' ? timestamps : { ...timestamps, lastUpdatedAt: currentDate });
     } else if (status === 'D') {
       timestampMap.delete(filePath);
     } else if (timestampMap.has(filePath)) {
