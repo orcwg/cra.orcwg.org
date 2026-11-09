@@ -8,6 +8,7 @@
  * - [[CRA-GUIDANCE Section 3.2.4]], [[CRA-GUIDANCE point 71]] → links into the Commission's CRA guidance
  * - [[category/filename]], [[category/sublist/filename]] → Internal FAQ links
  * - [[category]] → List links
+ * - [[CRA Article 25 | security attestations]] → any of the above, with the link text given after the pipe
  * - ../relative/path.md → Relative markdown links
  */
 
@@ -271,6 +272,14 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
   if (!markdown) return markdown;
 
   let result = markdown;
+
+  // Convert [[target | link text]] patterns: the target resolves as [[target]] does, and the link
+  // shows the given text instead of the generated one. The pipe may be escaped, "\|", as it has to be
+  // in a table cell. Targets that don't resolve are left as written.
+  result = replaceOutsideLinks(result, /\[\[([^\]|]+?)\s*\\?\|\s*([^\]]+?)\s*\]\]/g, (match, target, text) => {
+    const link = resolveLinks(`[[${target}]]`, linkResolutionContext, internalLinks, craReferences).match(/^\[.*\]\((.+)\)$/s);
+    return link ? `[${text}](${link[1]})` : match;
+  });
 
   if (linkResolutionContext === 'official') {
 
