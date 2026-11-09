@@ -137,30 +137,32 @@ function generateTimestamps(faqs) {
 const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
   const timestampMap = new Map();
 
-  // Get all commits with their modified files
-  const logOutput = execSync('git log --format="%ad|%H" --date=iso --name-only', {
+  // Every commit, oldest first, with the files it added, modified, renamed or deleted
+  const logOutput = execSync('git log --reverse --format="commit %ad" --date=iso --name-status -M', {
     cwd: cacheDir,
     encoding: 'utf8'
   });
 
-  const lines = logOutput.trim().split('\n');
   let currentDate = null;
+  for (const line of logOutput.split('\n')) {
+    if (line.startsWith('commit ')) {
+      currentDate = new Date(line.slice('commit '.length));
+      continue;
+    }
+    if (!line) continue;
 
-  // Process in reverse order to get creation dates (oldest first)
-  for (const line of lines.reverse()) {
-    if (line.includes('|')) {
-      // This is a date line
-      currentDate = new Date(line.split('|')[0]);
-    } else if (line && currentDate) {
-      // This is a file path
-      const existing = timestampMap.get(line);
-      if (!existing) {
-        // First time seeing this file (creation)
-        timestampMap.set(line, { createdAt: currentDate, lastUpdatedAt: currentDate });
-      } else {
-        // Update last modified date
-        existing.lastUpdatedAt = currentDate;
-      }
+    const [status, filePath, renamedTo] = line.split('\t');
+    if (status.startsWith('R')) {
+      // A moved file keeps its dates. Moving it isn't an update, even with the small edits a move
+      // comes with (a `canonical-id` to keep its URL, relative links), since PRs are squash-merged
+      timestampMap.set(renamedTo, timestampMap.get(filePath));
+      timestampMap.delete(filePath);
+    } else if (status === 'D') {
+      timestampMap.delete(filePath);
+    } else if (timestampMap.has(filePath)) {
+      timestampMap.get(filePath).lastUpdatedAt = currentDate;
+    } else {
+      timestampMap.set(filePath, { createdAt: currentDate, lastUpdatedAt: currentDate });
     }
   }
 
@@ -232,6 +234,9 @@ function createInternalLinkIndex(faqs, lists, guidanceRequests) {
 
   faqs.forEach(faq => {
     index[faq.id] = faq;
+    if (faq._pathId) {
+      index[faq._pathId] = faq;
+    }
   });
 
   lists.forEach(list => {
@@ -252,6 +257,17 @@ function isFaq(file) {
     file.name.endsWith('.md');           // Keep only markdown files
 }
 
+// Two FAQs with the same id would be served at the same URL
+function assertUniqueFaqIds(faqs) {
+  const paths = new Map();
+  for (const faq of faqs) {
+    if (paths.has(faq.id)) {
+      throw new Error(`FAQ id "${faq.id}" is used by both ${paths.get(faq.id)} and ${faq._posixPath}`);
+    }
+    paths.set(faq.id, faq._posixPath);
+  }
+}
+
 function createFaq(file) {
 
   // Normalize status
@@ -264,8 +280,15 @@ function createFaq(file) {
   // Set guidance ID
   const guidanceId = file._frontmatter["guidance-id"] ? file._frontmatter["guidance-id"].trim() : false;
 
+  // An FAQ moved to another folder (into a sublist, say) keeps the id, and so the URL, it had before
+  // by giving it as `canonical-id`. Lists and relative links still find it by where the file is (`_pathId`).
+  const id = file._frontmatter["canonical-id"] ? file._frontmatter["canonical-id"].trim() : file.id;
+
   return {
     ...file,
+    id,
+    _pathId: file.id,
+    permalink: `/faq/${id}/`,
     type: FAQ,
     status,
     _needsRefactoring,
@@ -422,7 +445,7 @@ function crossReferenceListsAndFaqs(lists, faqs) {
         sublist.parents.push(list);
         list.children.push(sublist);
       } else {
-        const faqObject = faqs.find(faq => faq.id === itemRef);
+        const faqObject = faqs.find(faq => faq.id === itemRef || faq._pathId === itemRef);
         if (faqObject) {
           faqObject.parents.push(list);
           faqObject._listed = true;  // Tag FAQ as listed in a YAML-based list
@@ -801,6 +824,8 @@ async function processAllContent() {
       if (list.id === ROOT_LIST_ID) { rootList = list; }
     }
   }
+
+  assertUniqueFaqIds(faqs);
 
   // Fetch and add EC content (now handled by dynamic list system)
   await fetchAndAddECFaqs(faqs);
