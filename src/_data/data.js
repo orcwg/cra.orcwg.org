@@ -154,7 +154,7 @@ const getTimestampsForObj = (function initTimestampsFetcher(cacheDir) {
     const [status, filePath, renamedTo] = line.split('\t');
     if (status.startsWith('R')) {
       // A moved file keeps its dates. Moving it isn't an update, even with the small edits a move
-      // comes with (an `id` to keep its URL, relative links), since PRs are squash-merged
+      // comes with (a `canonical-id` to keep its URL, relative links), since PRs are squash-merged
       timestampMap.set(renamedTo, timestampMap.get(filePath));
       timestampMap.delete(filePath);
     } else if (status === 'D') {
@@ -281,8 +281,8 @@ function createFaq(file) {
   const guidanceId = file._frontmatter["guidance-id"] ? file._frontmatter["guidance-id"].trim() : false;
 
   // An FAQ moved to another folder (into a sublist, say) keeps the id, and so the URL, it had before
-  // by giving it as `id`. Lists and relative links still find it by where the file is (`_pathId`).
-  const id = file._frontmatter.id ? file._frontmatter.id.trim() : file.id;
+  // by giving it as `canonical-id`. Lists and relative links still find it by where the file is (`_pathId`).
+  const id = file._frontmatter["canonical-id"] ? file._frontmatter["canonical-id"].trim() : file.id;
 
   return {
     ...file,
