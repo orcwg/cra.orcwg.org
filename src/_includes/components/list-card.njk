@@ -3,11 +3,12 @@
 
   Parameters (set via list variable):
   - list: The list object to display as a card
+  - cardDescription: Optional text shown instead of the list's description
 #}
 
 <a href="{{ list.permalink }}" class="card">
   <h2>{% if list.icon %}{{ list.icon }} {% endif %}{{ list.title }}</h2>
-  {{ list.descriptionHtml | safe }}
+  {% if cardDescription %}<p>{{ cardDescription }}</p>{% else %}{{ list.descriptionHtml | safe }}{% endif %}
   <span class="card-meta">
     {{ list.countText }}
   </span>

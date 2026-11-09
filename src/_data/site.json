@@ -32,7 +32,8 @@
       "list": "faq"
     },
     {
-      "list": "official"
+      "list": "official",
+      "description": "Browse the official FAQs of the EU Commission"
     },
     {
       "url": "/official-guidance/",
@@ -45,7 +46,8 @@
       "description": "Topics requiring additional clarification by the European Commission"
     },
     {
-      "list": "srp"
+      "list": "srp",
+      "description": "Browse ENISA's FAQs on reporting vulnerabilities and incidents through the Single Reporting Platform"
     }
   ],
   "footer": {

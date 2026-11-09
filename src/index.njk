@@ -12,6 +12,7 @@ permalink: "/"
     {% if card.list %}
       {% for list in data.lists %}
         {% if list.id == card.list %}
+          {% set cardDescription = card.description %}
           {% include "components/list-card.njk" %}
         {% endif %}
       {% endfor %}

@@ -200,7 +200,7 @@ Components follow a consistent data pattern:
 
 - Global site settings in `src/_data/site.json`
 - `navigation`: the links in the site header
-- `homepage`: the cards on the homepage, each either `{ "list": "<id>" }` for an FAQ list (drawn from the list itself) or a `url`, `title` and `description`
+- `homepage`: the cards on the homepage, each either `{ "list": "<id>" }` for an FAQ list (drawn from the list itself, with an optional `description` to use instead of the list's) or a `url`, `title` and `description`
 - List ordering controlled via `listOrder` array
 - Footer content structured as sections with titles and lists
 
