@@ -98,7 +98,7 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
    - File operations: Parse markdown files with frontmatter using gray-matter
 
 2. **Content Processors**
-   - **FAQs**: Extract questions from `#` headings, answers from subsequent content, status badges, and GitHub edit links
+   - **FAQs**: Extract questions from `#` headings, answers from subsequent content, status badges, and GitHub edit links. An FAQ's id and URL come from its path, unless its frontmatter gives an `id`: an FAQ moved to another folder keeps its old id that way, and lists and relative links still find it by its path. The build fails if two FAQs share an id
    - **Guidance Requests**: Parse pending guidance documents, extract titles and "Guidance Needed" sections
    - **FAQ Lists**: Load README.yml files from FAQ subdirectories, normalize FAQ references
    - **Authors**: Load and process AUTHORS.md from FAQ repository and CONTRIBUTORS.md from website repository, extract name lists for acknowledgements
