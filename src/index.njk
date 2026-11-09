@@ -8,11 +8,20 @@ permalink: "/"
 </section>
 
 <nav class="card-grid half-width">
-  {% for nav in site.navigation %}
-  <a href="{{ nav.url }}" class="card">
-    <h2>{{ nav.title }}</h2>
-    <p>{{ nav.description }}</p>
+  {% for card in site.homepage %}
+    {% if card.list %}
+      {% for list in data.lists %}
+        {% if list.id == card.list %}
+          {% set cardDescription = card.description %}
+          {% include "components/list-card.njk" %}
+        {% endif %}
+      {% endfor %}
+    {% else %}
+  <a href="{{ card.url }}" class="card">
+    <h2>{{ card.title }}</h2>
+    <p>{{ card.description }}</p>
   </a>
+    {% endif %}
   {% endfor %}
   {% for list in data.lists %}
     {% if list.id == 'recently-updated' and list.faqCount > 0 %}
