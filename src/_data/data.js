@@ -8,7 +8,7 @@ const markdownIt = require("markdown-it");
 const plainTextPlugin = require("markdown-it-plain-text");
 const markdownItFootnote = require("markdown-it-footnote");
 const yaml = require("js-yaml");
-const { resolveLinks } = require("./utils/link-resolver.js");
+const { resolveLinks, findUnresolvedReferences } = require("./utils/link-resolver.js");
 const { isNew, recentlyUpdated, NEW_CONTENT_THRESHOLD, RECENTLY_UPDATED_THRESHOLD } = require("./utils/timestamp-helpers.js");
 const { parseRelatedIssues } = require("./utils/issue-parser.js");
 const craReferences = require("./eu-reg-titles.json")["2024/2847"];
@@ -245,6 +245,8 @@ function createInternalLinkIndex(faqs, lists, guidanceRequests) {
 
   guidanceRequests.forEach(guidanceRequest => {
     index[`guidance-requests/${guidanceRequest.id}`] = guidanceRequest;
+    // The id content authors write, [[pending-guidance/custom-dev]]: the request's path in the hub and on the site
+    index[`pending-guidance/${guidanceRequest.id}`] = guidanceRequest;
   });
 
   return index;
@@ -434,8 +436,10 @@ function crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests) {
   });
 };
 
-// Cross-reference YAML-based lists with their FAQs and sublists (bidirectional)
+// Cross-reference YAML-based lists with their FAQs and sublists (bidirectional).
+// Returns a message for each entry of a list that names neither a list nor an FAQ.
 function crossReferenceListsAndFaqs(lists, faqs) {
+  const problems = [];
   lists.forEach(list => {
     const childRefs = list._yaml ? normalizeReferenceIds(list._yaml.faqs, list._isRoot ? null : list.id) : [];
     childRefs.forEach(itemRef => {
@@ -450,10 +454,13 @@ function crossReferenceListsAndFaqs(lists, faqs) {
           faqObject.parents.push(list);
           faqObject._listed = true;  // Tag FAQ as listed in a YAML-based list
           list.children.push(faqObject);
+        } else {
+          problems.push(`${list._posixPath} lists "${itemRef}", which is neither an FAQ nor a list`);
         }
       }
     });
   });
+  return problems;
 }
 
 // ============================================================================
@@ -643,8 +650,10 @@ function calculateListCounts(lists) {
   });
 }
 
-// Resolve links and render markdown in a single pass
+// Resolve links and render markdown in a single pass.
+// Returns a message for each double-bracket reference that doesn't resolve.
 async function resolveLinksThenRenderMarkdown(items, sourceField, targetField, internalLinkIndex) {
+  const problems = [];
   const { default: markdownItGitHubAlerts } = await import("markdown-it-github-alerts");
   md = md.use(markdownItGitHubAlerts, {
     markers: ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION", "ORC_REC"],
@@ -656,8 +665,22 @@ async function resolveLinksThenRenderMarkdown(items, sourceField, targetField, i
       // Source-specific links (e.g. cross-references between ENISA's SRP FAQs) are added by the item's own preprocessor
       const source = item._linkPreprocessor ? item._linkPreprocessor(item[sourceField], internalLinkIndex) : item[sourceField];
       const resolved = resolveLinks(source, item._linkResolutionContext, internalLinkIndex, craReferences, item);
-      item[targetField] = md.render(resolved);
+      const env = {};
+      const tokens = md.parse(resolved, env);
+      for (const reference of findUnresolvedReferences(tokens)) {
+        problems.push(`${item._posixPath || item.id} has a reference that doesn't resolve: ${reference}`);
+      }
+      item[targetField] = md.renderer.render(tokens, md.options, env);
     }
+  }
+  return problems;
+}
+
+// A reference that doesn't resolve would be published as literal brackets, and a list entry that
+// names nothing would silently drop an FAQ from its list, so neither is ever deployed
+function assertNoBrokenReferences(problems) {
+  if (problems.length) {
+    throw new Error(`${problems.length} broken reference(s) in the content:\n- ${problems.join("\n- ")}`);
   }
 }
 
@@ -839,7 +862,7 @@ async function processAllContent() {
   crossReferenceFaqsAndGuidanceRequests(faqs, guidanceRequests);
 
   // Cross-reference YAML-based lists and FAQs
-  crossReferenceListsAndFaqs(lists, faqs);
+  const problems = crossReferenceListsAndFaqs(lists, faqs);
 
   // Create, populate, and insert dynamic lists
   const endDynamicLists = createAndInsertDynamicLists(lists, rootList, faqs);
@@ -857,9 +880,12 @@ async function processAllContent() {
   const internalLinkIndex = createInternalLinkIndex(faqs, lists, guidanceRequests);
 
   // Resolve links and render markdown to HTML
-  await resolveLinksThenRenderMarkdown(faqs, 'answer', 'answerHtml', internalLinkIndex);
-  await resolveLinksThenRenderMarkdown(guidanceRequests, 'body', 'bodyHtml', internalLinkIndex);
-  await resolveLinksThenRenderMarkdown(lists, 'description', 'descriptionHtml', internalLinkIndex);
+  problems.push(
+    ...await resolveLinksThenRenderMarkdown(faqs, 'answer', 'answerHtml', internalLinkIndex),
+    ...await resolveLinksThenRenderMarkdown(guidanceRequests, 'body', 'bodyHtml', internalLinkIndex),
+    ...await resolveLinksThenRenderMarkdown(lists, 'description', 'descriptionHtml', internalLinkIndex)
+  );
+  assertNoBrokenReferences(problems);
 
   const acknowledgements = await processAcknowledgements(AUTHORS_PATH, CONTRIBUTORS_PATH);
 

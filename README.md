@@ -107,6 +107,7 @@ The data processing pipeline in `src/_data/data.js` is organized into modular se
    - Link FAQs to their related guidance requests via `guidance-id` frontmatter field
    - Bidirectionally connect lists with their referenced FAQs
    - Each FAQ knows which lists include it; each list knows its FAQs
+   - The build fails if a list names an entry that is neither an FAQ nor a list, or if a `[[double-bracket]]` reference in an FAQ, a guidance request or a list description doesn't resolve. The error lists every file and reference at fault. `orcwg/cra-hub` runs this build on its pull requests, so broken references are caught before they are merged
 
 ### FAQ Lists
 

@@ -8,6 +8,7 @@
  * - [[CRA-GUIDANCE Section 3.2.4]], [[CRA-GUIDANCE point 71]] → links into the Commission's CRA guidance
  * - [[category/filename]], [[category/sublist/filename]] → Internal FAQ links
  * - [[category]] → List links
+ * - [[pending-guidance/filename]] → Links to a request for Commission guidance
  * - [[CRA Article 25 | security attestations]] → any of the above, with the link text given after the pipe
  * - ../relative/path.md → Relative markdown links
  */
@@ -361,11 +362,13 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
     return mdLink(`Recital ${num}`, `${CRA_BASE_URL}#rct_${num}`, `⚖️ Recital ${num}`);
   });
 
-  // 4. Convert [[category/filename]] and [[category/sublist/filename]] patterns (FAQ references)
+  // 4. Convert [[category/filename]] and [[category/sublist/filename]] patterns (FAQ references),
+  //    and [[pending-guidance/filename]] (references to a request for Commission guidance)
   result = result.replace(/\[\[([a-z0-9_-]+(?:\/[a-z0-9_-]+)+)\]\]/gi, (match, faqId) => {
     const faq = internalLinks?.[faqId];
     if (faq) {
-      return mdLink(faq._pageTitle, faq.permalink, `💬 FAQ: ${faq._pageTitle}`);
+      const label = faq.type === 'guidance-request' ? '🛑 Guidance request' : '💬 FAQ';
+      return mdLink(faq._pageTitle, faq.permalink, `${label}: ${faq._pageTitle}`);
     }
     return match;
   });
@@ -479,8 +482,24 @@ function resolveLinks(markdown, linkResolutionContext, internalLinks, craReferen
   return result;
 }
 
+/**
+ * The double-bracket references still in a text once its links are resolved: references that name
+ * no known document, part, FAQ or list. Takes the markdown-it tokens of the resolved text, so that
+ * double brackets in code spans and code blocks, which are examples of the syntax, don't count.
+ *
+ * @param {Array} tokens - markdown-it tokens of a text whose links have been resolved
+ * @returns {string[]} The unresolved references, as written
+ */
+function findUnresolvedReferences(tokens) {
+  return tokens.flatMap(token => {
+    if (token.children) return findUnresolvedReferences(token.children);
+    return token.type === 'text' ? token.content.match(/\[\[[^\]]+\]\]/g) || [] : [];
+  });
+}
+
 module.exports = {
   resolveLinks,
+  findUnresolvedReferences,
   replaceOutsideLinks,
   craArticleLink
 };

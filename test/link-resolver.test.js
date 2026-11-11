@@ -1,7 +1,7 @@
 const { test, describe } = require("node:test");
 const assert = require("node:assert/strict");
 const markdownIt = require("markdown-it");
-const { resolveLinks, replaceOutsideLinks } = require("../src/_data/utils/link-resolver.js");
+const { resolveLinks, replaceOutsideLinks, findUnresolvedReferences } = require("../src/_data/utils/link-resolver.js");
 const { htmlToMarkdown } = require("../src/_data/utils/html-to-markdown.js");
 const craReferences = require("../src/_data/eu-reg-titles.json")["2024/2847"];
 
@@ -366,5 +366,36 @@ describe("official FAQ cross-references", () => {
   test("renders as a single link holding the italic number", () => {
     const html = md.renderInline(link("See _6.8_ What is the declaration of conformity?"));
     assert.equal(html, 'See <a href="/faq/official/faq_6-8/" title="🇪🇺 Official European Commission FAQ: What is the declaration of conformity?"><em>6.8</em> What is the declaration of conformity?</a>');
+  });
+});
+
+describe("guidance request references", () => {
+  const index = { "pending-guidance/custom-dev": { type: "guidance-request", permalink: "/pending-guidance/custom-dev/", _pageTitle: "Custom development" } };
+
+  test("link to the request, with its title as the link text", () => {
+    assert.equal(
+      resolveLinks("see [[pending-guidance/custom-dev]]", "manufacturers", index, craReferences),
+      'see [Custom development](/pending-guidance/custom-dev/ "🛑 Guidance request: Custom development")'
+    );
+  });
+});
+
+describe("findUnresolvedReferences", () => {
+  const index = { "maintainers/donations": { type: "faq", permalink: "/faq/maintainers/donations/", _pageTitle: "Donations?" } };
+  const unresolved = (markdown) => findUnresolvedReferences(md.parse(resolveLinks(markdown, "maintainers", index, craReferences), {}));
+
+  test("finds nothing when every reference resolves", () => {
+    assert.deepEqual(unresolved("See [[maintainers/donations]] ([[CRA Article 24]], [[CRA-GUIDANCE point 61]]) and [[PLD Article 4 | the PLD]]."), []);
+  });
+
+  test("finds references to an FAQ, a document or a part that doesn't exist", () => {
+    assert.deepEqual(
+      unresolved("See [[maintainers/nope]], [[XYZ Article 3]] and [[CRA-GUIDANCE point 9999]].\n\n| a |\n|---|\n| [[stewards/nope \\| text]] |"),
+      ["[[maintainers/nope]]", "[[XYZ Article 3]]", "[[CRA-GUIDANCE point 9999]]", "[[stewards/nope | text]]"]
+    );
+  });
+
+  test("ignores double brackets in code spans and code blocks", () => {
+    assert.deepEqual(unresolved("Write `[[maintainers/nope]]`.\n\n```markdown\n[[maintainers/nope]]\n```"), []);
   });
 });
