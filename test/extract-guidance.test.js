@@ -17,23 +17,6 @@ const noteRef = (n) => ` <a id="ntc${n}-X-E000${n}" href="#ntr${n}-X-E000${n}">(
 const note = (n, text) => `<p class="oj-note"><a id="ntr${n}-X-E000${n}" href="#ntc${n}-X-E000${n}">(<span class="oj-super">${n}</span>)</a>\u00a0\u00a0${text}</p>`;
 const build = (...body) => buildDocument(parseXml(`<html><body><div class="eli-container">${body.join("\n")}</div></body></html>`));
 
-describe("parseXml", () => {
-  test("parses elements, attributes, text and entities, dropping comments and the prolog", () => {
-    const root = parseXml('<?xml version="1.0"?><!DOCTYPE html><a href="?x=1&amp;y=2"><!-- note --><b class="c">R&amp;D &#8212; &#x2019;</b><br/></a>');
-    const [a] = root.children;
-    assert.equal(a.tag, "a");
-    assert.deepEqual(a.attrs, { href: "?x=1&y=2" });
-    assert.deepEqual(a.children[0], { tag: "b", attrs: { class: "c" }, children: [{ text: "R&D — ’" }] });
-    assert.deepEqual(a.children[1], { tag: "br", attrs: {}, children: [] });
-  });
-
-  test("rejects malformed input", () => {
-    assert.throws(() => parseXml("<a><b></a>"), /Unexpected <\/a>/);
-    assert.throws(() => parseXml("<a>"), /Unclosed <a>/);
-    assert.throws(() => parseXml("<a>x < y</a>"), /Malformed XML/);
-  });
-});
-
 describe("buildDocument", () => {
   test("reads headings, points and footnotes", () => {
     const doc = build(

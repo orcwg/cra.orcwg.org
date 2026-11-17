@@ -43,58 +43,31 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const { parseDocument } = require("htmlparser2");
 
 // ---------------------------------------------------------------------------
-// XML
+// XML. The document is parsed with htmlparser2 into its DOM: elements have a
+// name, attribs and children, and text nodes have data.
+
+const parseXml = (src) => parseDocument(src, { xmlMode: true });
 
 const decodeEntities = (s) =>
   s
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCodePoint(parseInt(n, 16)))
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
     .replace(/&amp;/g, "&");
 
-// Parses well-formed XML into { tag, attrs, children } elements and { text }
-// nodes. Comments, processing instructions and the doctype are dropped.
-function parseXml(src) {
-  const root = { tag: "#document", attrs: {}, children: [] };
-  const stack = [root];
-  const token =
-    /<!--[\s\S]*?-->|<\?[\s\S]*?\?>|<!DOCTYPE[^>]*>|<\/([\w:.-]+)\s*>|<([\w:.-]+)((?:\s+[\w:.-]+\s*=\s*(?:"[^"]*"|'[^']*'))*)\s*(\/?)>|([^<]+)/g;
-  let at = 0;
-  let m;
-  while ((m = token.exec(src))) {
-    if (m.index !== at) break;
-    at = token.lastIndex;
-    const parent = stack[stack.length - 1];
-    if (m[1]) {
-      if (parent.tag !== m[1]) throw new Error(`Unexpected </${m[1]}> inside <${parent.tag}>`);
-      stack.pop();
-    } else if (m[2]) {
-      const attrs = {};
-      for (const a of m[3].matchAll(/([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) attrs[a[1]] = decodeEntities(a[2] ?? a[3]);
-      const node = { tag: m[2], attrs, children: [] };
-      parent.children.push(node);
-      if (!m[4]) stack.push(node);
-    } else if (m[5] !== undefined) {
-      parent.children.push({ text: decodeEntities(m[5]) });
-    }
-  }
-  if (at !== src.length) throw new Error(`Malformed XML at character ${at}: ${src.slice(at, at + 60)}`);
-  if (stack.length !== 1) throw new Error(`Unclosed <${stack[stack.length - 1].tag}>`);
-  return root;
-}
-
-const textOf = (node) => (node.text !== undefined ? node.text : node.children.map(textOf).join(""));
-const elements = (node) => node.children.filter((c) => c.tag);
-const cls = (node) => node.attrs.class || "";
-const is = (node, tag, className) => node.tag === tag && (className === undefined || cls(node) === className);
+const isText = (node) => node.type === "text";
+const isElement = (node) => node.type === "tag";
+const textOf = (node) => (isText(node) ? node.data : (node.children || []).map(textOf).join(""));
+const elements = (node) => node.children.filter(isElement);
+const cls = (node) => node.attribs.class || "";
+const is = (node, name, className) => isElement(node) && node.name === name && (className === undefined || cls(node) === className);
 
 function find(node, test) {
-  if (node.tag && test(node)) return node;
+  if (isElement(node) && test(node)) return node;
   for (const child of node.children || []) {
     const found = find(child, test);
     if (found) return found;
@@ -114,19 +87,20 @@ const collapse = (s) => s.replace(/[ \t\r\n]+/g, " ");
 const escapeHtml = (s) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const describe = (node) => `<${node.tag}${cls(node) ? ` class="${cls(node)}"` : ""}>: ${collapse(textOf(node)).trim().slice(0, 60)}`;
+const describe = (node) => `<${node.name}${cls(node) ? ` class="${cls(node)}"` : ""}>: ${collapse(textOf(node)).trim().slice(0, 60)}`;
 
 // Flattens a node's children into inline tokens: { text, em?, link? } or
 // { footnote, label, key } for a footnote reference.
 function inlines(node, em = false) {
   return node.children.flatMap((child) => {
-    if (child.text !== undefined) return [{ text: collapse(child.text), ...(em && { em }) }];
+    if (isText(child)) return [{ text: collapse(child.data), ...(em && { em }) }];
+    if (!isElement(child)) return [];
     if (is(child, "span", "oj-italic")) return inlines(child, true);
-    if (child.tag === "span" && ["", "oj-bold"].includes(cls(child))) return inlines(child, em);
-    if (child.tag === "a") {
-      const note = (child.attrs.id || "").match(/^ntc(\d+)-(.+)$/);
+    if (child.name === "span" && ["", "oj-bold"].includes(cls(child))) return inlines(child, em);
+    if (child.name === "a") {
+      const note = (child.attribs.id || "").match(/^ntc(\d+)-(.+)$/);
       if (note) return [{ footnote: Number(note[1]), label: compact(textOf(child)), key: note[2] }];
-      if (/^https?:\/\//.test(child.attrs.href || "")) return [{ text: collapse(textOf(child)), link: { uri: child.attrs.href }, ...(em && { em }) }];
+      if (/^https?:\/\//.test(child.attribs.href || "")) return [{ text: collapse(textOf(child)), link: { uri: child.attribs.href }, ...(em && { em }) }];
     }
     throw new Error(`Unsupported inline content ${describe(child)}`);
   });
@@ -174,7 +148,7 @@ function splitLabel(tokens, re) {
 // contents entries, points, lettered sub-points and dash list items.
 
 const cells = (table) => {
-  const rows = elements(table).filter((e) => e.tag === "tbody").flatMap(elements);
+  const rows = elements(table).filter((e) => e.name === "tbody").flatMap(elements);
   if (rows.length !== 1) throw new Error(`Expected a one-row table: ${describe(table)}`);
   return elements(rows[0]);
 };
@@ -215,10 +189,10 @@ function buildDocument(root) {
   const itemBody = (cell) => {
     const body = [];
     for (const child of cell.children) {
-      if (child.text !== undefined) {
-        if (child.text.trim()) throw new Error(`Unexpected text in a list item: ${child.text.trim().slice(0, 60)}`);
+      if (!isElement(child)) {
+        if (textOf(child).trim()) throw new Error(`Unexpected text in a list item: ${textOf(child).trim().slice(0, 60)}`);
       } else if (is(child, "p", "oj-normal")) body.push({ p: tidy(inlines(child)) });
-      else if (child.tag === "table") appendItem(body, listItem(child));
+      else if (child.name === "table") appendItem(body, listItem(child));
       else throw new Error(`Unsupported list item content ${describe(child)}`);
     }
     return body;
@@ -246,13 +220,13 @@ function buildDocument(root) {
   const point = (label, content) => {
     const block = push({ type: "point", label, num: parseInt(label, 10), body: [] });
     for (const child of content.children) {
-      if (child.text !== undefined) {
-        if (child.text.trim()) throw new Error(`Unexpected text in point ${label}: ${child.text.trim().slice(0, 60)}`);
+      if (!isElement(child)) {
+        if (textOf(child).trim()) throw new Error(`Unexpected text in point ${label}: ${textOf(child).trim().slice(0, 60)}`);
       } else if (is(child, "span", "")) {
         block.body.push({ p: tidy(inlines(child)) });
       } else if (is(child, "p", "oj-normal")) {
         paragraph(tidy(inlines(child)), block);
-      } else if (child.tag === "table") {
+      } else if (child.name === "table") {
         if (doc.blocks[doc.blocks.length - 1] !== block) throw new Error(`Point ${label} continues after an example`);
         appendItem(block.body, listItem(child));
       } else {
@@ -266,7 +240,7 @@ function buildDocument(root) {
     if (inNotes) {
       if (!is(node, "p", "oj-note")) throw new Error(`Unexpected content among the footnotes ${describe(node)}`);
       const [anchor] = elements(node);
-      const id = anchor && anchor.tag === "a" && (anchor.attrs.id || "").match(/^ntr(\d+)-(.+)$/);
+      const id = anchor && (anchor.attribs.id || "").match(/^ntr(\d+)-(.+)$/);
       if (!id) throw new Error(`Footnote without a marker: ${text.slice(0, 60)}`);
       const tokens = tidy(inlines({ ...node, children: node.children.slice(node.children.indexOf(anchor) + 1) }));
       // The marker is followed by non-breaking spaces.
@@ -280,7 +254,7 @@ function buildDocument(root) {
       doc.reference = number ? collapse(textOf(number)).trim().replace(/^\(|\)$/g, "") : "";
     } else if (is(node, "p", "oj-ti-tbl")) {
       // The "Contents" heading; the page has its own.
-    } else if (node.tag === "table" && find(node, (n) => is(n, "p", "oj-tbl-num"))) {
+    } else if (node.name === "table" && find(node, (n) => is(n, "p", "oj-tbl-num"))) {
       const [num, title, page] = cells(node).map((c) => collapse(textOf(c)).trim());
       doc.toc.push({ label: num, num: num.replace(/\.$/, ""), title, page });
     } else if (is(node, "p", "oj-ti-grseq-1")) {
@@ -296,7 +270,7 @@ function buildDocument(root) {
       } else {
         throw new Error(`Unrecognised heading: ${text.slice(0, 60)}`);
       }
-    } else if (node.tag === "table") {
+    } else if (node.name === "table") {
       const tds = cells(node);
       const label = tds.length === 3 && !compact(textOf(tds[0])) ? compact(textOf(tds[1])) : null;
       if (label && /^\d+\.$/.test(label)) {
@@ -311,10 +285,10 @@ function buildDocument(root) {
       } else {
         throw new Error(`Unrecognised table: ${text.slice(0, 60)}`);
       }
-    } else if (is(node, "p", "oj-normal") && find(node, (n) => n.tag === "img")) {
-      const img = find(node, (n) => n.tag === "img");
-      if (text || !current || current.type !== "figure" || !current.caption || current.image) throw new Error(`Image outside a figure: ${img.attrs.alt}`);
-      current.image = img.attrs.src;
+    } else if (is(node, "p", "oj-normal") && find(node, (n) => n.name === "img")) {
+      const img = find(node, (n) => n.name === "img");
+      if (text || !current || current.type !== "figure" || !current.caption || current.image) throw new Error(`Image outside a figure: ${img.attribs.alt}`);
+      current.image = img.attribs.src;
     } else if (is(node, "p", "oj-normal")) {
       paragraph(tidy(inlines(node)), null);
       list = null;
@@ -735,21 +709,21 @@ function sourceStreams(root) {
     const text = compact(textOf(node));
     if (is(node, "hr", "oj-note")) inNotes = true;
     else if (inNotes) streams.notes += text;
-    else if (is(node, "div", "eli-main-title") || is(node, "p", "oj-ti-tbl") || (node.tag === "table" && find(node, (n) => is(n, "p", "oj-tbl-num")))) streams.front += text;
+    else if (is(node, "div", "eli-main-title") || is(node, "p", "oj-ti-tbl") || (node.name === "table" && find(node, (n) => is(n, "p", "oj-tbl-num")))) streams.front += text;
     else streams.body += text;
   }
   const walk = (node, p) => {
     if (node === container) return;
-    if (node.text !== undefined) {
-      const text = collapse(node.text).trim();
+    if (isText(node)) {
+      const text = collapse(node.data).trim();
       if (!text) return;
       const known = p && (FURNITURE.includes(cls(p)) || (cls(p) === "oj-normal" && /^(ELI: |ISSN )/.test(collapse(textOf(p)).trim())));
       (known ? streams.furniture : streams.stray).push(text);
-    } else {
-      node.children.forEach((child) => walk(child, node.tag === "p" ? node : p));
+    } else if (isElement(node)) {
+      node.children.forEach((child) => walk(child, node.name === "p" ? node : p));
     }
   };
-  walk(find(root, (n) => n.tag === "body"), null);
+  walk(find(root, (n) => n.name === "body"), null);
   return streams;
 }
 
@@ -791,7 +765,7 @@ function verify({ xhtml, root, doc, parts, json, figures }) {
   // it is the body, the footnotes, the front matter or known page furniture.
   check("coverage", () => {
     const raw = xhtml.slice(xhtml.indexOf("<body"), xhtml.lastIndexOf("</body>")).replace(/<!--[\s\S]*?-->/g, "");
-    const lost = firstDifference(htmlText(raw), compact(textOf(find(root, (n) => n.tag === "body"))));
+    const lost = firstDifference(htmlText(raw), compact(textOf(find(root, (n) => n.name === "body"))));
     if (lost) problems.push(`The parsed document differs from the XHTML's text ${lost}`);
     if (source.stray.length) problems.push(`Unrecognised text outside the document: ${JSON.stringify(source.stray)}`);
     return `all ${htmlText(raw).length} characters of the XHTML are parsed; left out of the page are ${source.furniture.length} lines of Official Journal page furniture, the title block and the table of contents`;
