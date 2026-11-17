@@ -6,7 +6,7 @@
   "scripts": {
     "update-cache": "node update-cache.js",
     "fetch-eu-reg-titles": "node scripts/fetch-eu-reg-titles.js",
-    "extract-guidance": "node scripts/extract-guidance.js src/_data/C_2026_5252_1_EN_annexe_acte_autonome_cp_part1_v3_kXuCPwXXxAuG8Uj44Ar0o2Vros_131456.pdf",
+    "extract-guidance": "node scripts/extract-guidance.js src/_data/OJ_C_202606013_EN.xhtml",
     "build": "eleventy",
     "serve": "eleventy --serve",
     "watch": "eleventy --watch",

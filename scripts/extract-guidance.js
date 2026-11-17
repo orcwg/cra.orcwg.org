@@ -1,165 +1,112 @@
 #!/usr/bin/env node
-// Extracts the Commission's CRA guidance PDF into the site's
-// /official-guidance/ page, with stable anchors for sections, points (and
-// their lettered sub-points), examples, figures and footnotes.
+// Extracts the Commission's CRA guidance, as published in the Official Journal
+// of the European Union, into the site's /official-guidance/ page, with stable
+// anchors for sections, points (and their lettered sub-points), examples,
+// figures and footnotes.
 //
-// Usage: node scripts/extract-guidance.js [--check] <input.pdf>
+// Usage: node scripts/extract-guidance.js [--check] <input.xhtml>
+//
+// The input is the XHTML rendition of the Official Journal publication, the
+// document EUR-Lex shows at
+// https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:C_202606013.
+// The Publications Office serves it to scripts at
+// https://publications.europa.eu/resource/oj/C_202606013 (with the headers
+// "Accept: application/xhtml+xml" and "Accept-Language: eng").
 //
 // Writes src/official-guidance.html (rendered with the official-guidance.njk
 // layout), src/_data/official-guidance.json (served by the API, in the shape
-// of the machine-readable CRA text) and the figures, in their original image
-// encoding, to src/assets/images/official-guidance/. With --check, writes
-// nothing and fails unless the committed output matches what the PDF produces.
+// of the machine-readable CRA text) and the figures, which the XHTML embeds,
+// to src/assets/images/official-guidance/. With --check, writes nothing and
+// fails unless the committed output matches what the XHTML produces.
 //
 // The extraction is deterministic and self-verifying. It exits non-zero
 // unless all of the following hold:
 //
-//   1. Coverage: every non-whitespace character of the PDF's page content is
-//      present in the structure tree, apart from untagged page furniture
-//      (page numbers, "EN" markers), which is reported.
-//   2. Fidelity: the text of the generated HTML, with whitespace removed, is
-//      identical to the text of the structure tree (excluding the cover page
-//      and table of contents), in the same order. Footnotes are compared as a
-//      separate stream, since they are moved to the end of the document.
+//   1. Coverage: the parsed document holds every character of the XHTML's
+//      text, and the only text left out of the page is the Official Journal's
+//      page furniture (masthead, ELI and ISSN lines), the title block and the
+//      table of contents, which the page renders from the headings.
+//   2. Fidelity: the text of the generated HTML and JSON, with whitespace
+//      removed, is identical to the text of the XHTML's body, in the same
+//      order. Footnotes are compared as a separate stream.
 //   3. Numbering: headings match the table of contents, and points, examples,
 //      figures and footnotes are numbered 1..n without gaps or duplicates.
-//   4. Figures: each extracted image is on the same page as its caption.
-//   5. Links: every id is unique, and every internal link points to an
-//      existing id and agrees with every other link to the same destination.
+//   4. Figures: each figure has a label, a caption and exactly one image.
+//   5. Links: every id is unique, every internal link points to an existing
+//      id, and each footnote is referenced exactly once, in order.
 //
-// Content comes from the PDF's tagged structure tree, as dumped by poppler's
-// `pdfinfo -struct-text`. The script repairs the artefacts introduced by page
-// breaks (points, examples and bullets split in two, footnotes interleaved
-// with body text). Link targets are read from the link annotations, and
-// footnote reference positions from the font sizes reported by
-// `pdftohtml -xml`, since superscript digits are indistinguishable from body
-// text in the structure tree (e.g. "13 April 20265"). Requires poppler
-// (`pdfinfo`, `pdftohtml`, `pdfimages`) on the PATH.
+// The Official Journal's text has no hyperlinks between its parts: it refers
+// to sections in italics ("Section 2.1 Placing on the market") and to points
+// in running text ("points 13, 14 and 15"). The script links those references
+// to their anchors; that adds links, never text.
 
 const crypto = require("crypto");
 const fs = require("fs");
-const os = require("os");
 const path = require("path");
-const zlib = require("zlib");
-const { execFileSync } = require("child_process");
 
 // ---------------------------------------------------------------------------
-// Structure tree
-
-function parseStructText(text) {
-  const root = { role: "Root", attrs: {}, children: [] };
-  const stack = [{ indent: -1, node: root }];
-  let last = root;
-  for (const line of text.split("\n")) {
-    if (!line.trim()) continue;
-    const indent = line.search(/\S/);
-    const trimmed = line.trim();
-    if (trimmed.startsWith("/")) {
-      const [, key, value] = trimmed.match(/^\/(\S+)\s+\/?(.*)$/);
-      last.attrs[key] = value;
-      continue;
-    }
-    while (stack[stack.length - 1].indent >= indent) stack.pop();
-    const parent = stack[stack.length - 1].node;
-    if (trimmed.startsWith('"')) {
-      parent.children.push({ text: trimmed.slice(1, trimmed.lastIndexOf('"')) });
-    } else if (/^Object \d+ \d+$/.test(trimmed)) {
-      parent.children.push({ obj: Number(trimmed.split(" ")[1]) });
-    } else {
-      const node = { role: trimmed.match(/^\w+/)[0], attrs: {}, children: [] };
-      parent.children.push(node);
-      stack.push({ indent, node });
-      last = node;
-    }
-  }
-  return root.children[0];
-}
-
-const textOf = (node) =>
-  node.text !== undefined ? node.text : (node.children || []).map(textOf).join("");
-
-const compact = (s) => s.replace(/\s+/g, "");
-const collapse = (s) => s.replace(/\s+/g, " ");
-
-// ---------------------------------------------------------------------------
-// Link annotations. The structure tree only references them by object number,
-// and they live in compressed object streams.
-
-function readObjectStreams(buf) {
-  const src = buf.toString("latin1");
-  const objects = new Map();
-  const re = /\d+ 0 obj\s*<<([\s\S]*?)>>\s*stream\r?\n/g;
-  let m;
-  while ((m = re.exec(src))) {
-    if (!/\/Type\s*\/ObjStm/.test(m[1])) continue;
-    const length = Number(m[1].match(/\/Length (\d+)/)[1]);
-    const first = Number(m[1].match(/\/First (\d+)/)[1]);
-    const start = m.index + m[0].length;
-    const data = zlib.inflateSync(buf.subarray(start, start + length)).toString("latin1");
-    const header = data.slice(0, first).trim().split(/\s+/).map(Number);
-    for (let i = 0; i < header.length; i += 2) {
-      const end = i + 3 < header.length ? header[i + 3] : data.length - first;
-      objects.set(header[i], data.slice(first + header[i + 1], first + end));
-    }
-  }
-  return objects;
-}
-
-function linkTarget(objects, num) {
-  const dict = objects.get(num);
-  if (!dict) throw new Error(`Link annotation object ${num} not found`);
-  const uri = dict.match(/\/URI\((.*?)\)(?=\s*[/>])/);
-  if (uri) return { uri: Buffer.from(uri[1].replace(/\\(.)/g, "$1"), "latin1").toString("utf8") };
-  const dest = dict.match(/\/Dest\s*\[\s*(\d+ \d+ R)\s*\/XYZ\s+([\d.]+)\s+([\d.]+)/);
-  if (dest) return { dest: `${dest[1]} ${dest[2]} ${dest[3]}` };
-  throw new Error(`Unsupported link annotation ${num}: ${dict}`);
-}
-
-// ---------------------------------------------------------------------------
-// Superscript footnote references, from pdftohtml's XML output.
+// XML
 
 const decodeEntities = (s) =>
   s
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCodePoint(parseInt(n, 16)))
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
     .replace(/&amp;/g, "&");
 
-function readPageText(xml) {
-  const sizes = new Map();
-  for (const m of xml.matchAll(/<fontspec id="(\d+)" size="(\d+)"/g)) sizes.set(m[1], Number(m[2]));
-  const elements = [];
-  let page = 0;
-  for (const m of xml.matchAll(/<page number="(\d+)"|<text top="(\d+)"[^>]*font="(\d+)">(.*?)<\/text>/g)) {
-    if (m[1]) page = Number(m[1]);
-    else elements.push({ page, top: Number(m[2]), size: sizes.get(m[3]), text: decodeEntities(m[4].replace(/<[^>]+>/g, "")) });
-  }
-  return elements;
-}
-
-// Returns, for each footnote in order, the ~30 characters of body text that
-// precede its superscript reference.
-function footnoteReferenceContexts(elements, count) {
-  const bodySize = mode(elements.filter((e) => compact(e.text)).map((e) => e.size));
-  const contexts = [];
-  for (let i = 0; i < elements.length && contexts.length < count; i++) {
-    const e = elements[i];
-    if (e.size >= bodySize || compact(e.text) !== String(contexts.length + 1)) continue;
-    let before = "";
-    for (let j = i - 1; j >= 0 && elements[j].page === e.page && compact(before).length < 30; j--) {
-      before = elements[j].text + before;
+// Parses well-formed XML into { tag, attrs, children } elements and { text }
+// nodes. Comments, processing instructions and the doctype are dropped.
+function parseXml(src) {
+  const root = { tag: "#document", attrs: {}, children: [] };
+  const stack = [root];
+  const token =
+    /<!--[\s\S]*?-->|<\?[\s\S]*?\?>|<!DOCTYPE[^>]*>|<\/([\w:.-]+)\s*>|<([\w:.-]+)((?:\s+[\w:.-]+\s*=\s*(?:"[^"]*"|'[^']*'))*)\s*(\/?)>|([^<]+)/g;
+  let at = 0;
+  let m;
+  while ((m = token.exec(src))) {
+    if (m.index !== at) break;
+    at = token.lastIndex;
+    const parent = stack[stack.length - 1];
+    if (m[1]) {
+      if (parent.tag !== m[1]) throw new Error(`Unexpected </${m[1]}> inside <${parent.tag}>`);
+      stack.pop();
+    } else if (m[2]) {
+      const attrs = {};
+      for (const a of m[3].matchAll(/([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) attrs[a[1]] = decodeEntities(a[2] ?? a[3]);
+      const node = { tag: m[2], attrs, children: [] };
+      parent.children.push(node);
+      if (!m[4]) stack.push(node);
+    } else if (m[5] !== undefined) {
+      parent.children.push({ text: decodeEntities(m[5]) });
     }
-    contexts.push(compact(before).slice(-30));
   }
-  return contexts;
+  if (at !== src.length) throw new Error(`Malformed XML at character ${at}: ${src.slice(at, at + 60)}`);
+  if (stack.length !== 1) throw new Error(`Unclosed <${stack[stack.length - 1].tag}>`);
+  return root;
 }
 
-function mode(values) {
-  const counts = new Map();
-  for (const v of values) counts.set(v, (counts.get(v) || 0) + 1);
-  return [...counts].sort((a, b) => b[1] - a[1])[0][0];
+const textOf = (node) => (node.text !== undefined ? node.text : node.children.map(textOf).join(""));
+const elements = (node) => node.children.filter((c) => c.tag);
+const cls = (node) => node.attrs.class || "";
+const is = (node, tag, className) => node.tag === tag && (className === undefined || cls(node) === className);
+
+function find(node, test) {
+  if (node.tag && test(node)) return node;
+  for (const child of node.children || []) {
+    const found = find(child, test);
+    if (found) return found;
+  }
+  return null;
 }
+
+// Whitespace-insensitive comparisons ignore every kind of space; collapsing
+// leaves the non-breaking spaces of the source ("Regulation (EU) 2024/2847")
+// alone.
+const compact = (s) => s.replace(/\s+/g, "");
+const collapse = (s) => s.replace(/[ \t\r\n]+/g, " ");
 
 // ---------------------------------------------------------------------------
 // Inline content
@@ -167,208 +114,214 @@ function mode(values) {
 const escapeHtml = (s) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-// Flattens a node into a list of inline tokens: { text } or { link, text }.
-function inlines(node, objects) {
-  if (node.text !== undefined) return [{ text: node.text }];
-  if (node.role === "Link") {
-    const obj = node.children.find((c) => c.obj !== undefined);
-    return [{ link: linkTarget(objects, obj.obj), text: textOf(node) }];
+const describe = (node) => `<${node.tag}${cls(node) ? ` class="${cls(node)}"` : ""}>: ${collapse(textOf(node)).trim().slice(0, 60)}`;
+
+// Flattens a node's children into inline tokens: { text, em?, link? } or
+// { footnote, label, key } for a footnote reference.
+function inlines(node, em = false) {
+  return node.children.flatMap((child) => {
+    if (child.text !== undefined) return [{ text: collapse(child.text), ...(em && { em }) }];
+    if (is(child, "span", "oj-italic")) return inlines(child, true);
+    if (child.tag === "span" && ["", "oj-bold"].includes(cls(child))) return inlines(child, em);
+    if (child.tag === "a") {
+      const note = (child.attrs.id || "").match(/^ntc(\d+)-(.+)$/);
+      if (note) return [{ footnote: Number(note[1]), label: compact(textOf(child)), key: note[2] }];
+      if (/^https?:\/\//.test(child.attrs.href || "")) return [{ text: collapse(textOf(child)), link: { uri: child.attrs.href }, ...(em && { em }) }];
+    }
+    throw new Error(`Unsupported inline content ${describe(child)}`);
+  });
+}
+
+// Merges adjacent text, drops the space the converter puts before a footnote
+// reference, and trims the ends.
+function tidy(tokens) {
+  const out = [];
+  for (const token of tokens) {
+    const prev = out[out.length - 1];
+    if (token.footnote) {
+      if (prev && prev.text !== undefined) prev.text = prev.text.replace(/ +$/, "");
+      if (prev && prev.text === "") out.pop();
+      out.push({ ...token });
+      continue;
+    }
+    const text = prev && prev.text !== undefined && prev.text.endsWith(" ") ? token.text.replace(/^ +/, "") : token.text;
+    if (prev && prev.text !== undefined && !prev.link && !token.link && !!prev.em === !!token.em) prev.text += text;
+    else out.push({ ...token, text });
   }
-  return node.children.filter((c) => c.obj === undefined).flatMap((c) => inlines(c, objects));
+  const first = out.find((t) => t.text !== undefined);
+  if (first && first === out[0]) first.text = first.text.replace(/^ +/, "");
+  const last = out[out.length - 1];
+  if (last && last.text !== undefined) last.text = last.text.replace(/ +$/, "");
+  return out.filter((t) => t.text !== "");
 }
 
-const plain = (tokens) => tokens.map((t) => (t.footnote ? String(t.footnote) : t.text)).join("");
+const plain = (tokens) => tokens.map((t) => (t.footnote ? t.label : t.text)).join("");
 
-function trimTokens(tokens) {
-  tokens = tokens.filter((t) => t.text !== "");
-  if (tokens.length && !tokens[0].link) tokens[0] = { text: tokens[0].text.replace(/^\s+/, "") };
-  const n = tokens.length - 1;
-  if (n >= 0 && !tokens[n].link) tokens[n] = { text: tokens[n].text.replace(/\s+$/, "") };
-  return tokens.filter((t) => t.text !== "");
-}
+const whollyItalic = (tokens) => tokens.every((t) => t.footnote || t.em || !t.text.trim());
+const withoutItalics = (tokens) => tokens.map(({ em, ...t }) => t);
 
-// Splits a leading label (e.g. "14. ") off the first text token.
+// Splits a leading label (e.g. "Example 3: ") off the first text token.
 function splitLabel(tokens, re) {
   const [first, ...rest] = tokens;
-  const m = first.link ? null : first.text.match(re);
+  const m = first.text !== undefined && !first.link ? first.text.match(re) : null;
   if (!m) throw new Error(`Expected label ${re} at: ${plain(tokens).slice(0, 60)}`);
-  return { label: m[0].trim(), tokens: trimTokens([{ text: first.text.slice(m[0].length) }, ...rest]) };
+  return { label: m[0].trim(), tokens: tidy([{ ...first, text: first.text.slice(m[0].length) }, ...rest]) };
 }
 
 // ---------------------------------------------------------------------------
-// Blocks
+// Blocks. The converter that produces the Official Journal's XHTML lays out
+// everything that carries a number or a marker as a one-row table: table of
+// contents entries, points, lettered sub-points and dash list items.
 
-function buildDocument(tree, objects) {
-  const doc = { cover: "", toc: [], headings: [], blocks: [], footnotes: [] };
-  let current = null; // the point/example/paragraph that continuations attach to
-  let bulletList = null; // the open top-level bullet list, if any
+const cells = (table) => {
+  const rows = elements(table).filter((e) => e.tag === "tbody").flatMap(elements);
+  if (rows.length !== 1) throw new Error(`Expected a one-row table: ${describe(table)}`);
+  return elements(rows[0]);
+};
 
-  // Appends a paragraph to a container, merging it into the previous one when
-  // that one ends mid-sentence (i.e. a page break split it).
-  const appendParagraph = (body, tokens) => {
-    const prev = body[body.length - 1];
-    if (prev && prev.p && !/[.:;!?’”)]$/.test(plain(prev.p))) {
-      prev.p = [...prev.p, { text: " " }, ...tokens];
-    } else {
-      body.push({ p: tokens });
-    }
+const LISTS = [
+  { type: "LowerAlpha", label: /^\([a-z]\)$/ },
+  { type: "Dash", label: /^—$/ },
+];
+
+function buildDocument(root) {
+  const container = find(root, (n) => is(n, "div", "eli-container"));
+  if (!container) throw new Error("No eli-container found: is this the Official Journal's XHTML?");
+  const doc = { kind: "", title: "", reference: "", toc: [], headings: [], blocks: [], footnotes: [] };
+  let current = null; // the open example or figure
+  let list = null; // the open top-level list
+  let inNotes = false;
+
+  const push = (block) => {
+    doc.blocks.push(block);
+    current = list = null;
+    return block;
   };
 
-  const itemBody = (li) => {
+  const listItem = (table) => {
+    const [label, content] = cells(table);
+    const marker = compact(textOf(label));
+    const kind = LISTS.find((l) => l.label.test(marker));
+    if (!kind) throw new Error(`Unsupported list marker "${marker}"`);
+    return { type: kind.type, item: { label: marker, body: itemBody(content) } };
+  };
+
+  const appendItem = (target, { type, item }) => {
+    const last = target[target.length - 1];
+    if (last && last.list && last.list.type === type) last.list.items.push(item);
+    else target.push({ list: { type, items: [item] } });
+  };
+
+  const itemBody = (cell) => {
     const body = [];
-    let run = [];
-    const flush = () => {
-      const t = trimTokens(run);
-      if (t.length) body.push({ p: t });
-      run = [];
-    };
-    for (const lbody of li.children) {
-      for (const child of lbody.children) {
-        if (child.role === "L") {
-          flush();
-          body.push({ list: list(child) });
-        } else {
-          run.push(...inlines(child, objects));
-        }
-      }
+    for (const child of cell.children) {
+      if (child.text !== undefined) {
+        if (child.text.trim()) throw new Error(`Unexpected text in a list item: ${child.text.trim().slice(0, 60)}`);
+      } else if (is(child, "p", "oj-normal")) body.push({ p: tidy(inlines(child)) });
+      else if (child.tag === "table") appendItem(body, listItem(child));
+      else throw new Error(`Unsupported list item content ${describe(child)}`);
     }
-    flush();
     return body;
   };
 
-  const LABELS = { Decimal: /^\d+\.\s/, LowerAlpha: /^[a-z]\.\s/, Disc: /^•\s*/ };
-
-  // Items whose text doesn't start with a label are the tail of the previous
-  // item, split by a page break.
-  const list = (l) => {
-    const type = l.attrs.ListNumbering;
-    if (!LABELS[type]) throw new Error(`Unsupported list numbering: ${type}`);
-    const result = { type, items: [] };
-    for (const li of l.children) {
-      const body = itemBody(li);
-      if (LABELS[type].test(plain(body[0].p))) {
-        const { label, tokens } = splitLabel(body[0].p, LABELS[type]);
-        result.items.push({ label, body: [{ p: tokens }, ...body.slice(1)] });
-      } else if (result.items.length) {
-        appendItems(result, [{ label: null, body }]);
-      } else {
-        // Continues an item from a previous list; resolved by the caller.
-        result.items.push({ label: null, body });
-      }
-    }
-    return result;
-  };
-
-  const appendItems = (target, items) => {
-    for (const item of items) {
-      if (item.label !== null) {
-        target.items.push(item);
-      } else {
-        const prev = target.items[target.items.length - 1];
-        if (!prev) throw new Error(`Unlabelled list item with nothing to continue: ${plain(item.body[0].p).slice(0, 60)}`);
-        appendParagraph(prev.body, item.body[0].p);
-        prev.body.push(...item.body.slice(1));
-      }
+  // A paragraph is an example ("Example 3: ..."), the continuation of one (the
+  // examples are set in italics throughout), or ordinary text.
+  const paragraph = (tokens, point) => {
+    if (/^Example\s\d+:/.test(plain(tokens))) {
+      const { label, tokens: rest } = splitLabel(tokens, /^Example\s\d+:\s*/);
+      const example = push({ type: "example", label, num: parseInt(label.slice(8), 10), body: [{ p: withoutItalics(rest) }] });
+      current = example;
+    } else if (current && current.type === "example" && whollyItalic(tokens)) {
+      current.body.push({ p: withoutItalics(tokens) });
+    } else if (point) {
+      // Examples are published as blocks of their own, after the point they
+      // belong to, so the point's text can't resume after one.
+      if (doc.blocks[doc.blocks.length - 1] !== point) throw new Error(`Point ${point.label} continues after an example: ${plain(tokens).slice(0, 60)}`);
+      point.body.push({ p: tokens });
+    } else {
+      push({ type: "paragraph", body: [{ p: tokens }] });
     }
   };
 
-  for (const node of tree.children) {
+  const point = (label, content) => {
+    const block = push({ type: "point", label, num: parseInt(label, 10), body: [] });
+    for (const child of content.children) {
+      if (child.text !== undefined) {
+        if (child.text.trim()) throw new Error(`Unexpected text in point ${label}: ${child.text.trim().slice(0, 60)}`);
+      } else if (is(child, "span", "")) {
+        block.body.push({ p: tidy(inlines(child)) });
+      } else if (is(child, "p", "oj-normal")) {
+        paragraph(tidy(inlines(child)), block);
+      } else if (child.tag === "table") {
+        if (doc.blocks[doc.blocks.length - 1] !== block) throw new Error(`Point ${label} continues after an example`);
+        appendItem(block.body, listItem(child));
+      } else {
+        throw new Error(`Unsupported content in point ${label} ${describe(child)}`);
+      }
+    }
+  };
+
+  for (const node of elements(container)) {
     const text = collapse(textOf(node)).trim();
-    switch (node.role) {
-      case "TOC":
-        for (const item of node.children) {
-          const link = item.children.find((c) => c.role === "Link");
-          if (!link) continue;
-          const [, num, title] = collapse(textOf(link)).trim().match(/^(\d+(?:\.\d+)*)\s+(.*?)\s*\.{3,}\s*\d+$/);
-          doc.toc.push({ num, title, link: linkTarget(objects, link.children.find((c) => c.obj !== undefined).obj) });
-        }
-        break;
-      case "H1":
-      case "H2":
-      case "H3": {
-        const [, num, title] = text.match(/^(\d+(?:\.\d+)*)\s+(.*)$/);
-        const heading = { type: "heading", level: Number(node.role[1]), num, title };
-        doc.blocks.push(heading);
-        doc.headings.push(heading);
-        current = bulletList = null;
-        break;
+    if (inNotes) {
+      if (!is(node, "p", "oj-note")) throw new Error(`Unexpected content among the footnotes ${describe(node)}`);
+      const [anchor] = elements(node);
+      const id = anchor && anchor.tag === "a" && (anchor.attrs.id || "").match(/^ntr(\d+)-(.+)$/);
+      if (!id) throw new Error(`Footnote without a marker: ${text.slice(0, 60)}`);
+      const tokens = tidy(inlines({ ...node, children: node.children.slice(node.children.indexOf(anchor) + 1) }));
+      // The marker is followed by non-breaking spaces.
+      if (tokens[0].text !== undefined && !tokens[0].link) tokens[0].text = tokens[0].text.replace(/^\s+/, "");
+      doc.footnotes.push({ num: Number(id[1]), label: compact(textOf(anchor)), key: id[2], tokens: tokens.filter((t) => t.text !== "") });
+    } else if (is(node, "div", "eli-main-title")) {
+      const titles = elements(node).filter((p) => is(p, "p", "oj-doc-ti")).map((p) => collapse(textOf(p)).trim());
+      const number = elements(node).find((p) => is(p, "p", "oj-no-doc-c"));
+      doc.kind = titles[0];
+      doc.title = titles[titles.length - 1];
+      doc.reference = number ? collapse(textOf(number)).trim().replace(/^\(|\)$/g, "") : "";
+    } else if (is(node, "p", "oj-ti-tbl")) {
+      // The "Contents" heading; the page has its own.
+    } else if (node.tag === "table" && find(node, (n) => is(n, "p", "oj-tbl-num"))) {
+      const [num, title, page] = cells(node).map((c) => collapse(textOf(c)).trim());
+      doc.toc.push({ label: num, num: num.replace(/\.$/, ""), title, page });
+    } else if (is(node, "p", "oj-ti-grseq-1")) {
+      const tokens = tidy(inlines(node));
+      const heading = text.match(/^(\d+(?:\.\d+)*)\.\s+(.*)$/);
+      if (/^Figure\s\d+$/.test(text)) {
+        current = push({ type: "figure", label: text, num: parseInt(text.slice(7), 10), caption: null, image: null });
+      } else if (current && current.type === "figure" && !current.caption) {
+        current.caption = withoutItalics(tokens);
+      } else if (heading && tokens.every((t) => t.text !== undefined && !t.link)) {
+        const num = heading[1];
+        doc.headings.push(push({ type: "heading", level: num.split(".").length, label: `${num}.`, num, title: heading[2] }));
+      } else {
+        throw new Error(`Unrecognised heading: ${text.slice(0, 60)}`);
       }
-      case "L": {
-        const parsed = list(node);
-        if (parsed.type === "Decimal") {
-          for (const item of parsed.items) {
-            if (item.label !== null) {
-              current = { type: "point", label: item.label, num: parseInt(item.label, 10), body: [] };
-              doc.blocks.push(current);
-            } else if (!current || current.type !== "point") {
-              throw new Error(`Unnumbered point with no point to continue: ${plain(item.body[0].p).slice(0, 60)}`);
-            }
-            const [head, ...rest] = item.body;
-            appendParagraph(current.body, head.p);
-            current.body.push(...rest);
-          }
-          bulletList = null;
-        } else if (bulletList) {
-          appendItems(bulletList, parsed.items);
-        } else {
-          bulletList = { type: parsed.type, items: [] };
-          appendItems(bulletList, parsed.items);
-          if (current && current.type === "example") {
-            current.body.push({ list: bulletList });
-          } else {
-            doc.blocks.push({ type: "list", list: bulletList });
-            current = null;
-          }
-        }
-        break;
+    } else if (node.tag === "table") {
+      const tds = cells(node);
+      const label = tds.length === 3 && !compact(textOf(tds[0])) ? compact(textOf(tds[1])) : null;
+      if (label && /^\d+\.$/.test(label)) {
+        point(label, tds[2]);
+      } else if (tds.length === 2) {
+        const open = list;
+        const target = open ? [{ list: open }] : [];
+        appendItem(target, listItem(node));
+        if (target.length !== 1) throw new Error(`A list changes its marker midway: ${text.slice(0, 60)}`);
+        if (!open) push({ type: "list", list: target[0].list });
+        list = target[0].list;
+      } else {
+        throw new Error(`Unrecognised table: ${text.slice(0, 60)}`);
       }
-      case "Note":
-        for (const p of node.children) {
-          const tokens = trimTokens(inlines(p, objects));
-          if (!tokens.length) continue;
-          const expected = String(doc.footnotes.length + 1);
-          const m = plain(tokens).match(/^\d+/);
-          if (m && m[0] === expected) {
-            const { label, tokens: rest } = splitLabel(tokens, /^\d+\s*/);
-            // The reference to this footnote is in a block before this point.
-            doc.footnotes.push({ num: Number(label), label, tokens: rest, before: doc.blocks.length });
-          } else {
-            const prev = doc.footnotes[doc.footnotes.length - 1];
-            prev.tokens = [...prev.tokens, { text: " " }, ...tokens];
-          }
-        }
-        break;
-      case "Figure":
-        current = { type: "figure", num: null, caption: null };
-        doc.blocks.push(current);
-        bulletList = null;
-        break;
-      case "P": {
-        if (!text) break;
-        if (!doc.cover) {
-          doc.cover = text;
-          break;
-        }
-        const tokens = trimTokens(inlines(node, objects));
-        if (/^Figure \d+:/.test(text) && current && current.type === "figure" && !current.caption) {
-          const { label, tokens: rest } = splitLabel(tokens, /^Figure \d+:\s*/);
-          Object.assign(current, { label, num: parseInt(label.slice(7), 10), caption: rest });
-          current = null;
-        } else if (/^Example \d+:/.test(text)) {
-          const { label, tokens: rest } = splitLabel(tokens, /^Example \d+:\s*/);
-          current = { type: "example", label, num: parseInt(label.slice(8), 10), body: [{ p: rest }] };
-          doc.blocks.push(current);
-        } else if (current && (current.type === "example" || current.type === "paragraph")) {
-          appendParagraph(current.body, tokens);
-        } else {
-          current = { type: "paragraph", body: [{ p: tokens }] };
-          doc.blocks.push(current);
-        }
-        bulletList = null;
-        break;
-      }
-      default:
-        throw new Error(`Unexpected top-level ${node.role}: ${text.slice(0, 60)}`);
+    } else if (is(node, "p", "oj-normal") && find(node, (n) => n.tag === "img")) {
+      const img = find(node, (n) => n.tag === "img");
+      if (text || !current || current.type !== "figure" || !current.caption || current.image) throw new Error(`Image outside a figure: ${img.attrs.alt}`);
+      current.image = img.attrs.src;
+    } else if (is(node, "p", "oj-normal")) {
+      paragraph(tidy(inlines(node)), null);
+      list = null;
+    } else if (is(node, "hr", "oj-note")) {
+      inNotes = true;
+    } else {
+      throw new Error(`Unexpected content ${describe(node)}`);
     }
   }
   return doc;
@@ -386,7 +339,8 @@ function buildDocument(tree, objects) {
 //   pnt_91.pnt_a       point 91(a)
 //   fgr_9              Figure 9
 //   exm_10             Example 10 (ELI has no code for examples)
-//   ntr1 / ntc1        reference to / content of footnote 1, as in EUR-Lex HTML
+//   ntr1 / ntc1        reference to / content of footnote 1 (EUR-Lex HTML
+//                      uses the same two prefixes the other way round)
 const ids = {
   section: (num) => num.split(".").map((n) => `sct_${n}`).join("."),
   point: (num) => `pnt_${num}`,
@@ -397,64 +351,101 @@ const ids = {
   footnoteRef: (num) => `ntr${num}`,
 };
 // ---------------------------------------------------------------------------
-// Internal links carry only a page position. Destinations are mapped to ids
-// from the table of contents first, then from link text (section numbers or
-// titles, point numbers), and every link to a destination must agree.
+// Cross-references
 
-function resolveInternalLinks(doc, problems) {
-  const headingIds = new Map(doc.headings.map((h) => [h.num, ids.section(h.num)]));
-  const titleIds = new Map(doc.headings.map((h) => [h.title.toLowerCase(), ids.section(h.num)]));
-  const pointIds = new Set(doc.blocks.filter((b) => b.type === "point").map((b) => ids.point(b.num)));
-  const byDest = new Map();
-  const assign = (dest, id, why) => {
-    const existing = byDest.get(dest);
-    if (existing && existing.id !== id) problems.push(`Destination ${dest} resolves to both #${existing.id} (${existing.why}) and #${id} (${why})`);
-    else if (!existing) byDest.set(dest, { id, why });
-  };
-  for (const entry of doc.toc) assign(entry.link.dest, ids.section(entry.num), `TOC ${entry.num}`);
+// Every list of inline tokens in the document, in order, each with a function
+// that replaces it.
+function tokenLists(doc) {
+  const lists = [];
+  const walk = (body) =>
+    body.forEach((part) => {
+      if (part.p) lists.push({ tokens: part.p, replace: (tokens) => (part.p = tokens) });
+      else part.list.items.forEach((item) => walk(item.body));
+    });
+  for (const block of doc.blocks) {
+    if (block.body) walk(block.body);
+    if (block.list) block.list.items.forEach((item) => walk(item.body));
+    if (block.caption) lists.push({ tokens: block.caption, replace: (tokens) => (block.caption = tokens) });
+  }
+  doc.footnotes.forEach((fn) => lists.push({ tokens: fn.tokens, replace: (tokens) => (fn.tokens = tokens) }));
+  return lists;
+}
 
-  const links = [];
-  const walkTokens = (tokens) => {
-    let before = "";
-    for (const t of tokens) {
-      if (t.link && t.link.dest) links.push({ token: t, before });
-      before += t.text;
+// Links the references the guidance makes to its own sections and points.
+//
+// Sections are referred to in italics, by number and usually by title, at
+// times shortened ("Section 3.2.6 Not-for-profit entities"). An italic number
+// is linked when it is a section's and any title that follows it starts that
+// section's title.
+//
+// Points are referred to in running text ("points 13, 14 and 15"). References
+// to the points of other texts name that text right after the number ("point
+// 6 of Annex VII") or right before it ("Annex I, point 11, to Implementing
+// Regulation ..."), or put the number in brackets ("point (1) of Part I"), and
+// are left alone.
+function linkCrossReferences(doc, problems) {
+  const headings = new Map(doc.headings.map((h) => [h.num, h]));
+  const points = new Set(doc.blocks.filter((b) => b.type === "point").map((b) => b.num));
+  const linked = { sections: [], points: [] };
+
+  const sectionLink = (token) => {
+    const m = token.text.match(/^(?:Section\s)?(\d+(?:\.\d+)*)(?:\s+(.+?))?[\s.,)]*$/);
+    if (!m) return token;
+    const heading = headings.get(m[1]);
+    const title = (m[2] || "").toLowerCase();
+    const matches = heading && [title, title.replace(/[\s.,)]+$/, "")].some((t) => heading.title.toLowerCase().startsWith(t));
+    if (!matches) {
+      problems.push(`Italic text looks like a reference to a section but matches none: "${token.text}"`);
+      return token;
     }
+    linked.sections.push(token.text);
+    return { ...token, link: { href: `#${ids.section(m[1])}` } };
   };
-  const walkBody = (body) => body.forEach((part) => (part.p ? walkTokens(part.p) : part.list.items.forEach((i) => walkBody(i.body))));
-  for (const b of doc.blocks) {
-    if (b.body) walkBody(b.body);
-    if (b.list) b.list.items.forEach((i) => walkBody(i.body));
-    if (b.caption) walkTokens(b.caption);
-  }
-  doc.footnotes.forEach((fn) => walkTokens(fn.tokens));
 
-  for (const { token, before } of links) {
-    const t = collapse(token.text).trim();
-    const why = `"${before.slice(-20)}${t}"`;
-    if (/^\d+\.\d/.test(t) && headingIds.has(t)) assign(token.link.dest, headingIds.get(t), why);
-    else if (/points?\s*$|\d\s*(,|and|or|to)\s*$/.test(before) && pointIds.has(ids.point(t))) assign(token.link.dest, ids.point(t), why);
-    else if (/sections?\s*$/i.test(before) && headingIds.has(t)) assign(token.link.dest, headingIds.get(t), why);
-    else if (titleIds.has(t.toLowerCase())) assign(token.link.dest, titleIds.get(t.toLowerCase()), `title "${t}"`);
+  const pointLinks = (token) => {
+    const out = [];
+    let at = 0;
+    for (const m of token.text.matchAll(/\b[Pp]oints?\s(\d+(?:,\s\d+)*(?:\sand\s\d+)?)(?!\d)/g)) {
+      const before = token.text.slice(0, m.index);
+      const after = token.text.slice(m.index + m[0].length);
+      if (/,\s$/.test(before) || /^,?\s(of|to)\s/.test(after)) continue;
+      const numbers = m.index + m[0].length - m[1].length;
+      out.push({ ...token, text: token.text.slice(at, numbers) });
+      at = numbers;
+      for (const n of m[1].matchAll(/\d+/g)) {
+        if (!points.has(Number(n[0]))) {
+          problems.push(`Reference to a point that doesn't exist: "${m[0]}"`);
+          continue;
+        }
+        out.push({ ...token, text: token.text.slice(at, numbers + n.index) }, { ...token, text: n[0], link: { href: `#${ids.point(n[0])}` } });
+        at = numbers + n.index + n[0].length;
+      }
+      linked.points.push(m[0]);
+    }
+    out.push({ ...token, text: token.text.slice(at) });
+    return out.filter((t) => t.text !== "");
+  };
+
+  for (const { tokens, replace } of tokenLists(doc)) {
+    replace(
+      tokens.flatMap((token) => {
+        if (token.text === undefined || token.link) return [token];
+        return token.em ? [sectionLink(token)] : pointLinks(token);
+      })
+    );
   }
-  for (const { token, before } of links) {
-    const resolved = byDest.get(token.link.dest);
-    if (resolved) token.link.href = `#${resolved.id}`;
-    else problems.push(`Unresolved internal link "${token.text}" after "${before.slice(-40)}"`);
-  }
+  return linked;
 }
 
 // ---------------------------------------------------------------------------
 // Rendering
 
-
 function renderTokens(tokens) {
   return tokens
     .map((t) => {
-      if (t.footnote) return `<sup class="footnote-ref"><a href="#${ids.footnote(t.footnote)}" id="${ids.footnoteRef(t.footnote)}">${t.footnote}</a></sup>`;
-      if (!t.link) return escapeHtml(t.text);
-      const href = t.link.uri || t.link.href;
-      return href ? `<a href="${escapeHtml(href)}">${escapeHtml(t.text)}</a>` : escapeHtml(t.text);
+      if (t.footnote) return `<sup class="footnote-ref"><a href="#${ids.footnote(t.footnote)}" id="${ids.footnoteRef(t.footnote)}">${escapeHtml(t.label)}</a></sup>`;
+      const text = t.link ? `<a href="${escapeHtml(t.link.uri || t.link.href)}">${escapeHtml(t.text)}</a>` : escapeHtml(t.text);
+      return t.em ? `<em>${text}</em>` : text;
     })
     .join("");
 }
@@ -464,6 +455,8 @@ function renderTokens(tokens) {
 const selfLink = (id, label, description) =>
   `<a class="self-link" href="#${id}" title="Copy link to ${escapeHtml(description)}">${escapeHtml(label)}</a>`;
 
+const subpointCite = (pointId, label) => `point ${pointId.slice(4)}${label}`;
+
 function renderBody(body, idPrefix) {
   return body
     .map((part) => {
@@ -471,12 +464,12 @@ function renderBody(body, idPrefix) {
       const { type, items } = part.list;
       const lis = items
         .map((item) => {
-          const id = idPrefix && type !== "Disc" ? ids.subpoint(idPrefix, item.label) : null;
-          const label = id ? selfLink(id, item.label, `point ${idPrefix.slice(4)}(${item.label.replace(/\W/g, "")})`) : escapeHtml(item.label);
+          const id = idPrefix && type !== "Dash" ? ids.subpoint(idPrefix, item.label) : null;
+          const label = id ? selfLink(id, item.label, subpointCite(idPrefix, item.label)) : escapeHtml(item.label);
           return `<li${id ? ` id="${id}"` : ""}><span class="label">${label}</span> ${renderBody(item.body, null)}</li>`;
         })
         .join("\n");
-      return type === "Disc" ? `<ul class="labelled">\n${lis}\n</ul>` : `<ol class="labelled">\n${lis}\n</ol>`;
+      return type === "Dash" ? `<ul class="labelled">\n${lis}\n</ul>` : `<ol class="labelled">\n${lis}\n</ol>`;
     })
     .join("\n");
 }
@@ -487,8 +480,8 @@ function renderBlock(b, figures) {
       const id = ids.section(b.num);
       const tag = `h${b.level + 1}`;
       // Top-level sections are rendered as cards, like the rest of the site.
-      const cls = b.level === 1 ? ' class="section-card"' : "";
-      return `<section id="${id}"${cls}>\n<${tag} id="${id}.tit_1">${selfLink(id, b.num, `Section ${b.num}`)} ${escapeHtml(b.title)}</${tag}>`;
+      const card = b.level === 1 ? ' class="section-card"' : "";
+      return `<section id="${id}"${card}>\n<${tag} id="${id}.tit_1">${selfLink(id, b.label, `Section ${b.num}`)} ${escapeHtml(b.title)}</${tag}>`;
     }
     case "point": {
       const id = ids.point(b.num);
@@ -506,63 +499,9 @@ function renderBlock(b, figures) {
       return renderBody([{ list: b.list }], null);
     case "figure": {
       const id = ids.figure(b.num);
-      return `<figure id="${id}">\n<img src="${escapeHtml(figures[b.num - 1].src)}" alt="${escapeHtml(plain(b.caption))}">\n<figcaption><strong>${selfLink(id, b.label.replace(/:$/, ""), `Figure ${b.num}`)}:</strong> ${renderTokens(b.caption)}</figcaption>\n</figure>`;
+      return `<figure id="${id}">\n<img src="${escapeHtml(figures[b.num - 1].src)}" alt="${escapeHtml(plain(b.caption))}">\n<figcaption><strong>${selfLink(id, b.label, b.label)}</strong> ${renderTokens(b.caption)}</figcaption>\n</figure>`;
     }
   }
-}
-
-// Inserts a footnote marker token where each superscript sits in the PDF.
-// Markers are looked for in order, each between the previous one and the place
-// where its footnote appeared in the structure tree, by matching the body text
-// that precedes the superscript on the page.
-function insertFootnoteMarkers(doc, contexts, problems) {
-  // Every paragraph of the document, in order, with the block it belongs to.
-  const paragraphs = [];
-  const collect = (body, blockIndex) => {
-    for (const part of body) {
-      if (part.p) paragraphs.push({ tokens: part.p, blockIndex });
-      else part.list.items.forEach((item) => collect(item.body, blockIndex));
-    }
-  };
-  doc.blocks.forEach((b, i) => {
-    if (b.body) collect(b.body, i);
-    if (b.list) b.list.items.forEach((item) => collect(item.body, i));
-    if (b.caption) paragraphs.push({ tokens: b.caption, blockIndex: i });
-  });
-
-  let from = 0;
-  doc.footnotes.forEach((fn, n) => {
-    const needle = contexts[n] + fn.label;
-    for (let i = from; i < paragraphs.length; i++) {
-      const { tokens, blockIndex } = paragraphs[i];
-      if (blockIndex >= fn.before) break;
-      // Map each non-whitespace character to the token it came from.
-      let text = "";
-      const positions = [];
-      tokens.forEach((token, t) => {
-        if (token.footnote) return;
-        [...token.text].forEach((ch, c) => {
-          if (/\s/.test(ch)) return;
-          text += ch;
-          positions.push({ t, c });
-        });
-      });
-      const at = text.indexOf(needle);
-      if (at === -1) continue;
-      if (text.indexOf(needle, at + 1) !== -1) problems.push(`Footnote ${fn.label} reference context is ambiguous: ${needle}`);
-      const start = positions[at + contexts[n].length];
-      const end = positions[at + needle.length - 1];
-      if (start.t !== end.t || tokens[start.t].link) {
-        problems.push(`Footnote ${fn.label} reference is not plain text: ${needle}`);
-        break;
-      }
-      const token = tokens[start.t];
-      tokens.splice(start.t, 1, { text: token.text.slice(0, start.c) }, { footnote: fn.num }, { text: token.text.slice(end.c + 1) });
-      from = i;
-      return;
-    }
-    problems.push(`Footnote ${fn.label} reference not found (context "${needle}")`);
-  });
 }
 
 // Joins rendered blocks, closing each <section> opened by a heading before the
@@ -587,8 +526,7 @@ function nestSections(blocks, rendered) {
 }
 
 // Returns the three parts of the page: table of contents, body and footnotes.
-function renderDocument(doc, figures, problems) {
-  resolveInternalLinks(doc, problems);
+function renderDocument(doc, figures) {
   const rendered = doc.blocks.map((b) => renderBlock(b, figures));
 
   // Nested lists, closing each level's <ol> before a shallower entry.
@@ -597,7 +535,7 @@ function renderDocument(doc, figures, problems) {
   for (const h of doc.headings) {
     if (h.level > depth) toc += "\n<ol>\n".repeat(h.level - depth);
     else toc += "</li>\n" + "</ol>\n</li>\n".repeat(depth - h.level);
-    toc += `<li><a href="#${ids.section(h.num)}">${h.num} ${escapeHtml(h.title)}</a>`;
+    toc += `<li><a href="#${ids.section(h.num)}">${h.label} ${escapeHtml(h.title)}</a>`;
     depth = h.level;
   }
   toc += "</li>\n</ol>\n".repeat(depth);
@@ -627,6 +565,7 @@ guidance:
   title: ${yamlString(meta.title)}
   reference: ${yamlString(meta.reference)}
   date: ${yamlString(meta.date)}
+  eli: ${yamlString(meta.eli)}
   sourceFile: ${yamlString(meta.sourceFile)}
   sourceSha256: ${yamlString(meta.sourceSha256)}
   sourceUrl: ${yamlString(meta.sourceUrl)}
@@ -637,8 +576,8 @@ attribution:
   license: "CC-BY-4.0"
   licenseUrl: "https://commission.europa.eu/legal-notice_en#copyright-notice"
   srcUrl: ${yamlString(meta.sourceUrl)}
-  source: ${yamlString(`"${meta.reference} - Annex" (PDF)`)}
-  disclaimer: ${yamlString(`This guidance is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.<br><br>The content of this page was generated from the [original PDF](${meta.sourceUrl}) of the guidance, and its text was verified against it. Please check the original PDF for accuracy.`)}
+  source: ${yamlString(`"OJ C, ${meta.reference}, ${meta.ojDate}"`)}
+  disclaimer: ${yamlString(`This guidance is subject to the [disclaimer](https://commission.europa.eu/legal-notice_en#disclaimer) published on the European Commission's website.<br><br>The content of this page was generated from the guidance as published in the [Official Journal of the European Union](${meta.sourceUrl}), and its text was verified against it. Only the Official Journal's version is authentic; please check it for accuracy.`)}
 ---
 <section class="section-card guidance-toc">
 ${parts.toc}
@@ -672,7 +611,7 @@ function jsonContent(body, pointId) {
       parts.push(renderTokens(part.p));
       continue;
     }
-    if (part.list.type === "Disc") {
+    if (part.list.type === "Dash" || !pointId) {
       parts.push({ type: "list", items: part.list.items.map((item) => ({ marker: item.label, content: jsonContent(item.body, null) })) });
       continue;
     }
@@ -685,7 +624,7 @@ function jsonContent(body, pointId) {
         marker: item.label,
         id,
         src: `#${id}`,
-        cite: `point ${pointId.slice(4)}(${item.label.replace(/\W/g, "")})`,
+        cite: subpointCite(pointId, item.label),
         content,
         footnotes: footnotesIn(content),
       });
@@ -699,7 +638,7 @@ function jsonBlock(block, figures) {
     case "point":
     case "example": {
       const id = block.type === "point" ? ids.point(block.num) : ids.example(block.num);
-      const content = jsonContent(block.body, id);
+      const content = jsonContent(block.body, block.type === "point" ? id : null);
       return {
         type: block.type,
         marker: block.label,
@@ -718,7 +657,7 @@ function jsonBlock(block, figures) {
         marker: block.label,
         id,
         src: `#${id}`,
-        cite: `Figure ${block.num}`,
+        cite: block.label,
         title: caption,
         image: figures[block.num - 1].src,
         footnotes: footnotesIn([caption]),
@@ -739,7 +678,7 @@ function jsonSections(doc, figures) {
       const id = ids.section(block.num);
       const section = {
         type: "section",
-        marker: block.num,
+        marker: block.label,
         title: block.title,
         id,
         src: `#${id}`,
@@ -767,6 +706,7 @@ function renderJson(doc, figures, meta) {
     shortTitle: "Official CRA Guidance",
     reference: meta.reference,
     date: meta.isoDate,
+    eli: meta.eli,
     permalink: "/official-guidance/",
     author: "European Union",
     license: "CC-BY-4.0",
@@ -774,30 +714,43 @@ function renderJson(doc, figures, meta) {
     srcUrl: meta.sourceUrl,
     source: { file: meta.sourceFile, sha256: meta.sourceSha256 },
     sections: jsonSections(doc, figures),
-    footnotes: doc.footnotes.map((fn) => ({ id: fn.label, text: renderTokens(fn.tokens) })),
+    footnotes: doc.footnotes.map((fn) => ({ id: String(fn.num), marker: fn.label, text: renderTokens(fn.tokens) })),
   };
 }
 
 // ---------------------------------------------------------------------------
 // Verification
 
-// Text of the structure tree, split into the body stream and the footnote
-// stream, excluding the cover page and table of contents.
-function sourceStreams(tree) {
-  let body = "";
-  let notes = "";
-  let coverSeen = false;
-  for (const node of tree.children) {
-    if (node.role === "TOC") continue;
+const FURNITURE = ["oj-hd-ti", "oj-hd-lg", "oj-hd-coll", "oj-hd-uniq", "oj-hd-date"];
+
+// Splits the XHTML's text into what the page reproduces (the body and the
+// footnotes, as two streams), what it renders from the headings instead (the
+// title block and the table of contents), and the Official Journal's page
+// furniture around the document.
+function sourceStreams(root) {
+  const streams = { body: "", notes: "", front: "", furniture: [], stray: [] };
+  const container = find(root, (n) => is(n, "div", "eli-container"));
+  let inNotes = false;
+  for (const node of elements(container)) {
     const text = compact(textOf(node));
-    if (node.role === "P" && text && !coverSeen) {
-      coverSeen = true;
-      continue;
-    }
-    if (node.role === "Note") notes += text;
-    else body += text;
+    if (is(node, "hr", "oj-note")) inNotes = true;
+    else if (inNotes) streams.notes += text;
+    else if (is(node, "div", "eli-main-title") || is(node, "p", "oj-ti-tbl") || (node.tag === "table" && find(node, (n) => is(n, "p", "oj-tbl-num")))) streams.front += text;
+    else streams.body += text;
   }
-  return { body, notes };
+  const walk = (node, p) => {
+    if (node === container) return;
+    if (node.text !== undefined) {
+      const text = collapse(node.text).trim();
+      if (!text) return;
+      const known = p && (FURNITURE.includes(cls(p)) || (cls(p) === "oj-normal" && /^(ELI: |ISSN )/.test(collapse(textOf(p)).trim())));
+      (known ? streams.furniture : streams.stray).push(text);
+    } else {
+      node.children.forEach((child) => walk(child, node.tag === "p" ? node : p));
+    }
+  };
+  walk(find(root, (n) => n.tag === "body"), null);
+  return streams;
 }
 
 function htmlText(html) {
@@ -817,14 +770,14 @@ function jsonText(nodes) {
   return nodes
     .map((node) => {
       if (typeof node === "string") return node;
-      const own = [node.marker, node.title, node.image ? "" : null].filter(Boolean).join(" ");
+      const own = [node.marker, node.title].filter(Boolean).join(" ");
       const children = node.items || node.content || [];
       return `${own} ${jsonText(children)} ${jsonText(node.sections || [])}`;
     })
     .join(" ");
 }
 
-function verify({ tree, doc, parts, json, pageText, figures }) {
+function verify({ xhtml, root, doc, parts, json, figures }) {
   const problems = [];
   const report = [];
   const check = (name, fn) => {
@@ -832,42 +785,38 @@ function verify({ tree, doc, parts, json, pageText, figures }) {
     const summary = fn();
     report.push(`${problems.length === before ? "PASS" : "FAIL"} ${name}: ${summary}`);
   };
+  const source = sourceStreams(root);
 
-  // 1. Coverage: every page content character (counted per character, so
-  // this doesn't check order) is in the structure tree, bar page furniture.
+  // 1. Coverage: the parsed tree holds the raw text of the file, and all of
+  // it is the body, the footnotes, the front matter or known page furniture.
   check("coverage", () => {
-    const tagged = charCounts(compact(textOf(tree)));
-    const bodySize = mode(pageText.filter((e) => compact(e.text)).map((e) => e.size));
-    const furniture = pageText.filter((e) => /^(\d+|EN)$/.test(compact(e.text)) && e.size >= bodySize && e.top > 1100);
-    const allowed = charCounts(compact(furniture.map((e) => e.text).join("")));
-    const unexplained = [];
-    for (const [ch, n] of charCounts(compact(pageText.map((e) => e.text).join("")))) {
-      const missing = n - (tagged.get(ch) || 0) - (allowed.get(ch) || 0);
-      if (missing > 0) unexplained.push([ch, missing]);
-    }
-    if (unexplained.length) problems.push(`Page content missing from the structure tree: ${JSON.stringify(unexplained)}`);
-    return `all page text is in the structure tree, except ${furniture.length} untagged page numbers and "EN" markers`;
+    const raw = xhtml.slice(xhtml.indexOf("<body"), xhtml.lastIndexOf("</body>")).replace(/<!--[\s\S]*?-->/g, "");
+    const lost = firstDifference(htmlText(raw), compact(textOf(find(root, (n) => n.tag === "body"))));
+    if (lost) problems.push(`The parsed document differs from the XHTML's text ${lost}`);
+    if (source.stray.length) problems.push(`Unrecognised text outside the document: ${JSON.stringify(source.stray)}`);
+    return `all ${htmlText(raw).length} characters of the XHTML are parsed; left out of the page are ${source.furniture.length} lines of Official Journal page furniture, the title block and the table of contents`;
   });
 
-  // 2. Fidelity: output text equals structure tree text, in order.
+  // 2. Fidelity: output text equals source text, in order.
   check("fidelity", () => {
-    const source = sourceStreams(tree);
     const jsonDiff = firstDifference(source.body, htmlText(jsonText(json.sections)));
-    if (jsonDiff) problems.push(`JSON text differs from the structure tree ${jsonDiff}`);
-    const jsonNotesDiff = firstDifference(source.notes, htmlText(json.footnotes.map((fn) => `${fn.id} ${fn.text}`).join(" ")));
-    if (jsonNotesDiff) problems.push(`JSON footnote text differs from the structure tree ${jsonNotesDiff}`);
+    if (jsonDiff) problems.push(`JSON text differs from the XHTML ${jsonDiff}`);
+    const jsonNotesDiff = firstDifference(source.notes, htmlText(json.footnotes.map((fn) => `${fn.marker} ${fn.text}`).join(" ")));
+    if (jsonNotesDiff) problems.push(`JSON footnote text differs from the XHTML ${jsonNotesDiff}`);
     const bodyDiff = firstDifference(source.body, htmlText(parts.body));
     const notesDiff = firstDifference(source.notes, htmlText(parts.footnotes));
-    if (bodyDiff) problems.push(`Body text differs from the structure tree ${bodyDiff}`);
-    if (notesDiff) problems.push(`Footnote text differs from the structure tree ${notesDiff}`);
-    return `HTML and JSON text are identical to the structure tree's ${source.body.length} body and ${source.notes.length} footnote characters (whitespace ignored)`;
+    if (bodyDiff) problems.push(`Body text differs from the XHTML ${bodyDiff}`);
+    if (notesDiff) problems.push(`Footnote text differs from the XHTML ${notesDiff}`);
+    return `HTML and JSON text are identical to the XHTML's ${source.body.length} body and ${source.notes.length} footnote characters (whitespace ignored)`;
   });
 
   // 3. Numbering.
   check("numbering", () => {
-    const tocEntries = doc.toc.map((t) => `${t.num} ${t.title}`).join("\n");
-    const headings = doc.headings.map((h) => `${h.num} ${h.title}`).join("\n");
+    const tocEntries = doc.toc.map((t) => `${t.label} ${t.title}`).join("\n");
+    const headings = doc.headings.map((h) => `${h.label} ${h.title}`).join("\n");
     if (compact(tocEntries) !== compact(headings)) problems.push(`Headings don't match the table of contents ${firstDifference(tocEntries, headings)}`);
+    if (compact(source.front) !== compact([doc.kind, doc.title, `(${doc.reference})`, "Contents", ...doc.toc.map((t) => t.label + t.title + t.page)].join("")))
+      problems.push("The title block and table of contents hold text that wasn't read");
     const counts = {};
     for (const [type, nums] of [
       ["point", doc.blocks.filter((b) => b.type === "point").map((b) => b.num)],
@@ -878,24 +827,24 @@ function verify({ tree, doc, parts, json, pageText, figures }) {
       counts[type] = nums.length;
       nums.forEach((n, i) => n !== i + 1 && problems.push(`${type} ${i + 1} expected, found ${n}`));
     }
+    doc.footnotes.forEach((fn) => fn.label !== `(${fn.num})` && problems.push(`Footnote ${fn.num} is labelled ${fn.label}`));
     return (
       `${doc.headings.length} headings match the TOC; ${counts.point} points, ${counts.example} examples, ` +
       `${counts.figure} figures and ${counts.footnote} footnotes numbered 1..n`
     );
   });
 
-  // 4. Figures: each image file is on the page of its caption, or the page
-  // before it.
+  // 4. Figures.
   check("figures", () => {
-    const figureBlocks = doc.blocks.filter((b) => b.type === "figure");
-    if (figures.length !== figureBlocks.length) problems.push(`${figures.length} images for ${figureBlocks.length} figures`);
-    figureBlocks.forEach((b, i) => {
-      const caption = pageText.find((e) => compact(e.text).startsWith(compact(b.label)));
-      const image = figures[i];
-      if (!caption || !image || (image.page !== caption.page && image.page !== caption.page - 1))
-        problems.push(`Figure ${b.num}: image on page ${image && image.page}, caption on page ${caption && caption.page}`);
+    const blocks = doc.blocks.filter((b) => b.type === "figure");
+    if (figures.length !== blocks.length) problems.push(`${figures.length} images for ${blocks.length} figures`);
+    blocks.forEach((b) => (!b.caption || !b.image) && problems.push(`${b.label} lacks ${b.caption ? "an image" : "a caption"}`));
+    figures.forEach((f, i) => {
+      const jpeg = f.data.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
+      const png = f.data.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+      if (path.extname(f.name) !== (jpeg ? ".jpg" : png ? ".png" : "")) problems.push(`Figure ${i + 1} is not the image its type says it is`);
     });
-    return `${figures.length} images extracted, each on its caption's page`;
+    return `${figures.length} images extracted, one for each captioned figure`;
   });
 
   // 5. Ids and links.
@@ -907,54 +856,41 @@ function verify({ tree, doc, parts, json, pageText, figures }) {
     const hrefs = [...html.matchAll(/ href="#([^"]+)"/g)].map((m) => m[1]);
     const broken = hrefs.filter((h) => !idSet.has(h));
     if (broken.length) problems.push(`Links to missing ids: ${[...new Set(broken)].join(", ")}`);
-    const refs = (html.match(/class="footnote-ref"/g) || []).length;
-    if (refs !== doc.footnotes.length) problems.push(`${refs} footnote references for ${doc.footnotes.length} footnotes`);
-    return `${all.length} ids are unique, ${hrefs.length} internal links resolve, ${refs}/${doc.footnotes.length} footnote references placed`;
+    const refs = tokenLists(doc).flatMap(({ tokens }) => tokens.filter((t) => t.footnote));
+    const placed = (html.match(/class="footnote-ref"/g) || []).length;
+    if (placed !== doc.footnotes.length) problems.push(`${placed} footnote references for ${doc.footnotes.length} footnotes`);
+    refs.forEach((ref, i) => {
+      const fn = doc.footnotes[i];
+      if (!fn || ref.footnote !== fn.num || ref.key !== fn.key) problems.push(`Footnote reference ${ref.label} doesn't match footnote ${fn ? fn.label : i + 1}`);
+    });
+    return `${all.length} ids are unique, ${hrefs.length} internal links resolve, ${placed}/${doc.footnotes.length} footnote references placed`;
   });
 
   return { problems, report };
 }
 
-function charCounts(s) {
-  const counts = new Map();
-  for (const ch of s) counts.set(ch, (counts.get(ch) || 0) + 1);
-  return counts;
-}
-
 // ---------------------------------------------------------------------------
 
-// Extracts the images in their original encoding (PNG or JPEG), skipping the
-// Commission logo on the cover page. Images appear in figure order.
-function extractFigures(pdf, figuresUrl) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "guidance-figures-"));
-  try {
-    execFileSync("pdfimages", ["-all", "-f", "2", pdf, path.join(dir, "img")]);
-    const pages = execFileSync("pdfimages", ["-list", "-f", "2", pdf])
-      .toString("utf8")
-      .split("\n")
-      .slice(2)
-      .filter((l) => l.trim())
-      .map((l) => Number(l.trim().split(/\s+/)[0]));
-    return fs
-      .readdirSync(dir)
-      .sort()
-      .map((f, i) => {
-        const name = `figure-${i + 1}${path.extname(f)}`;
-        return { name, src: `${figuresUrl}/${name}`, page: pages[i], data: fs.readFileSync(path.join(dir, f)) };
-      });
-  } finally {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
+// The figures are embedded in the XHTML as data URIs, in figure order.
+function extractFigures(doc, figuresUrl) {
+  return doc.blocks
+    .filter((b) => b.type === "figure" && b.image)
+    .map((b) => {
+      const m = b.image.match(/^data:image\/(jpe?g|png);base64,(.*)$/s);
+      if (!m) throw new Error(`${b.label} is not an embedded JPEG or PNG image`);
+      const name = `figure-${b.num}.${m[1] === "png" ? "png" : "jpg"}`;
+      return { name, src: `${figuresUrl}/${name}`, data: Buffer.from(m[2], "base64") };
+    });
 }
 
-// "27.7.2026" -> "2026-07-27"
+// "17.11.2026" -> "2026-11-17"
 function isoDate(date) {
   if (!date) return null;
   const [day, month, year] = date.split(".");
   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
-// "27.7.2026" -> "27 July 2026"
+// "17.11.2026" -> "17 November 2026"
 function formatDate(date) {
   if (!date) return null;
   const [day, month, year] = date.split(".").map(Number);
@@ -962,44 +898,46 @@ function formatDate(date) {
   return `${day} ${months[month - 1]} ${year}`;
 }
 
-const TITLE_PREFIX = "Commission guidance on the application of ";
-
-// The Commission's download link for the PDF, from
-// https://digital-strategy.ec.europa.eu/en/library/commission-publishes-new-guidance-support-timely-cyber-resilience-act-implementation
-const SOURCE_URL = "https://ec.europa.eu/newsroom/dae/redirection/document/131456";
-
-function extract(input, figuresUrl, sourceUrl = SOURCE_URL) {
-  const pdf = fs.readFileSync(input);
-  const run = (cmd, args) => execFileSync(cmd, args, { maxBuffer: 256 * 1024 * 1024 }).toString("utf8");
-  const tree = parseStructText(run("pdfinfo", ["-struct-text", input]));
-  const pageText = readPageText(run("pdftohtml", ["-xml", "-i", "-q", "-stdout", input]));
-  const doc = buildDocument(tree, readObjectStreams(pdf));
+function extract(input, figuresUrl) {
+  const file = fs.readFileSync(input);
+  const xhtml = file.toString("utf8");
+  const root = parseXml(xhtml);
+  const doc = buildDocument(root);
 
   const problems = [];
-  const figures = extractFigures(input, figuresUrl);
+  const figures = extractFigures(doc, figuresUrl);
   const figureCount = doc.blocks.filter((b) => b.type === "figure").length;
   if (figures.length !== figureCount) throw new Error(`${figures.length} images found for ${figureCount} figures`);
 
-  const contexts = footnoteReferenceContexts(pageText, doc.footnotes.length);
-  if (contexts.length !== doc.footnotes.length) problems.push(`${contexts.length} superscript references found for ${doc.footnotes.length} footnotes`);
-
-  const meta = {
-    title: doc.cover.match(new RegExp(`(${TITLE_PREFIX}.*?\\))\\s*$`))?.[1],
-    reference: doc.cover.match(/C\(\d{4}\) \d+ final/)?.[0],
-    date: formatDate(doc.cover.match(/Brussels, (\d+\.\d+\.\d{4})/)?.[1]),
-    isoDate: isoDate(doc.cover.match(/Brussels, (\d+\.\d+\.\d{4})/)?.[1]),
-    sourceFile: path.basename(input),
-    sourceSha256: crypto.createHash("sha256").update(pdf).digest("hex"),
-    sourceUrl,
+  // The masthead carries the Official Journal number and publication date,
+  // and the last lines the document's European Legislation Identifier.
+  const masthead = (className) => {
+    const node = find(root, (n) => is(n, "p", className));
+    return node ? collapse(textOf(node)).trim() : null;
   };
-  for (const [key, value] of Object.entries(meta)) if (!value) problems.push(`Could not find the ${key} on the cover page`);
+  const ojDate = masthead("oj-hd-date");
+  const eli = sourceStreams(root).furniture.map((line) => line.match(/^ELI: (http\S+)$/)?.[1]).find(Boolean);
+  const meta = {
+    title: doc.title,
+    reference: doc.reference,
+    ojDate,
+    date: formatDate(ojDate),
+    isoDate: isoDate(ojDate),
+    eli,
+    sourceFile: path.basename(input),
+    sourceSha256: crypto.createHash("sha256").update(file).digest("hex"),
+    sourceUrl: eli && eli.replace(/^http:/, "https:"),
+  };
+  for (const [key, value] of Object.entries(meta)) if (!value) problems.push(`Could not find the ${key} of the document`);
+  if (doc.reference !== masthead("oj-hd-uniq")) problems.push(`The document is numbered ${doc.reference}, but the Official Journal's masthead says ${masthead("oj-hd-uniq")}`);
 
-  insertFootnoteMarkers(doc, contexts, problems);
-  const parts = renderDocument(doc, figures, problems);
+  const linked = linkCrossReferences(doc, problems);
+  const parts = renderDocument(doc, figures);
   const page = renderPage(parts, meta);
   const json = renderJson(doc, figures, meta);
-  const verification = verify({ tree, doc, parts, json, pageText, figures });
-  return { page, parts, json, figures, tree, doc, pageText, problems: [...problems, ...verification.problems], report: verification.report };
+  const verification = verify({ xhtml, root, doc, parts, json, figures });
+  const report = [...verification.report, `INFO cross-references: linked ${linked.sections.length} references to sections and ${linked.points.length} to points`];
+  return { page, parts, json, figures, xhtml, root, doc, linked, problems: [...problems, ...verification.problems], report };
 }
 
 const PAGE = "src/official-guidance.html";
@@ -1012,7 +950,7 @@ function main() {
   const check = args.includes("--check");
   const input = args.find((a) => !a.startsWith("--"));
   if (!input) {
-    console.error("Usage: node scripts/extract-guidance.js [--check] <input.pdf>");
+    console.error("Usage: node scripts/extract-guidance.js [--check] <input.xhtml>");
     process.exit(2);
   }
   const root = path.join(__dirname, "..");
@@ -1028,7 +966,7 @@ function main() {
   const pagePath = path.join(root, PAGE);
   const jsonPath = path.join(root, JSON_FILE);
   if (check) {
-    // Confirms the committed output is exactly what this PDF produces.
+    // Confirms the committed output is exactly what this XHTML produces.
     const stale = [];
     if (!fs.existsSync(pagePath) || fs.readFileSync(pagePath, "utf8") !== page) stale.push(PAGE);
     if (!fs.existsSync(jsonPath) || fs.readFileSync(jsonPath, "utf8") !== jsonText) stale.push(JSON_FILE);
@@ -1043,7 +981,7 @@ function main() {
       console.error(`Output is out of date; run: node scripts/extract-guidance.js ${input}\n  ${stale.join("\n  ")}`);
       process.exit(1);
     }
-    console.log("Verification passed; committed output matches the PDF.");
+    console.log("Verification passed; committed output matches the XHTML.");
     return;
   }
 
@@ -1057,4 +995,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { parseStructText, buildDocument, readPageText, footnoteReferenceContexts, extract, verify, ids };
+module.exports = { parseXml, buildDocument, linkCrossReferences, extract, verify, ids };

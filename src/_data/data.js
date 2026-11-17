@@ -18,7 +18,7 @@ const { EC_QANDA_API_URL, parseEcQandaDocument } = require("./utils/ec-qanda-par
 const { SRP_FAQ_URL, parseSrpFaqPage, linkSrpCrossReferences } = require("./utils/srp-faq-parser.js");
 const { fetchWithFallback } = require("./utils/fetch-with-fallback.js");
 const { createApiArray } = require("./utils/api-formatter.js");
-// The Commission's guidance, extracted from its PDF by
+// The Commission's guidance, extracted from its Official Journal XHTML by
 // scripts/extract-guidance.js (regenerate with `npm run extract-guidance`)
 const officialGuidance = require("./official-guidance.json");
 
